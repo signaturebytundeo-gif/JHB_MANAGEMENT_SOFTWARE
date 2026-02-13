@@ -37,12 +37,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Database contains all 6 products with complete pricing tiers and volume discounts
   5. Database contains all 7 locations, 9 sales channels, subscription plans, and approval thresholds
 
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Project initialization, Prisma schema, database seeding (all products, locations, channels, users, plans, thresholds)
-- [ ] 01-02-PLAN.md — Auth infrastructure (JWT sessions, DAL, proxy), login page, dashboard layout with sidebar, dark mode, toasts
-- [ ] 01-03-PLAN.md — Invite system, magic link auth, role-specific dashboards, user management, loading skeletons
+- [ ] 01-01-PLAN.md — Project initialization (Next.js, Tailwind, shadcn/ui, Prisma client)
+- [ ] 01-02-PLAN.md — Prisma schema definition and database seeding (all products, locations, channels, users, plans, thresholds)
+- [ ] 01-03-PLAN.md — Auth infrastructure (JWT sessions, DAL, proxy), login page, dashboard layout with sidebar, dark mode, toasts
+- [ ] 01-04-PLAN.md — Invite system, magic link auth, role-specific dashboards, user management, loading skeletons
 
 ### Phase 2: Production & Quality Control
 **Goal**: Users can create production batches with auto-generated lot codes, track QC testing, and ensure only passed batches enter available inventory.
@@ -206,7 +207,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 0/3 | Planned | - |
+| 1. Foundation & Authentication | 0/4 | Planned | - |
 | 2. Production & Quality Control | 0/3 | Not started | - |
 | 3. Inventory Management | 0/4 | Not started | - |
 | 4. Order Management | 0/3 | Not started | - |
