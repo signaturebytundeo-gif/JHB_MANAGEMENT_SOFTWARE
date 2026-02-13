@@ -182,13 +182,120 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| PROD-01 | Phase 2 | Pending |
+| PROD-02 | Phase 2 | Pending |
+| PROD-03 | Phase 2 | Pending |
+| PROD-04 | Phase 2 | Pending |
+| PROD-05 | Phase 2 | Pending |
+| PROD-06 | Phase 2 | Pending |
+| PROD-07 | Phase 2 | Pending |
+| PROD-08 | Phase 2 | Pending |
+| PROD-09 | Phase 2 | Pending |
+| PROD-10 | Phase 2 | Pending |
+| PROD-11 | Phase 2 | Pending |
+| PROD-12 | Phase 2 | Pending |
+| PROD-13 | Phase 2 | Pending |
+| PROD-14 | Phase 2 | Pending |
+| INV-01 | Phase 3 | Pending |
+| INV-02 | Phase 3 | Pending |
+| INV-03 | Phase 3 | Pending |
+| INV-04 | Phase 3 | Pending |
+| INV-05 | Phase 3 | Pending |
+| INV-06 | Phase 3 | Pending |
+| INV-07 | Phase 3 | Pending |
+| INV-08 | Phase 3 | Pending |
+| INV-09 | Phase 3 | Pending |
+| INV-10 | Phase 3 | Pending |
+| INV-11 | Phase 3 | Pending |
+| ORD-01 | Phase 4 | Pending |
+| ORD-02 | Phase 4 | Pending |
+| ORD-03 | Phase 4 | Pending |
+| ORD-04 | Phase 4 | Pending |
+| ORD-05 | Phase 4 | Pending |
+| ORD-06 | Phase 4 | Pending |
+| ORD-07 | Phase 4 | Pending |
+| ORD-08 | Phase 4 | Pending |
+| ORD-09 | Phase 4 | Pending |
+| PRICE-01 | Phase 4 | Pending |
+| PRICE-02 | Phase 4 | Pending |
+| PRICE-03 | Phase 4 | Pending |
+| PRICE-04 | Phase 4 | Pending |
+| PRICE-05 | Phase 4 | Pending |
+| PRICE-06 | Phase 5 | Pending |
+| PRICE-07 | Phase 5 | Pending |
+| PRICE-08 | Phase 5 | Pending |
+| PRICE-09 | Phase 5 | Pending |
+| CRM-01 | Phase 5 | Pending |
+| CRM-02 | Phase 5 | Pending |
+| CRM-03 | Phase 5 | Pending |
+| CRM-04 | Phase 5 | Pending |
+| CRM-05 | Phase 5 | Pending |
+| CRM-06 | Phase 5 | Pending |
+| CRM-07 | Phase 5 | Pending |
+| CRM-08 | Phase 5 | Pending |
+| CRM-09 | Phase 5 | Pending |
+| CRM-10 | Phase 5 | Pending |
+| CRM-11 | Phase 5 | Pending |
+| FIN-01 | Phase 6 | Pending |
+| FIN-02 | Phase 6 | Pending |
+| FIN-03 | Phase 6 | Pending |
+| FIN-04 | Phase 6 | Pending |
+| FIN-05 | Phase 6 | Pending |
+| FIN-06 | Phase 6 | Pending |
+| FIN-07 | Phase 6 | Pending |
+| FIN-08 | Phase 6 | Pending |
+| FIN-09 | Phase 6 | Pending |
+| FIN-10 | Phase 6 | Pending |
+| FIN-11 | Phase 6 | Pending |
+| DASH-01 | Phase 7 | Pending |
+| DASH-02 | Phase 7 | Pending |
+| DASH-03 | Phase 7 | Pending |
+| DASH-04 | Phase 7 | Pending |
+| DASH-05 | Phase 7 | Pending |
+| DASH-06 | Phase 7 | Pending |
+| DASH-07 | Phase 7 | Pending |
+| INVST-01 | Phase 7 | Pending |
+| INVST-02 | Phase 7 | Pending |
+| INVST-03 | Phase 7 | Pending |
+| INVST-04 | Phase 7 | Pending |
+| INVST-05 | Phase 7 | Pending |
+| INVST-06 | Phase 7 | Pending |
+| INVST-07 | Phase 7 | Pending |
+| RPT-01 | Phase 7 | Pending |
+| RPT-02 | Phase 7 | Pending |
+| RPT-03 | Phase 7 | Pending |
+| RPT-04 | Phase 7 | Pending |
+| RPT-05 | Phase 7 | Pending |
+| RPT-06 | Phase 7 | Pending |
+| RPT-07 | Phase 7 | Pending |
+| RPT-08 | Phase 7 | Pending |
+| RPT-09 | Phase 7 | Pending |
+| DOC-01 | Phase 8 | Pending |
+| DOC-02 | Phase 8 | Pending |
+| DOC-03 | Phase 8 | Pending |
+| DOC-04 | Phase 8 | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
+| INFRA-04 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Pending |
+| INFRA-06 | Phase 1 | Pending |
+| INFRA-07 | Phase 1 | Pending |
+| INFRA-08 | Phase 1 | Pending |
+| INFRA-09 | Phase 1 | Pending |
+| INFRA-10 | Phase 1 | Pending |
+| INFRA-11 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 95 total
-- Mapped to phases: 0
-- Unmapped: 95
+- v1 requirements: 108 total
+- Mapped to phases: 108
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-13*
-*Last updated: 2026-02-13 after initial definition*
+*Last updated: 2026-02-13 after roadmap creation*
