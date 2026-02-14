@@ -11,27 +11,27 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 ## Current Position
 
 Phase: 1 of 8 (Foundation & Authentication)
-Plan: 3 of 4 in current phase
-Status: Executing
-Last activity: 2026-02-14 — Completed plan 01-03 (Authentication & Dashboard Foundation)
+Plan: 4 of 4 in current phase
+Status: Phase Complete
+Last activity: 2026-02-14 — Completed plan 01-04 (Invites, Magic Links & Role Dashboards)
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 7 minutes
-- Total execution time: 0.35 hours
+- Total execution time: 0.45 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation-authentication | 3 | 21m | 7m |
+| 01-foundation-authentication | 4 | 28m | 7m |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m), 01-02 (8m), 01-03 (7m)
+- Last 5 plans: 01-01 (6m), 01-02 (8m), 01-03 (7m), 01-04 (7m)
 - Trend: Consistent pace (7min average)
 
 *Updated after each plan completion*
@@ -58,6 +58,12 @@ Recent decisions affecting current work:
 - Data Access Layer caching with React cache() - Avoid redundant session verification database queries
 - Generic login error messages - Never reveal which field is wrong (prevents email enumeration)
 - Role-based navigation with permission matrix - ROLE_PERMISSIONS + hasPermission + getRoleDashboard
+- Use Resend for transactional emails - Industry-standard service with excellent DX and generous free tier
+- Email templates use inline CSS - Email clients have inconsistent CSS support, inline styles are most reliable
+- Magic link tokens single-use with 15-min expiration - Security best practice prevents token replay attacks
+- Invite tokens expire after 7 days - Balances security (limited lifetime) with UX (reasonable acceptance window)
+- Generic success message for magic link requests - Prevents email enumeration attacks, don't reveal registered emails
+- Quick action buttons disabled with phase tooltips - Demonstrates future functionality with clear UX expectations
 
 ### Pending Todos
 
@@ -70,5 +76,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-14
-Stopped at: Completed 01-03-PLAN.md - Authentication & Dashboard Foundation
-Resume file: .planning/phases/01-foundation-authentication/01-03-SUMMARY.md
+Stopped at: Completed 01-04-PLAN.md - Invites, Magic Links & Role Dashboards (Phase 1 Complete)
+Resume file: .planning/phases/01-foundation-authentication/01-04-SUMMARY.md
