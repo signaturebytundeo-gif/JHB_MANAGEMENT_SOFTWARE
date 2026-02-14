@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-caribbean-green: #006633;
+  --color-caribbean-green-light: #00884D;
+  --color-caribbean-green-dark: #004D26;
+  --color-caribbean-gold: #D4AF37;
+  --color-caribbean-gold-light: #E5C158;
+  --color-caribbean-gold-dark: #B8941F;
+  --color-caribbean-black: #1A1A1A;
+  --color-caribbean-black-light: #2D2D2D;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 150 100% 20%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 70% 52%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 150 100% 20%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 150 100% 20%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 70% 52%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 17%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 17%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
+    --ring: 150 100% 20%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
