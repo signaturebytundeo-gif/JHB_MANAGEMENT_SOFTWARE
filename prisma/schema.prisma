@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 // ============================================================================
@@ -117,8 +117,8 @@ model PricingTier {
   id         String   @id @default(cuid())
   productId  String
   tierName   String   // e.g., "Wholesale Cash", "Wholesale Net 30", "Retail"
-  unitPrice  Decimal  @db.Decimal(10, 2)
-  casePrice  Decimal? @db.Decimal(10, 2)
+  unitPrice  Decimal
+  casePrice  Decimal?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -133,7 +133,7 @@ model VolumeDiscount {
   id              String   @id @default(cuid())
   minCases        Int
   maxCases        Int?     // Nullable for unlimited (11+)
-  discountPercent Decimal  @db.Decimal(5, 2)
+  discountPercent Decimal
   description     String
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -144,7 +144,7 @@ model VolumeDiscount {
 model FrequencyDiscount {
   id                 String   @id @default(cuid())
   frequency          String   // "quarterly" or "annual"
-  discountPercent    Decimal  @db.Decimal(5, 2)
+  discountPercent    Decimal
   additionalBenefits String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
@@ -194,7 +194,7 @@ model SubscriptionPlan {
   id                 String   @id @default(cuid())
   name               String   @unique
   billingCycle       String   // "monthly" or "annual"
-  price              Decimal  @db.Decimal(10, 2)
+  price              Decimal
   includedProducts   String   // Description of what's included
   loyaltyReward      String?  // e.g., "1 month free at 6 months"
   cancellationPolicy String?
@@ -209,8 +209,8 @@ model SubscriptionPlan {
 
 model ApprovalThreshold {
   id           String   @id @default(cuid())
-  minAmount    Decimal  @db.Decimal(10, 2)
-  maxAmount    Decimal? @db.Decimal(10, 2) // Nullable for unlimited
+  minAmount    Decimal
+  maxAmount    Decimal? // Nullable for unlimited
   approvalType String   // "auto", "single_member", "dual_member", "dual_bank"
   description  String
   createdAt    DateTime @default(now())

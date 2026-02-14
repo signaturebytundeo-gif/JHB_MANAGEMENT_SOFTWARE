@@ -1,14 +1,16 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 text-caribbean-green">
-          JHB Command Center
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Operations management for Jamaica House Brand LLC
-        </p>
-      </div>
-    </main>
-  );
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { decrypt } from '@/lib/session';
+import { getRoleDashboard } from '@/lib/auth/permissions';
+
+export default async function Home() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
+  const session = await decrypt(sessionCookie);
+
+  if (session) {
+    redirect(getRoleDashboard(session.role));
+  }
+
+  redirect('/login');
 }

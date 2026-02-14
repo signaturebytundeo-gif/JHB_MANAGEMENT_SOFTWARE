@@ -1,6 +1,16 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not set. Cannot send emails in production without it.');
+  }
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 /**
  * Send invite email to a new user with pre-assigned role
@@ -92,7 +102,7 @@ export async function sendInviteEmail(
     </html>
   `;
 
-  await resend.emails.send({
+  await getResendClient().emails.send({
     from: 'JHB Command Center <onboarding@resend.dev>',
     to,
     subject: "You've been invited to JHB Command Center",
@@ -188,7 +198,7 @@ export async function sendMagicLinkEmail(
     </html>
   `;
 
-  await resend.emails.send({
+  await getResendClient().emails.send({
     from: 'JHB Command Center <onboarding@resend.dev>',
     to,
     subject: 'Your sign-in link for JHB Command Center',

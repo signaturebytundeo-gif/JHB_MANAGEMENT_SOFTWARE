@@ -20,6 +20,16 @@ export async function proxy(request: NextRequest) {
   const sessionCookie = cookieStore.get('session')?.value;
   const session = await decrypt(sessionCookie);
 
+  // Root route: redirect based on auth status
+  if (path === '/') {
+    if (session) {
+      return NextResponse.redirect(
+        new URL(getRoleDashboard(session.role), request.url)
+      );
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
   // Redirect to login if accessing protected route without session
   if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL('/login', request.url));

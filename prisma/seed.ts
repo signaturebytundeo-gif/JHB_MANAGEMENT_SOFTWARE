@@ -1,14 +1,11 @@
+import "dotenv/config";
 import { PrismaClient, Role, LocationType, ChannelType } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import * as bcrypt from "bcrypt";
 
-const { Pool } = pg;
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+const adapter = new PrismaBetterSqlite3({
+  url: process.env.DATABASE_URL || "file:./dev.db",
 });
-const adapter = new PrismaPg(pool);
-
 const prisma = new PrismaClient({
   adapter,
   log: ["error"],
@@ -38,10 +35,10 @@ async function main() {
   });
 
   const tunde = await prisma.user.upsert({
-    where: { email: "tunde@jamaicahousebrand.com" },
+    where: { email: "olatunde@jamaicahousebrand.com" },
     update: {},
     create: {
-      email: "tunde@jamaicahousebrand.com",
+      email: "olatunde@jamaicahousebrand.com",
       name: "Olatunde Ogunjulugbe",
       password: defaultPassword,
       role: Role.ADMIN,
