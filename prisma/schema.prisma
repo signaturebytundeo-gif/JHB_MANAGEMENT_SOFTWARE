@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -11,4 +8,214 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Role {
+  ADMIN
+  MANAGER
+  SALES_REP
+  INVESTOR
+}
+
+enum LocationType {
+  PRODUCTION
+  RESTAURANT
+  WAREHOUSE
+  FULFILLMENT
+  MARKET
+  EVENT
+}
+
+enum ChannelType {
+  ONLINE
+  RETAIL
+  WHOLESALE
+  MARKETPLACE
+  SUBSCRIPTION
+  EVENT
+}
+
+// ============================================================================
+// USER & AUTHENTICATION MODELS
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String?   // Nullable for magic link users
+  role          Role      @default(SALES_REP)
+  emailVerified DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  invitesSent InviteToken[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model InviteToken {
+  id          String    @id @default(cuid())
+  email       String
+  role        Role
+  token       String    @unique
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  invitedBy User @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([email])
+}
+
+model MagicLinkToken {
+  id        String    @id @default(cuid())
+  email     String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([token])
+  @@index([email])
+}
+
+// ============================================================================
+// PRODUCT & PRICING MODELS
+// ============================================================================
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  sku          String   @unique
+  size         String
+  unitsPerCase Int?     // Nullable for TBD packaging
+  description  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  pricingTiers PricingTier[]
+
+  @@index([sku])
+  @@index([isActive])
+}
+
+model PricingTier {
+  id         String   @id @default(cuid())
+  productId  String
+  tierName   String   // e.g., "Wholesale Cash", "Wholesale Net 30", "Retail"
+  unitPrice  Decimal  @db.Decimal(10, 2)
+  casePrice  Decimal? @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tierName])
+  @@index([productId])
+}
+
+model VolumeDiscount {
+  id              String   @id @default(cuid())
+  minCases        Int
+  maxCases        Int?     // Nullable for unlimited (11+)
+  discountPercent Decimal  @db.Decimal(5, 2)
+  description     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([minCases])
+}
+
+model FrequencyDiscount {
+  id                 String   @id @default(cuid())
+  frequency          String   // "quarterly" or "annual"
+  discountPercent    Decimal  @db.Decimal(5, 2)
+  additionalBenefits String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([frequency])
+}
+
+// ============================================================================
+// LOCATION & SALES CHANNEL MODELS
+// ============================================================================
+
+model Location {
+  id               String       @id @default(cuid())
+  name             String       @unique
+  type             LocationType
+  address          String?
+  description      String?
+  deliverySchedule String?      // e.g., "Weekly delivery"
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([name])
+  @@index([type])
+  @@index([isActive])
+}
+
+model SalesChannel {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  type        ChannelType
+  description String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([name])
+  @@index([type])
+  @@index([isActive])
+}
+
+// ============================================================================
+// SUBSCRIPTION & APPROVAL MODELS
+// ============================================================================
+
+model SubscriptionPlan {
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  billingCycle       String   // "monthly" or "annual"
+  price              Decimal  @db.Decimal(10, 2)
+  includedProducts   String   // Description of what's included
+  loyaltyReward      String?  // e.g., "1 month free at 6 months"
+  cancellationPolicy String?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([name])
+  @@index([billingCycle])
+  @@index([isActive])
+}
+
+model ApprovalThreshold {
+  id           String   @id @default(cuid())
+  minAmount    Decimal  @db.Decimal(10, 2)
+  maxAmount    Decimal? @db.Decimal(10, 2) // Nullable for unlimited
+  approvalType String   // "auto", "single_member", "dual_member", "dual_bank"
+  description  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([minAmount])
 }
