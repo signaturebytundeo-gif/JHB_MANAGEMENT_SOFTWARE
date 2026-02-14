@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import Link from 'next/link';
 import { login } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,6 +87,16 @@ export function LoginForm() {
           >
             {isPending ? 'Signing in...' : 'Sign In'}
           </Button>
+
+          {/* Magic link option */}
+          <div className="text-center">
+            <Link
+              href="/magic-link"
+              className="text-sm text-caribbean-green hover:underline"
+            >
+              Or sign in with magic link
+            </Link>
+          </div>
         </form>
       </CardContent>
     </Card>
