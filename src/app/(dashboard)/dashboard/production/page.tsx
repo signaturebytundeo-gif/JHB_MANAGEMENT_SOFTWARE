@@ -1,24 +1,50 @@
-import { Factory } from 'lucide-react';
+import Link from 'next/link';
+import { verifySession } from '@/lib/dal';
+import { getBatches, getProductionMetrics } from '@/app/actions/production';
+import { db } from '@/lib/db';
+import { Button } from '@/components/ui/button';
+import { BatchList } from '@/components/production/BatchList';
+import { CapacityMetrics } from '@/components/production/CapacityMetrics';
 
-export default function ProductionPage() {
+export default async function ProductionPage() {
+  await verifySession();
+
+  // Fetch batches and metrics
+  const batches = await getBatches();
+  const metrics = await getProductionMetrics();
+
+  // Fetch products for filter dropdown
+  const products = await db.product.findMany({
+    where: { isActive: true },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Production Tracking</h1>
-        <p className="text-muted-foreground mt-2">
-          Track hot sauce batches from raw ingredients through bottling and packaging.
-        </p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Production Tracking</h1>
+          <p className="text-muted-foreground mt-2">
+            Track hot sauce batches from production through quality control.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/production/new">New Batch</Link>
+        </Button>
       </div>
 
-      <div className="rounded-lg border bg-card p-12 text-center">
-        <div className="mx-auto w-16 h-16 rounded-full bg-caribbean-green/10 flex items-center justify-center mb-6">
-          <Factory className="h-8 w-8 text-caribbean-green" />
-        </div>
-        <h2 className="text-xl font-semibold mb-2">Coming in Phase 2</h2>
-        <p className="text-muted-foreground max-w-md mx-auto">
-          Batch creation, recipe management, production scheduling, yield tracking, and quality control logging.
-        </p>
-      </div>
+      {/* Capacity Metrics */}
+      <CapacityMetrics
+        totalUnits={metrics.totalUnits}
+        target={metrics.target}
+        batchCount={metrics.batchCount}
+        utilizationPercent={metrics.utilizationPercent}
+      />
+
+      {/* Batch List */}
+      <BatchList initialBatches={batches} products={products} />
     </div>
   );
 }
