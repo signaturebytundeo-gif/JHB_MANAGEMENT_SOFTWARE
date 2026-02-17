@@ -714,6 +714,39 @@ async function main() {
 
   console.log("✅ Created/verified 4 approval thresholds");
 
+  // ============================================================================
+  // CO-PACKER PARTNERS (PROD-10)
+  // ============================================================================
+  console.log("🏭 Seeding co-packer partners...");
+
+  await prisma.coPackerPartner.upsert({
+    where: { name: "Space Coast Sauces" },
+    update: {},
+    create: {
+      name: "Space Coast Sauces",
+      contactName: null,
+      email: null,
+      phone: null,
+      address: null,
+      isActive: true,
+    },
+  });
+
+  await prisma.coPackerPartner.upsert({
+    where: { name: "Tabanero Holdings" },
+    update: {},
+    create: {
+      name: "Tabanero Holdings",
+      contactName: null,
+      email: null,
+      phone: null,
+      address: null,
+      isActive: true,
+    },
+  });
+
+  console.log("✅ Created/verified 2 co-packer partners");
+
   console.log("\n🎉 Database seed completed successfully!");
 }
 
