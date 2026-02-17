@@ -60,12 +60,13 @@ Plans:
   5. Batch records are immutable and retained forever (cannot be deleted)
   6. User can view production capacity utilization vs 15,000 unit/month target
 
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: TBD during phase planning
-- [ ] 02-02: TBD during phase planning
-- [ ] 02-03: TBD during phase planning
+- [ ] 02-01-PLAN.md — Prisma schema (Batch, QCTest, CoPackerPartner, RawMaterial models), Zod validators, batch code utility, seed data
+- [ ] 02-02-PLAN.md — Production Server Actions and mobile-optimized batch creation form with conditional co-packer fields
+- [ ] 02-03-PLAN.md — Batch list with filters, batch detail page with QC testing forms, capacity utilization metrics
+- [ ] 02-04-PLAN.md — Co-packer partner settings management and raw materials tracking
 
 ### Phase 3: Inventory Management
 **Goal**: Users can view real-time stock levels across all locations, transfer inventory with FIFO enforcement, and track every movement with full audit trails.
@@ -203,12 +204,12 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Authentication | 0/4 | Planned | - |
-| 2. Production & Quality Control | 0/3 | Not started | - |
+| 2. Production & Quality Control | 0/4 | Planned | - |
 | 3. Inventory Management | 0/4 | Not started | - |
 | 4. Order Management | 0/3 | Not started | - |
 | 5. Sales Channels & CRM | 0/4 | Not started | - |
