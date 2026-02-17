@@ -11,28 +11,28 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 ## Current Position
 
 Phase: 2 of 8 (Production & Quality Control)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-17 — Completed plan 02-01 (Production Database Foundation)
+Last activity: 2026-02-17 — Completed plan 02-02 (Production Server Actions & Batch Creation Form)
 
 Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 6 minutes
-- Total execution time: 0.51 hours
+- Total plans completed: 6
+- Average duration: 5 minutes
+- Total execution time: 0.56 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 4 | 28m | 7m |
-| 02-production-quality-control | 1 | 4m | 4m |
+| 02-production-quality-control | 2 | 7m | 3.5m |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (8m), 01-03 (7m), 01-04 (7m), 02-01 (4m)
+- Last 5 plans: 01-03 (7m), 01-04 (7m), 02-01 (4m), 02-02 (3m)
 - Trend: Improving efficiency
 
 *Updated after each plan completion*
@@ -69,6 +69,11 @@ Recent decisions affecting current work:
 - Soft delete for batches (isActive flag) - Production records are immutable for audit trail and traceability
 - Conditional validation via Zod refine - CO_PACKER source requires partner ID, allocations must sum to totalUnits
 - SQLite Decimal without @db annotations - Prisma handles Decimal mapping automatically for SQLite
+- Auto-fail QC tests when pH >= 4.6 - Food safety compliance, prevents unsafe batches from releasing
+- Batch status state machine with enforced transitions - Prevents invalid status changes (e.g., RELEASED can't transition)
+- Mobile-first form inputs (16px, 44px touch targets) - Prevents iOS auto-zoom, optimizes for Anthony's phone usage
+- Production source toggle buttons vs select - Large touch targets for mobile, clearer visual state indication
+- Location allocations optional at batch creation - Flexibility to allocate later, but must sum to total if provided
 
 ### Pending Todos
 
@@ -81,5 +86,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 02-01-PLAN.md - Production Database Foundation
-Resume file: .planning/phases/02-production-quality-control/02-01-SUMMARY.md
+Stopped at: Completed 02-02-PLAN.md - Production Server Actions & Batch Creation Form
+Resume file: .planning/phases/02-production-quality-control/02-02-SUMMARY.md
