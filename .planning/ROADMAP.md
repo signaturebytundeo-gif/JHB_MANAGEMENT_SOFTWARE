@@ -12,8 +12,8 @@ This roadmap transforms fragmented operations (Square, Amazon, spreadsheets) int
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Authentication** - Auth, roles, seed data, database foundation
-- [ ] **Phase 2: Production & Quality Control** - Batch tracking with MMDDYY codes, QC workflows, co-packer support
+- [x] **Phase 1: Foundation & Authentication** - Auth, roles, seed data, database foundation
+- [x] **Phase 2: Production & Quality Control** - Batch tracking with MMDDYY codes, QC workflows, co-packer support
 - [ ] **Phase 3: Inventory Management** - Multi-location FIFO, transfers, raw materials, audit trails
 - [ ] **Phase 4: Order Management** - Order lifecycle, fulfillment, inventory allocation
 - [ ] **Phase 5: Sales Channels & CRM** - Multi-channel sales, pricing engine, customer management
@@ -208,8 +208,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Authentication | 0/4 | Planned | - |
-| 2. Production & Quality Control | 0/4 | Planned | - |
+| 1. Foundation & Authentication | 4/4 | Complete | 2026-02-14 |
+| 2. Production & Quality Control | 4/4 | Complete | 2026-02-17 |
 | 3. Inventory Management | 0/4 | Not started | - |
 | 4. Order Management | 0/3 | Not started | - |
 | 5. Sales Channels & CRM | 0/4 | Not started | - |
