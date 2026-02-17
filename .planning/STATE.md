@@ -11,29 +11,29 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 ## Current Position
 
 Phase: 2 of 8 (Production & Quality Control)
-Plan: 2 of 4 in current phase
+Plan: 4 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-17 — Completed plan 02-02 (Production Server Actions & Batch Creation Form)
+Last activity: 2026-02-17 — Completed plan 02-04 (Co-Packer & Raw Material Management)
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 5 minutes
-- Total execution time: 0.56 hours
+- Total execution time: 0.67 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 4 | 28m | 7m |
-| 02-production-quality-control | 2 | 7m | 3.5m |
+| 02-production-quality-control | 3 | 13m | 4.3m |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (7m), 01-04 (7m), 02-01 (4m), 02-02 (3m)
-- Trend: Improving efficiency
+- Last 5 plans: 01-04 (7m), 02-01 (4m), 02-02 (3m), 02-04 (6m)
+- Trend: Steady pace, good efficiency
 
 *Updated after each plan completion*
 
@@ -74,6 +74,11 @@ Recent decisions affecting current work:
 - Mobile-first form inputs (16px, 44px touch targets) - Prevents iOS auto-zoom, optimizes for Anthony's phone usage
 - Production source toggle buttons vs select - Large touch targets for mobile, clearer visual state indication
 - Location allocations optional at batch creation - Flexibility to allocate later, but must sum to total if provided
+- Separate raw-materials actions file - Avoid conflicts with future production.ts file from parallel plans
+- Badge component with status variants - success/warning/destructive variants for visual status indicators
+- Expiration tracking with date-fns - Expired (<0 days), Expiring Soon (<=30 days), OK (>30 days) status logic
+- Client-server component split for settings - Server fetches data, client handles edit/toggle interactions
+- SQLite case-sensitive queries - Removed 'mode: insensitive' option not supported in SQLite
 
 ### Pending Todos
 
@@ -86,5 +91,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 02-02-PLAN.md - Production Server Actions & Batch Creation Form
-Resume file: .planning/phases/02-production-quality-control/02-02-SUMMARY.md
+Stopped at: Completed 02-04-PLAN.md - Co-Packer & Raw Material Management
+Resume file: .planning/phases/02-production-quality-control/02-04-SUMMARY.md
