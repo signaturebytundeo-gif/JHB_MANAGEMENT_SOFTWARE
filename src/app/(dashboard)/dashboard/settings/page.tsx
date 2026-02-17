@@ -21,6 +21,15 @@ export default function SettingsPage() {
           </div>
         </Link>
 
+        <Link href="/dashboard/settings/co-packers" className="block">
+          <div className="rounded-lg border bg-card p-6 hover:border-caribbean-green/50 transition-colors">
+            <h3 className="text-lg font-semibold mb-2">Co-Packer Partners</h3>
+            <p className="text-sm text-muted-foreground">
+              Manage co-packing partner list for production tracking.
+            </p>
+          </div>
+        </Link>
+
         <div className="rounded-lg border bg-card p-6">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="text-lg font-semibold">App Configuration</h3>
