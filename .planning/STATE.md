@@ -6,33 +6,34 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 1 - Foundation & Authentication
+**Current focus:** Phase 2 - Production & Quality Control
 
 ## Current Position
 
-Phase: 1 of 8 (Foundation & Authentication)
-Plan: 4 of 4 in current phase
-Status: Phase Complete
-Last activity: 2026-02-14 — Completed plan 01-04 (Invites, Magic Links & Role Dashboards)
+Phase: 2 of 8 (Production & Quality Control)
+Plan: 1 of 4 in current phase
+Status: In Progress
+Last activity: 2026-02-17 — Completed plan 02-01 (Production Database Foundation)
 
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 7 minutes
-- Total execution time: 0.45 hours
+- Total plans completed: 5
+- Average duration: 6 minutes
+- Total execution time: 0.51 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 4 | 28m | 7m |
+| 02-production-quality-control | 1 | 4m | 4m |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m), 01-02 (8m), 01-03 (7m), 01-04 (7m)
-- Trend: Consistent pace (7min average)
+- Last 5 plans: 01-02 (8m), 01-03 (7m), 01-04 (7m), 02-01 (4m)
+- Trend: Improving efficiency
 
 *Updated after each plan completion*
 
@@ -64,6 +65,10 @@ Recent decisions affecting current work:
 - Invite tokens expire after 7 days - Balances security (limited lifetime) with UX (reasonable acceptance window)
 - Generic success message for magic link requests - Prevents email enumeration attacks, don't reveal registered emails
 - Quick action buttons disabled with phase tooltips - Demonstrates future functionality with clear UX expectations
+- Use MMDDYY format for batch codes with letter suffixes - Matches existing manual workflow Anthony uses, prevents duplicates
+- Soft delete for batches (isActive flag) - Production records are immutable for audit trail and traceability
+- Conditional validation via Zod refine - CO_PACKER source requires partner ID, allocations must sum to totalUnits
+- SQLite Decimal without @db annotations - Prisma handles Decimal mapping automatically for SQLite
 
 ### Pending Todos
 
@@ -75,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-14
-Stopped at: Completed 01-04-PLAN.md - Invites, Magic Links & Role Dashboards (Phase 1 Complete)
-Resume file: .planning/phases/01-foundation-authentication/01-04-SUMMARY.md
+Last session: 2026-02-17
+Stopped at: Completed 02-01-PLAN.md - Production Database Foundation
+Resume file: .planning/phases/02-production-quality-control/02-01-SUMMARY.md
