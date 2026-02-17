@@ -38,6 +38,19 @@ enum ChannelType {
   EVENT
 }
 
+enum BatchStatus {
+  PLANNED
+  IN_PROGRESS
+  QC_REVIEW
+  RELEASED
+  HOLD
+}
+
+enum ProductionSource {
+  IN_HOUSE
+  CO_PACKER
+}
+
 // ============================================================================
 // USER & AUTHENTICATION MODELS
 // ============================================================================
@@ -54,7 +67,9 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  invitesSent InviteToken[]
+  invitesSent      InviteToken[]
+  createdBatches   Batch[]
+  conductedQCTests QCTest[]
 
   @@index([email])
   @@index([role])
@@ -108,6 +123,7 @@ model Product {
 
   // Relations
   pricingTiers PricingTier[]
+  batches      Batch[]
 
   @@index([sku])
   @@index([isActive])
@@ -157,15 +173,18 @@ model FrequencyDiscount {
 // ============================================================================
 
 model Location {
-  id               String       @id @default(cuid())
-  name             String       @unique
+  id               String            @id @default(cuid())
+  name             String            @unique
   type             LocationType
   address          String?
   description      String?
-  deliverySchedule String?      // e.g., "Weekly delivery"
-  isActive         Boolean      @default(true)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  deliverySchedule String?           // e.g., "Weekly delivery"
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  batchAllocations BatchAllocation[]
 
   @@index([name])
   @@index([type])
@@ -217,4 +236,134 @@ model ApprovalThreshold {
   updatedAt    DateTime @updatedAt
 
   @@index([minAmount])
+}
+
+// ============================================================================
+// PRODUCTION & QUALITY CONTROL MODELS
+// ============================================================================
+
+model CoPackerPartner {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  batches Batch[]
+
+  @@index([name])
+  @@index([isActive])
+}
+
+model Batch {
+  id                     String           @id @default(cuid())
+  batchCode              String           @unique
+  productId              String
+  productionDate         DateTime         @default(now())
+  productionSource       ProductionSource
+  status                 BatchStatus      @default(PLANNED)
+  totalUnits             Int
+  notes                  String?
+  coPackerPartnerId      String?
+  coPackerLotNumber      String?
+  coPackerReceivingDate  DateTime?
+  createdById            String
+  isActive               Boolean          @default(true)
+  deletedAt              DateTime?
+  deletedReason          String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  // Relations
+  product         Product            @relation(fields: [productId], references: [id])
+  coPackerPartner CoPackerPartner?   @relation(fields: [coPackerPartnerId], references: [id])
+  createdBy       User               @relation(fields: [createdById], references: [id])
+  qcTests         QCTest[]
+  allocations     BatchAllocation[]
+  materials       BatchMaterial[]
+
+  @@index([batchCode])
+  @@index([productId])
+  @@index([status])
+  @@index([productionDate])
+  @@index([isActive])
+  @@index([coPackerPartnerId])
+}
+
+model QCTest {
+  id         String   @id @default(cuid())
+  batchId    String
+  testType   String
+  phLevel    Decimal?
+  passed     Boolean
+  notes      String?
+  testedById String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  batch    Batch @relation(fields: [batchId], references: [id])
+  testedBy User  @relation(fields: [testedById], references: [id])
+
+  @@index([batchId])
+  @@index([testType])
+}
+
+model BatchAllocation {
+  id         String   @id @default(cuid())
+  batchId    String
+  locationId String
+  quantity   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  batch    Batch    @relation(fields: [batchId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
+
+  @@unique([batchId, locationId])
+  @@index([batchId])
+  @@index([locationId])
+}
+
+model RawMaterial {
+  id             String          @id @default(cuid())
+  name           String
+  supplier       String
+  lotNumber      String
+  expirationDate DateTime
+  receivedDate   DateTime
+  quantity       Decimal
+  unit           String
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  // Relations
+  batchMaterials BatchMaterial[]
+
+  @@index([name])
+  @@index([supplier])
+  @@index([lotNumber])
+  @@index([isActive])
+}
+
+model BatchMaterial {
+  id            String   @id @default(cuid())
+  batchId       String
+  rawMaterialId String
+  quantityUsed  Decimal
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  batch       Batch       @relation(fields: [batchId], references: [id])
+  rawMaterial RawMaterial @relation(fields: [rawMaterialId], references: [id])
+
+  @@unique([batchId, rawMaterialId])
 }
