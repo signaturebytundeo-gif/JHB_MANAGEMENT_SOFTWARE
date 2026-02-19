@@ -83,13 +83,13 @@ Plans:
   5. System prevents negative inventory at database level
   6. User can track raw materials and packaging with expiration dates and reorder alerts
 
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 03-01: TBD during phase planning
-- [ ] 03-02: TBD during phase planning
-- [ ] 03-03: TBD during phase planning
-- [ ] 03-04: TBD during phase planning
+- [ ] 03-01-PLAN.md — InventoryMovement + PackagingMaterial Prisma models, Zod validators, FIFO allocation utility, reorder-point utility
+- [ ] 03-02-PLAN.md — Inventory server actions and stock levels dashboard with color-coded alerts
+- [ ] 03-03-PLAN.md — Transfer form, adjustment form with reason codes, dual approval workflow, audit trail page
+- [ ] 03-04-PLAN.md — Packaging materials CRUD, reorder alert panel, inventory valuation report
 
 ### Phase 4: Order Management
 **Goal**: Users can create orders, allocate inventory via FIFO, track fulfillment workflow, and generate invoices with payment terms.
