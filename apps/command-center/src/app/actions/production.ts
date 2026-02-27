@@ -22,6 +22,8 @@ export async function createBatch(
   prevState: CreateBatchFormState,
   formData: FormData
 ): Promise<CreateBatchFormState> {
+  let batchId: string;
+
   try {
     // Verify user has manager or admin role
     const session = await verifyManagerOrAbove();
@@ -105,14 +107,17 @@ export async function createBatch(
       return batch;
     });
 
-    // Redirect to batch detail page
-    redirect(`/dashboard/production/${newBatch.id}`);
+    batchId = newBatch.id;
   } catch (error) {
     console.error('Error creating batch:', error);
     return {
       message: 'Failed to create batch',
     };
   }
+
+  // Redirect outside try/catch — redirect() throws a special error
+  // that must not be caught
+  redirect(`/dashboard/production/${batchId}`);
 }
 
 export async function submitQCTest(
