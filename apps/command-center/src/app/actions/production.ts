@@ -10,6 +10,10 @@ import {
   qcTestSchema,
   type QCTestFormState,
   updateBatchStatusSchema,
+  deleteBatchSchema,
+  type DeleteBatchFormState,
+  updateBatchSchema,
+  type UpdateBatchFormState,
 } from '@/lib/validators/production';
 import { generateBatchCode } from '@/lib/utils/batch-code';
 import { ProductionSource, BatchStatus } from '@prisma/client';
@@ -431,5 +435,113 @@ export async function getProductionMetrics(month?: Date) {
       utilizationPercent: 0,
       batchCount: 0,
     };
+  }
+}
+
+export async function deleteBatch(
+  prevState: DeleteBatchFormState,
+  formData: FormData
+): Promise<DeleteBatchFormState> {
+  try {
+    await verifyManagerOrAbove();
+
+    const validatedFields = deleteBatchSchema.safeParse({
+      batchId: formData.get('batchId'),
+      reason: formData.get('reason'),
+    });
+
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+
+    const { batchId, reason } = validatedFields.data;
+
+    const batch = await db.batch.findUnique({
+      where: { id: batchId, isActive: true },
+      select: { status: true },
+    });
+
+    if (!batch) {
+      return { message: 'Batch not found' };
+    }
+
+    if (batch.status !== 'PLANNED' && batch.status !== 'IN_PROGRESS') {
+      return { message: 'Only PLANNED or IN_PROGRESS batches can be deleted' };
+    }
+
+    await db.batch.update({
+      where: { id: batchId },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+        deletedReason: reason,
+      },
+    });
+
+    revalidatePath('/dashboard/production');
+  } catch (error) {
+    console.error('Error deleting batch:', error);
+    return { message: 'Failed to delete batch' };
+  }
+
+  redirect('/dashboard/production');
+}
+
+export async function updateBatch(
+  prevState: UpdateBatchFormState,
+  formData: FormData
+): Promise<UpdateBatchFormState> {
+  try {
+    await verifyManagerOrAbove();
+
+    const validatedFields = updateBatchSchema.safeParse({
+      batchId: formData.get('batchId'),
+      totalUnits: formData.get('totalUnits'),
+      notes: formData.get('notes') || undefined,
+      productionDate: formData.get('productionDate'),
+    });
+
+    if (!validatedFields.success) {
+      return {
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+
+    const { batchId, totalUnits, notes, productionDate } = validatedFields.data;
+
+    const batch = await db.batch.findUnique({
+      where: { id: batchId, isActive: true },
+      select: { status: true },
+    });
+
+    if (!batch) {
+      return { message: 'Batch not found' };
+    }
+
+    if (batch.status !== 'PLANNED' && batch.status !== 'IN_PROGRESS') {
+      return { message: 'Only PLANNED or IN_PROGRESS batches can be edited' };
+    }
+
+    await db.batch.update({
+      where: { id: batchId },
+      data: {
+        totalUnits,
+        notes,
+        productionDate,
+      },
+    });
+
+    revalidatePath('/dashboard/production');
+    revalidatePath(`/dashboard/production/${batchId}`);
+
+    return {
+      success: true,
+      message: 'Batch updated successfully',
+    };
+  } catch (error) {
+    console.error('Error updating batch:', error);
+    return { message: 'Failed to update batch' };
   }
 }

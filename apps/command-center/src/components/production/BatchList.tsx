@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { Download } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -38,6 +39,9 @@ type BatchWithRelations = {
   coPackerPartner?: {
     name: string;
   } | null;
+  createdBy: {
+    name: string;
+  };
 };
 
 interface BatchListProps {
@@ -51,12 +55,20 @@ export function BatchList({ initialBatches, products }: BatchListProps) {
   const [sourceFilter, setSourceFilter] = useState<string>('');
   const [dateFromFilter, setDateFromFilter] = useState<string>('');
   const [dateToFilter, setDateToFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Client-side filtering
   const filteredBatches = initialBatches.filter((batch) => {
     if (statusFilter && batch.status !== statusFilter) return false;
     if (productFilter && batch.product.name !== productFilter) return false;
     if (sourceFilter && batch.productionSource !== sourceFilter) return false;
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchesBatchCode = batch.batchCode.toLowerCase().includes(q);
+      const matchesProduct = batch.product.name.toLowerCase().includes(q);
+      if (!matchesBatchCode && !matchesProduct) return false;
+    }
 
     if (dateFromFilter) {
       const fromDate = new Date(dateFromFilter);
@@ -84,13 +96,52 @@ export function BatchList({ initialBatches, products }: BatchListProps) {
     setSourceFilter('');
     setDateFromFilter('');
     setDateToFilter('');
+    setSearchQuery('');
   };
 
   const hasActiveFilters =
-    statusFilter || productFilter || sourceFilter || dateFromFilter || dateToFilter;
+    statusFilter || productFilter || sourceFilter || dateFromFilter || dateToFilter || searchQuery;
+
+  const exportCSV = () => {
+    const headers = ['Batch Code', 'Product', 'SKU', 'Size', 'Date', 'Source', 'Units', 'Status', 'Created By'];
+    const rows = sortedBatches.map((batch) => [
+      batch.batchCode,
+      batch.product.name,
+      batch.product.sku,
+      batch.product.size,
+      format(new Date(batch.productionDate), 'yyyy-MM-dd'),
+      batch.productionSource === 'IN_HOUSE' ? 'In-House' : batch.coPackerPartner?.name || 'Co-Packer',
+      batch.totalUnits.toString(),
+      batch.status,
+      batch.createdBy.name,
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `batches_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="w-full sm:max-w-sm">
+        <Input
+          type="text"
+          placeholder="Search batch code or product..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full"
+        />
+      </div>
+
       {/* Filter Bar */}
       <div className="flex flex-wrap gap-3">
         <div className="w-full sm:w-auto sm:min-w-[180px]">
@@ -160,6 +211,11 @@ export function BatchList({ initialBatches, products }: BatchListProps) {
             Clear Filters
           </Button>
         )}
+
+        <Button variant="outline" onClick={exportCSV} className="ml-auto">
+          <Download className="h-4 w-4 mr-2" />
+          CSV
+        </Button>
       </div>
 
       {/* Desktop Table View */}
@@ -173,13 +229,14 @@ export function BatchList({ initialBatches, products }: BatchListProps) {
                 <TableHead>Date</TableHead>
                 <TableHead>Source</TableHead>
                 <TableHead>Units</TableHead>
+                <TableHead>Created By</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedBatches.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No batches found.{' '}
                     <Link
                       href="/dashboard/production/new"
@@ -217,6 +274,9 @@ export function BatchList({ initialBatches, products }: BatchListProps) {
                         : batch.coPackerPartner?.name || 'Co-Packer'}
                     </TableCell>
                     <TableCell>{batch.totalUnits.toLocaleString()}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {batch.createdBy.name}
+                    </TableCell>
                     <TableCell>
                       <BatchStatusBadge status={batch.status} />
                     </TableCell>
@@ -267,10 +327,13 @@ export function BatchList({ initialBatches, products }: BatchListProps) {
                         {batch.totalUnits.toLocaleString()} units
                       </span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {batch.productionSource === 'IN_HOUSE'
-                        ? 'In-House'
-                        : batch.coPackerPartner?.name || 'Co-Packer'}
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>
+                        {batch.productionSource === 'IN_HOUSE'
+                          ? 'In-House'
+                          : batch.coPackerPartner?.name || 'Co-Packer'}
+                      </span>
+                      <span>by {batch.createdBy.name}</span>
                     </div>
                   </div>
                 </Link>

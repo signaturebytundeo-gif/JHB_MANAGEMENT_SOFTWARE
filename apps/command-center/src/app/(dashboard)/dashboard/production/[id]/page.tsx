@@ -16,6 +16,8 @@ import {
 import { BatchStatusBadge } from '@/components/production/BatchStatusBadge';
 import { QCTestingForm } from '@/components/production/QCTestingForm';
 import { StatusTransitionButton } from '@/components/production/StatusTransitionButton';
+import { DeleteBatchButton } from '@/components/production/DeleteBatchButton';
+import { EditBatchForm } from '@/components/production/EditBatchForm';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -248,6 +250,35 @@ export default async function BatchDetailPage({ params }: PageProps) {
                 </TableBody>
               </Table>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Section — only for PLANNED/IN_PROGRESS */}
+      {(batch.status === 'PLANNED' || batch.status === 'IN_PROGRESS') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Batch</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EditBatchForm
+              batchId={batch.id}
+              totalUnits={batch.totalUnits}
+              notes={batch.notes}
+              productionDate={batch.productionDate}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Delete Section — only for PLANNED/IN_PROGRESS */}
+      {(batch.status === 'PLANNED' || batch.status === 'IN_PROGRESS') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Danger Zone</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DeleteBatchButton batchId={batch.id} />
           </CardContent>
         </Card>
       )}

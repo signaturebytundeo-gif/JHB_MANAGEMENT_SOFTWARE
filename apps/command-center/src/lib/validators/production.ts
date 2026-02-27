@@ -105,3 +105,23 @@ export const updateBatchStatusSchema = z.object({
   batchId: z.string().min(1),
   status: z.nativeEnum(BatchStatus),
 });
+
+export const deleteBatchSchema = z.object({
+  batchId: z.string().min(1, 'Batch ID is required'),
+  reason: z.string().min(1, 'Reason is required'),
+});
+
+export type DeleteBatchFormState =
+  | { errors?: Record<string, string[]>; message?: string; success?: boolean }
+  | undefined;
+
+export const updateBatchSchema = z.object({
+  batchId: z.string().min(1, 'Batch ID is required'),
+  totalUnits: z.coerce.number().int().positive('Total units must be positive'),
+  notes: z.string().optional(),
+  productionDate: z.coerce.date(),
+});
+
+export type UpdateBatchFormState =
+  | { errors?: Record<string, string[]>; message?: string; success?: boolean }
+  | undefined;

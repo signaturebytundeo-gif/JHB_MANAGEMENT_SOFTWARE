@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/dal';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -11,6 +12,8 @@ import {
 import { RoleBadge } from '@/components/dashboard/RoleBadge';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
+import { getProductionMetrics } from '@/app/actions/production';
+import { getSalesMetrics } from '@/app/actions/sales';
 import {
   DollarSign,
   Package,
@@ -26,47 +29,48 @@ import {
 } from 'lucide-react';
 
 async function KPICards({ role }: { role: string }) {
-  // Simulate data loading delay for Suspense demonstration
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  const [productionMetrics, salesMetrics] = await Promise.all([
+    getProductionMetrics(),
+    getSalesMetrics(),
+  ]);
 
-  // Role-specific KPIs
   if (role === 'ADMIN' || role === 'MANAGER') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <KPICard
           title="Today's Revenue"
-          value="$0"
-          subtitle="Coming in Phase 6"
+          value={`$${salesMetrics.todayRevenue.toFixed(2)}`}
+          subtitle={`${salesMetrics.todaySaleCount} sale${salesMetrics.todaySaleCount !== 1 ? 's' : ''} today`}
           icon={<DollarSign className="h-5 w-5" />}
         />
         <KPICard
           title="MTD Revenue"
-          value="$0"
-          subtitle="Coming in Phase 6"
+          value={`$${salesMetrics.mtdRevenue.toFixed(2)}`}
+          subtitle={`${salesMetrics.mtdSaleCount} sale${salesMetrics.mtdSaleCount !== 1 ? 's' : ''} this month`}
           icon={<TrendingUp className="h-5 w-5" />}
         />
         <KPICard
-          title="Units Produced"
-          value="0"
-          subtitle="Coming in Phase 2"
+          title="Units Produced (MTD)"
+          value={productionMetrics.totalUnits.toLocaleString()}
+          subtitle={`${productionMetrics.batchCount} batch${productionMetrics.batchCount !== 1 ? 'es' : ''} — ${productionMetrics.utilizationPercent}% of ${productionMetrics.target.toLocaleString()} target`}
           icon={<Package className="h-5 w-5" />}
         />
         <KPICard
-          title="Current Inventory"
-          value="0"
-          subtitle="Coming in Phase 3"
+          title="Units Sold (MTD)"
+          value={salesMetrics.mtdUnits.toLocaleString()}
+          subtitle="Across all channels"
           icon={<PackagePlus className="h-5 w-5" />}
         />
         <KPICard
           title="Open Orders"
-          value="0"
-          subtitle="Coming in Phase 4"
+          value={salesMetrics.openOrderCount.toString()}
+          subtitle={`${salesMetrics.openOrderCount} order${salesMetrics.openOrderCount !== 1 ? 's' : ''} this month`}
           icon={<ShoppingCart className="h-5 w-5" />}
         />
         <KPICard
           title="Accounts Receivable"
-          value="$0"
-          subtitle="Coming in Phase 4"
+          value={`$${salesMetrics.accountsReceivable.toFixed(2)}`}
+          subtitle="Net 30 sales (last 30 days)"
           icon={<Receipt className="h-5 w-5" />}
         />
       </div>
@@ -77,15 +81,15 @@ async function KPICards({ role }: { role: string }) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <KPICard
-          title="My Orders Today"
-          value="0"
-          subtitle="Coming in Phase 4"
+          title="My Sales Today"
+          value={salesMetrics.todaySaleCount.toString()}
+          subtitle={`$${salesMetrics.todayRevenue.toFixed(2)} revenue`}
           icon={<ShoppingCart className="h-5 w-5" />}
         />
         <KPICard
           title="My Revenue MTD"
-          value="$0"
-          subtitle="Coming in Phase 6"
+          value={`$${salesMetrics.mtdRevenue.toFixed(2)}`}
+          subtitle={`${salesMetrics.mtdSaleCount} total sales`}
           icon={<DollarSign className="h-5 w-5" />}
         />
         <KPICard
@@ -114,30 +118,28 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  // Redirect investor to their dedicated dashboard
   if (user.role === 'INVESTOR') {
     redirect('/dashboard/investor');
   }
 
-  // Quick action buttons by role
   const quickActions =
     user.role === 'ADMIN'
       ? [
-          { label: 'New Batch', phase: 2, icon: Plus },
-          { label: 'New Order', phase: 4, icon: ShoppingCart },
-          { label: 'Record Expense', phase: 6, icon: Receipt },
-          { label: 'Transfer Inventory', phase: 3, icon: ArrowLeftRight },
+          { label: 'New Batch', href: '/dashboard/production/new', icon: Plus, enabled: true },
+          { label: 'Log Sale', href: '/dashboard/orders', icon: ShoppingCart, enabled: true },
+          { label: 'Record Expense', phase: 6, icon: Receipt, enabled: false },
+          { label: 'Transfer Inventory', href: '/dashboard/inventory', icon: ArrowLeftRight, enabled: true },
         ]
       : user.role === 'MANAGER'
       ? [
-          { label: 'New Batch', phase: 2, icon: Plus },
-          { label: 'New Order', phase: 4, icon: ShoppingCart },
-          { label: 'Transfer Inventory', phase: 3, icon: ArrowLeftRight },
+          { label: 'New Batch', href: '/dashboard/production/new', icon: Plus, enabled: true },
+          { label: 'Log Sale', href: '/dashboard/orders', icon: ShoppingCart, enabled: true },
+          { label: 'Transfer Inventory', href: '/dashboard/inventory', icon: ArrowLeftRight, enabled: true },
         ]
       : user.role === 'SALES_REP'
       ? [
-          { label: 'New Order', phase: 4, icon: ShoppingCart },
-          { label: 'New Customer', phase: 5, icon: UserPlus },
+          { label: 'Log Sale', href: '/dashboard/orders', icon: ShoppingCart, enabled: true },
+          { label: 'New Customer', phase: 5, icon: UserPlus, enabled: false },
         ]
       : [];
 
@@ -164,6 +166,21 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {quickActions.map((action) => {
                 const Icon = action.icon;
+
+                if (action.enabled && action.href) {
+                  return (
+                    <Link key={action.label} href={action.href}>
+                      <Button
+                        variant="outline"
+                        className="w-full h-auto flex flex-col items-center gap-2 p-4 border-caribbean-gold hover:bg-caribbean-green/10 hover:border-caribbean-green"
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-sm">{action.label}</span>
+                      </Button>
+                    </Link>
+                  );
+                }
+
                 return (
                   <Tooltip key={action.label}>
                     <TooltipTrigger asChild>
