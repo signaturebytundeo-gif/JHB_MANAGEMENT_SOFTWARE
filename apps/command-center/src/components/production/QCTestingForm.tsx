@@ -69,6 +69,7 @@ export function QCTestingForm({ batchId, batchStatus }: QCTestingFormProps) {
             <form action={phAction} className="space-y-4">
               <input type="hidden" name="batchId" value={batchId} />
               <input type="hidden" name="testType" value="pH" />
+              <input type="hidden" name="passed" value="true" />
 
               <div className="space-y-2">
                 <label htmlFor="phLevel" className="text-sm font-medium">
