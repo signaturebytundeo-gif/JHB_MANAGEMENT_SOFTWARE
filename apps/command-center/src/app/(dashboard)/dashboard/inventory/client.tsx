@@ -26,7 +26,7 @@ interface InventoryItem {
 
 interface InventoryPageClientProps {
   summary: InventoryItem[];
-  products: { id: string; name: string }[];
+  products: { id: string; name: string; sku: string; size: string }[];
   locations: { id: string; name: string }[];
 }
 

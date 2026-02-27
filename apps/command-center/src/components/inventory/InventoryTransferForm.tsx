@@ -29,7 +29,7 @@ function SubmitButton() {
 }
 
 interface InventoryTransferFormProps {
-  products: { id: string; name: string }[];
+  products: { id: string; name: string; sku: string; size: string }[];
   locations: { id: string; name: string }[];
 }
 
@@ -63,7 +63,7 @@ export function InventoryTransferForm({ products, locations }: InventoryTransfer
           <SelectContent>
             {products.map((p) => (
               <SelectItem key={p.id} value={p.id}>
-                {p.name}
+                {p.name} ({p.sku}) — {p.size}
               </SelectItem>
             ))}
           </SelectContent>
