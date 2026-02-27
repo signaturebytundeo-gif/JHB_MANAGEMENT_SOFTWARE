@@ -16,7 +16,48 @@ import {
   type UpdateBatchFormState,
 } from '@/lib/validators/production';
 import { generateBatchCode } from '@/lib/utils/batch-code';
-import { ProductionSource, BatchStatus } from '@prisma/client';
+import { ProductionSource, BatchStatus, TransactionType, LocationType } from '@prisma/client';
+
+/** Find or create the "Main Warehouse / Storage" location for batch completion inventory */
+async function getOrCreateMainWarehouse(tx: any) {
+  let warehouse = await tx.location.findFirst({
+    where: { name: 'Main Warehouse / Storage' },
+  });
+
+  if (!warehouse) {
+    warehouse = await tx.location.create({
+      data: {
+        name: 'Main Warehouse / Storage',
+        type: LocationType.WAREHOUSE,
+        description: 'Primary storage for released production batches',
+        isActive: true,
+      },
+    });
+  }
+
+  return warehouse;
+}
+
+/** Create BATCH_COMPLETION inventory transaction when batch is released */
+async function createBatchCompletionTransaction(
+  tx: any,
+  batch: { id: string; productId: string; batchCode: string; totalUnits: number },
+  userId: string
+) {
+  const warehouse = await getOrCreateMainWarehouse(tx);
+
+  await tx.inventoryTransaction.create({
+    data: {
+      productId: batch.productId,
+      locationId: warehouse.id,
+      type: TransactionType.BATCH_COMPLETION,
+      quantityChange: batch.totalUnits,
+      referenceId: batch.id,
+      notes: `Batch ${batch.batchCode} released`,
+      createdById: userId,
+    },
+  });
+}
 
 export async function createBatch(
   prevState: CreateBatchFormState,
@@ -194,9 +235,21 @@ export async function submitQCTest(
         where: { id: data.batchId },
         data: { status: newStatus },
       });
+
+      // Auto-create inventory transaction when batch is RELEASED
+      if (newStatus === BatchStatus.RELEASED) {
+        const batch = await tx.batch.findUnique({
+          where: { id: data.batchId },
+          select: { id: true, productId: true, batchCode: true, totalUnits: true },
+        });
+        if (batch) {
+          await createBatchCompletionTransaction(tx, batch, session.userId);
+        }
+      }
     });
 
     revalidatePath('/dashboard/production');
+    revalidatePath('/dashboard/inventory');
 
     return {
       success: true,
@@ -216,7 +269,7 @@ export async function updateBatchStatus(
 ): Promise<{ message?: string; success?: boolean }> {
   try {
     // Verify user has manager or admin role
-    await verifyManagerOrAbove();
+    const session = await verifyManagerOrAbove();
 
     // Validate input
     const validatedFields = updateBatchStatusSchema.safeParse({
@@ -235,7 +288,7 @@ export async function updateBatchStatus(
     // Get current batch
     const batch = await db.batch.findUnique({
       where: { id: batchId },
-      select: { status: true },
+      select: { status: true, productId: true, batchCode: true, totalUnits: true },
     });
 
     if (!batch) {
@@ -259,13 +312,24 @@ export async function updateBatchStatus(
       };
     }
 
-    // Update batch status
-    await db.batch.update({
-      where: { id: batchId },
-      data: { status },
+    // Update batch status and auto-create inventory if RELEASED
+    await db.$transaction(async (tx) => {
+      await tx.batch.update({
+        where: { id: batchId },
+        data: { status },
+      });
+
+      if (status === BatchStatus.RELEASED && batch) {
+        await createBatchCompletionTransaction(
+          tx,
+          { id: batchId, productId: batch.productId, batchCode: batch.batchCode, totalUnits: batch.totalUnits },
+          session.userId
+        );
+      }
     });
 
     revalidatePath('/dashboard/production');
+    revalidatePath('/dashboard/inventory');
 
     return {
       success: true,

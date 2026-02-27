@@ -15,12 +15,14 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 
-const REASON_LABELS: Record<string, string> = {
-  DAMAGE: 'Damage',
-  THEFT: 'Theft',
-  COUNTING_ERROR: 'Counting Error',
-  OTHER: 'Other',
-};
+const REASON_OPTIONS = [
+  { value: 'Damage', label: 'Damage' },
+  { value: 'Theft', label: 'Theft' },
+  { value: 'Counting Error', label: 'Counting Error' },
+  { value: 'Expired', label: 'Expired' },
+  { value: 'Sample/Giveaway', label: 'Sample / Giveaway' },
+  { value: 'Other', label: 'Other' },
+];
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -81,10 +83,10 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="adj-locationId">Location (Optional)</Label>
-        <Select name="locationId">
+        <Label htmlFor="adj-locationId">Location</Label>
+        <Select name="locationId" required>
           <SelectTrigger id="adj-locationId" className="h-11">
-            <SelectValue placeholder="All locations" />
+            <SelectValue placeholder="Select location" />
           </SelectTrigger>
           <SelectContent>
             {locations.map((loc) => (
@@ -94,6 +96,9 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
             ))}
           </SelectContent>
         </Select>
+        {state?.errors?.locationId && (
+          <p className="text-sm text-red-500">{state.errors.locationId[0]}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -121,9 +126,9 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
             <SelectValue placeholder="Select reason" />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(REASON_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
+            {REASON_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
               </SelectItem>
             ))}
           </SelectContent>

@@ -71,6 +71,22 @@ enum AdjustmentReason {
   OTHER
 }
 
+enum TransactionType {
+  BATCH_COMPLETION
+  TRANSFER_IN
+  TRANSFER_OUT
+  SALE_DEDUCTION
+  ADJUSTMENT
+}
+
+enum ShipmentStatus {
+  DRAFT
+  LABEL_CREATED
+  SHIPPED
+  DELIVERED
+  VOIDED
+}
+
 // ============================================================================
 // USER & AUTHENTICATION MODELS
 // ============================================================================
@@ -87,11 +103,13 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  invitesSent      InviteToken[]
-  createdBatches   Batch[]
-  conductedQCTests QCTest[]
-  createdSales     Sale[]
-  stockAdjustments StockAdjustment[]
+  invitesSent           InviteToken[]
+  createdBatches        Batch[]
+  conductedQCTests      QCTest[]
+  createdSales          Sale[]
+  stockAdjustments      StockAdjustment[]
+  inventoryTransactions InventoryTransaction[]
+  shipments             Shipment[]
 
   @@index([email])
   @@index([role])
@@ -144,10 +162,11 @@ model Product {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  pricingTiers     PricingTier[]
-  batches          Batch[]
-  sales            Sale[]
-  stockAdjustments StockAdjustment[]
+  pricingTiers          PricingTier[]
+  batches               Batch[]
+  sales                 Sale[]
+  stockAdjustments      StockAdjustment[]
+  inventoryTransactions InventoryTransaction[]
 
   @@index([sku])
   @@index([isActive])
@@ -208,8 +227,10 @@ model Location {
   updatedAt        DateTime          @updatedAt
 
   // Relations
-  batchAllocations BatchAllocation[]
-  stockAdjustments StockAdjustment[]
+  batchAllocations      BatchAllocation[]
+  stockAdjustments      StockAdjustment[]
+  inventoryTransactions InventoryTransaction[]
+  shipments             Shipment[]
 
   @@index([name])
   @@index([type])
@@ -422,6 +443,30 @@ model StockAdjustment {
   @@index([reason])
 }
 
+model InventoryTransaction {
+  id             String          @id @default(cuid())
+  productId      String
+  locationId     String
+  type           TransactionType
+  quantityChange Int             // positive = add, negative = subtract
+  referenceId    String?         // batchId, saleId, or transfer pair ID
+  reason         String?         // For ADJUSTMENT type (e.g., "Damage", "Counting Error")
+  notes          String?
+  createdById    String
+  createdAt      DateTime        @default(now())
+
+  // Relations
+  product   Product  @relation(fields: [productId], references: [id])
+  location  Location @relation(fields: [locationId], references: [id])
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@index([productId])
+  @@index([locationId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([referenceId])
+}
+
 // ============================================================================
 // SALES MODEL
 // ============================================================================
@@ -451,4 +496,59 @@ model Sale {
   @@index([productId])
   @@index([createdById])
   @@index([paymentMethod])
+}
+
+// ============================================================================
+// SHIPPING MODEL
+// ============================================================================
+
+model Shipment {
+  id                String          @id @default(cuid())
+  status            ShipmentStatus  @default(DRAFT)
+
+  // Recipient
+  recipientName     String
+  recipientEmail    String?
+  recipientPhone    String?
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String
+  zip               String
+  country           String          @default("US")
+
+  // Package
+  weight            Decimal         // lbs
+  length            Decimal?        // inches
+  width             Decimal?
+  height            Decimal?
+
+  // Shipment details
+  serviceCode       String          @default("03") // 03 = UPS Ground
+  shipFromLocationId String?
+
+  // UPS response data
+  trackingNumber    String?
+  labelData         String?         // base64-encoded label image (PNG)
+  labelFormat       String?         // PNG, ZPL, etc.
+  shippingCost      Decimal?        // in dollars
+
+  // Order reference
+  stripePaymentIntentId String?     // Link to website order
+  orderNotes        String?
+  items             String?         // JSON string of items in shipment
+
+  createdById       String
+  shippedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  createdBy        User      @relation(fields: [createdById], references: [id])
+  shipFromLocation Location? @relation(fields: [shipFromLocationId], references: [id])
+
+  @@index([status])
+  @@index([trackingNumber])
+  @@index([stripePaymentIntentId])
+  @@index([createdAt])
 }

@@ -9,58 +9,26 @@ import {
   inventoryTransferSchema,
   type InventoryTransferFormState,
 } from '@/lib/validators/inventory';
-import { AdjustmentReason, BatchStatus } from '@prisma/client';
+import { TransactionType } from '@prisma/client';
+
+// ============================================================================
+// READ ACTIONS
+// ============================================================================
 
 export async function getInventorySummary() {
   try {
-    // Get all active products
     const products = await db.product.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
     });
 
-    // Get produced units from RELEASED batches (with allocations)
-    const releasedAllocations = await db.batchAllocation.findMany({
-      where: {
-        batch: {
-          status: BatchStatus.RELEASED,
-          isActive: true,
-        },
-      },
-      include: {
-        batch: {
-          select: { productId: true },
-        },
-        location: {
-          select: { id: true, name: true },
-        },
-      },
+    const locations = await db.location.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
     });
 
-    // Get total produced per product (from RELEASED batches without allocations)
-    const releasedBatches = await db.batch.findMany({
-      where: {
-        status: BatchStatus.RELEASED,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        productId: true,
-        totalUnits: true,
-        allocations: { select: { id: true } },
-      },
-    });
-
-    // Get all sales
-    const allSales = await db.sale.findMany({
-      select: {
-        productId: true,
-        quantity: true,
-      },
-    });
-
-    // Get all stock adjustments
-    const adjustments = await db.stockAdjustment.findMany({
+    // Get all inventory transactions
+    const transactions = await db.inventoryTransaction.findMany({
       select: {
         productId: true,
         locationId: true,
@@ -68,59 +36,33 @@ export async function getInventorySummary() {
       },
     });
 
-    // Get all locations
-    const locations = await db.location.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' },
-    });
-
-    // Build summary per product
     const summary = products.map((product) => {
-      // Total produced from RELEASED batches
-      const produced = releasedBatches
-        .filter((b) => b.productId === product.id)
-        .reduce((sum, b) => sum + b.totalUnits, 0);
-
-      // Total sold
-      const sold = allSales
-        .filter((s) => s.productId === product.id)
-        .reduce((sum, s) => sum + s.quantity, 0);
-
-      // Total adjusted
-      const adjusted = adjustments
-        .filter((a) => a.productId === product.id)
-        .reduce((sum, a) => sum + a.quantityChange, 0);
-
-      const currentStock = produced - sold + adjusted;
+      // Total stock across all locations
+      const totalStock = transactions
+        .filter((t) => t.productId === product.id)
+        .reduce((sum, t) => sum + t.quantityChange, 0);
 
       // Per-location breakdown
-      const locationBreakdown = locations.map((loc) => {
-        const allocated = releasedAllocations
-          .filter((a) => a.batch.productId === product.id && a.location.id === loc.id)
-          .reduce((sum, a) => sum + a.quantity, 0);
+      const locationBreakdown = locations
+        .map((loc) => {
+          const locStock = transactions
+            .filter((t) => t.productId === product.id && t.locationId === loc.id)
+            .reduce((sum, t) => sum + t.quantityChange, 0);
 
-        const locAdjusted = adjustments
-          .filter((a) => a.productId === product.id && a.locationId === loc.id)
-          .reduce((sum, a) => sum + a.quantityChange, 0);
-
-        return {
-          locationId: loc.id,
-          locationName: loc.name,
-          allocated,
-          adjusted: locAdjusted,
-          stock: allocated + locAdjusted,
-        };
-      }).filter((loc) => loc.allocated !== 0 || loc.adjusted !== 0);
+          return {
+            locationId: loc.id,
+            locationName: loc.name,
+            stock: locStock,
+          };
+        })
+        .filter((loc) => loc.stock !== 0);
 
       return {
         productId: product.id,
         productName: product.name,
         sku: product.sku,
         size: product.size,
-        produced,
-        sold,
-        adjusted,
-        currentStock,
+        currentStock: totalStock,
         locationBreakdown,
       };
     });
@@ -132,6 +74,111 @@ export async function getInventorySummary() {
   }
 }
 
+export async function getTransactionLog(filters?: {
+  productId?: string;
+  locationId?: string;
+  type?: TransactionType;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  try {
+    const page = filters?.page || 1;
+    const pageSize = filters?.pageSize || 25;
+    const skip = (page - 1) * pageSize;
+
+    const where: any = {};
+
+    if (filters?.productId) {
+      where.productId = filters.productId;
+    }
+    if (filters?.locationId) {
+      where.locationId = filters.locationId;
+    }
+    if (filters?.type) {
+      where.type = filters.type;
+    }
+    if (filters?.dateFrom || filters?.dateTo) {
+      where.createdAt = {};
+      if (filters.dateFrom) {
+        where.createdAt.gte = new Date(filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        where.createdAt.lte = new Date(filters.dateTo + 'T23:59:59');
+      }
+    }
+
+    const [transactions, total] = await Promise.all([
+      db.inventoryTransaction.findMany({
+        where,
+        include: {
+          product: { select: { name: true, sku: true, size: true } },
+          location: { select: { name: true } },
+          createdBy: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      db.inventoryTransaction.count({ where }),
+    ]);
+
+    return {
+      transactions: transactions.map((t) => ({
+        id: t.id,
+        productName: t.product.name,
+        productSku: t.product.sku,
+        productSize: t.product.size,
+        locationName: t.location.name,
+        type: t.type,
+        quantityChange: t.quantityChange,
+        referenceId: t.referenceId,
+        reason: t.reason,
+        notes: t.notes,
+        createdBy: t.createdBy.name,
+        createdAt: t.createdAt.toISOString(),
+      })),
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    };
+  } catch (error) {
+    console.error('Error fetching transaction log:', error);
+    return { transactions: [], total: 0, page: 1, pageSize: 25, totalPages: 0 };
+  }
+}
+
+export async function getLocationStock(productId: string, locationId: string): Promise<number> {
+  try {
+    const result = await db.inventoryTransaction.aggregate({
+      where: { productId, locationId },
+      _sum: { quantityChange: true },
+    });
+    return result._sum.quantityChange || 0;
+  } catch (error) {
+    console.error('Error fetching location stock:', error);
+    return 0;
+  }
+}
+
+export async function getLocations() {
+  try {
+    return await db.location.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+    });
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    return [];
+  }
+}
+
+// ============================================================================
+// WRITE ACTIONS
+// ============================================================================
+
 export async function createStockAdjustment(
   prevState: StockAdjustmentFormState,
   formData: FormData
@@ -141,7 +188,7 @@ export async function createStockAdjustment(
 
     const validatedFields = stockAdjustmentSchema.safeParse({
       productId: formData.get('productId'),
-      locationId: formData.get('locationId') || undefined,
+      locationId: formData.get('locationId'),
       quantityChange: formData.get('quantityChange'),
       reason: formData.get('reason'),
       notes: formData.get('notes') || undefined,
@@ -155,10 +202,11 @@ export async function createStockAdjustment(
 
     const data = validatedFields.data;
 
-    await db.stockAdjustment.create({
+    await db.inventoryTransaction.create({
       data: {
         productId: data.productId,
         locationId: data.locationId,
+        type: TransactionType.ADJUSTMENT,
         quantityChange: data.quantityChange,
         reason: data.reason,
         notes: data.notes,
@@ -207,29 +255,60 @@ export async function createInventoryTransfer(
       ? `Transfer: ${data.notes}`
       : 'Inventory transfer';
 
-    // Create two adjustments in a transaction
-    await db.$transaction([
-      db.stockAdjustment.create({
-        data: {
+    // Negative stock prevention: check available stock at source location
+    const result = await db.$transaction(async (tx) => {
+      const sourceStock = await tx.inventoryTransaction.aggregate({
+        where: {
           productId: data.productId,
           locationId: data.fromLocationId,
-          quantityChange: -data.quantity,
-          reason: AdjustmentReason.TRANSFER,
-          notes: transferNote,
-          createdById: session.userId,
         },
-      }),
-      db.stockAdjustment.create({
-        data: {
-          productId: data.productId,
-          locationId: data.toLocationId,
-          quantityChange: data.quantity,
-          reason: AdjustmentReason.TRANSFER,
-          notes: transferNote,
-          createdById: session.userId,
-        },
-      }),
-    ]);
+        _sum: { quantityChange: true },
+      });
+
+      const availableStock = sourceStock._sum.quantityChange || 0;
+
+      if (availableStock < data.quantity) {
+        const location = await tx.location.findUnique({
+          where: { id: data.fromLocationId },
+          select: { name: true },
+        });
+        return {
+          error: `Insufficient stock at ${location?.name || 'source'}. Available: ${availableStock} units`,
+        };
+      }
+
+      // Create paired transfer transactions
+      const transferId = `xfer_${Date.now()}`;
+
+      await tx.inventoryTransaction.createMany({
+        data: [
+          {
+            productId: data.productId,
+            locationId: data.fromLocationId,
+            type: TransactionType.TRANSFER_OUT,
+            quantityChange: -data.quantity,
+            referenceId: transferId,
+            notes: transferNote,
+            createdById: session.userId,
+          },
+          {
+            productId: data.productId,
+            locationId: data.toLocationId,
+            type: TransactionType.TRANSFER_IN,
+            quantityChange: data.quantity,
+            referenceId: transferId,
+            notes: transferNote,
+            createdById: session.userId,
+          },
+        ],
+      });
+
+      return { success: true };
+    });
+
+    if ('error' in result) {
+      return { message: result.error };
+    }
 
     revalidatePath('/dashboard/inventory');
     revalidatePath('/dashboard');
@@ -243,17 +322,5 @@ export async function createInventoryTransfer(
     return {
       message: 'Failed to complete inventory transfer',
     };
-  }
-}
-
-export async function getLocations() {
-  try {
-    return await db.location.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' },
-    });
-  } catch (error) {
-    console.error('Error fetching locations:', error);
-    return [];
   }
 }
