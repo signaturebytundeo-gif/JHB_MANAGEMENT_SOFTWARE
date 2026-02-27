@@ -31,9 +31,21 @@ export function Header({ user, onMenuToggle }: HeaderProps) {
               <Menu className="w-5 h-5 text-caribbean-gold" />
             </button>
           )}
-          <h2 className="text-xl font-semibold text-foreground">
-            Command Center
-          </h2>
+          <div className="flex items-center space-x-3">
+            <img
+              src="/images/logo.jpg"
+              alt="JHB"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <div>
+              <h2 className="text-lg font-semibold text-foreground leading-tight">
+                Jamaica House Brand
+              </h2>
+              <p className="text-xs text-caribbean-gold font-medium -mt-0.5">
+                Command Center
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Right side: User info + Dark mode toggle */}

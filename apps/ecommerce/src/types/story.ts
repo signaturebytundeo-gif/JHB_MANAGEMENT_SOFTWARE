@@ -24,4 +24,6 @@ export interface Restaurant {
   zip: string
   phone: string
   image: string
+  badge?: string
+  comingSoon?: boolean
 }

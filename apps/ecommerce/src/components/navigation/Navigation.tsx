@@ -24,10 +24,10 @@ export default function Navigation() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <Image
-              src="/images/hummingbird-logo.svg"
+              src="/images/hummingbird-logo.png"
               alt="Jamaica House Brand"
-              width={40}
-              height={40}
+              width={48}
+              height={48}
               priority
             />
             <span className="text-white font-bold text-lg hidden sm:inline">

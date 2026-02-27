@@ -12,14 +12,19 @@ export default {
       colors: {
         caribbean: {
           green: {
-            DEFAULT: "#006633",
-            light: "#00884D",
-            dark: "#004D26",
+            DEFAULT: "#2D5016",
+            light: "#3D6B1E",
+            dark: "#1E3A0E",
           },
           gold: {
-            DEFAULT: "#D4AF37",
-            light: "#E5C158",
-            dark: "#B8941F",
+            DEFAULT: "#D4A843",
+            light: "#E0BC5E",
+            dark: "#B8912A",
+          },
+          red: {
+            DEFAULT: "#C74B2A",
+            light: "#D4603F",
+            dark: "#A83D20",
           },
           black: {
             DEFAULT: "#1A1A1A",

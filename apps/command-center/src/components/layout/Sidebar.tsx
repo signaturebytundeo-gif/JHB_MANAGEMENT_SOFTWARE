@@ -74,19 +74,31 @@ export function Sidebar({ user }: SidebarProps) {
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="p-4 border-b border-caribbean-gold/20">
-          {!collapsed && (
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-caribbean-green to-caribbean-gold flex items-center justify-center text-white font-bold">
-                {user.name.charAt(0)}
+          {!collapsed ? (
+            <div className="mb-4">
+              <div className="flex justify-center mb-3">
+                <img
+                  src="/images/logo.jpg"
+                  alt="Jamaica House Brand"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-caribbean-gold/40"
+                />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="text-center">
                 <p className="text-sm font-medium text-white truncate">
                   {user.name}
                 </p>
-                <p className="text-xs text-caribbean-green truncate">
+                <p className="text-xs text-caribbean-gold truncate">
                   {user.role}
                 </p>
               </div>
+            </div>
+          ) : (
+            <div className="flex justify-center mb-2">
+              <img
+                src="/images/logo.jpg"
+                alt="JHB"
+                className="w-10 h-10 rounded-full object-cover border border-caribbean-gold/40"
+              />
             </div>
           )}
           <button

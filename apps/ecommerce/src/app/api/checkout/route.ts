@@ -8,6 +8,7 @@ interface CheckoutItem {
   quantity: number
   image: string
   size: string
+  isFreeSample?: boolean
 }
 
 export async function POST(request: NextRequest) {
@@ -22,26 +23,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: items.map((item) => ({
+    const hasFreeSample = items.some((item) => item.isFreeSample)
+
+    // Build line items
+    const line_items = items.map((item) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.isFreeSample
+            ? 'Free 2oz Jerk Sauce Sample'
+            : `${item.name} (${item.size})`,
+          // Only include absolute URLs for images — relative paths won't work in Stripe
+          images: item.image.startsWith('http') ? [item.image] : [],
+        },
+        unit_amount: item.isFreeSample ? 0 : item.price, // Free sample has $0 price
+      },
+      quantity: item.quantity,
+    }))
+
+    // Add shipping line item if cart contains a free sample
+    if (hasFreeSample) {
+      line_items.push({
         price_data: {
           currency: 'usd',
           product_data: {
-            name: `${item.name} (${item.size})`,
-            // Only include absolute URLs for images — relative paths won't work in Stripe
-            images: item.image.startsWith('http') ? [item.image] : [],
+            name: 'Shipping & Handling',
+            images: [],
           },
-          unit_amount: item.price, // Already in cents — do NOT multiply by 100
+          unit_amount: 599, // $5.99
         },
-        quantity: item.quantity,
-      })),
+        quantity: 1,
+      })
+    }
+
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items,
       mode: 'payment',
       success_url: `${request.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get('origin')}/shop`,
       metadata: {
         source: 'jamaica-house-brand-web',
+        hasFreeSample: hasFreeSample ? 'true' : 'false',
       },
     })
 

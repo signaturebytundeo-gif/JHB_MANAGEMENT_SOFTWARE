@@ -47,7 +47,20 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created/verified admin users: ${anthony.name}, ${tunde.name}`);
+  const tomi = await prisma.user.upsert({
+    where: { email: "tomi@jamaicahousebrand.com" },
+    update: {},
+    create: {
+      email: "tomi@jamaicahousebrand.com",
+      name: "Tomi",
+      password: defaultPassword,
+      role: Role.ADMIN,
+      emailVerified: new Date(),
+      isActive: true,
+    },
+  });
+
+  console.log(`✅ Created/verified admin users: ${anthony.name}, ${tunde.name}, ${tomi.name}`);
 
   // ============================================================================
   // PRODUCTS WITH PRICING TIERS (INFRA-01)

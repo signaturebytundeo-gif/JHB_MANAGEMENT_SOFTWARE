@@ -8,6 +8,7 @@ export interface CartItem {
   quantity: number
   image: string
   size: string
+  isFreeSample?: boolean
 }
 
 interface CartStore {
@@ -33,6 +34,9 @@ export const useCartStore = create<CartStore>()(
           const existingItem = state.items.find((i) => i.id === item.id)
 
           if (existingItem) {
+            // Free samples should not stack
+            if (item.isFreeSample) return state
+
             // Item already exists, increment quantity
             return {
               items: state.items.map((i) =>

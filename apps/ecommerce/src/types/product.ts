@@ -6,7 +6,7 @@ export interface Product {
   size: string
   image: string
   slug: string
-  category: 'sauce' | 'pikliz'
+  category: 'sauce' | 'pikliz' | 'bundle'
   inStock: boolean
   rating: number // star rating (e.g., 4.8)
   callouts: string[] // product highlights (e.g., ["Zero Calories", "All Natural"])

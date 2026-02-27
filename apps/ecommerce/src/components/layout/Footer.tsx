@@ -11,10 +11,10 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Image
-                src="/images/hummingbird-logo.svg"
+                src="/images/hummingbird-logo.png"
                 alt="Jamaica House Brand"
-                width={40}
-                height={40}
+                width={48}
+                height={48}
               />
               <span className="font-semibold text-white text-lg">Jamaica House Brand</span>
             </div>
@@ -54,9 +54,9 @@ export default function Footer() {
               </li>
               <li className="mt-4 pt-4 border-t border-brand-gold/10">
                 <div className="font-semibold text-white mb-2">Restaurant Locations</div>
-                <div>Lauderhill</div>
-                <div>Miramar</div>
-                <div>Pembroke Pines</div>
+                <div>Miami (The Original)</div>
+                <div>Fort Lauderdale</div>
+                <div>Miramar (Coming Soon)</div>
               </li>
             </ul>
           </div>

@@ -2,13 +2,16 @@
 
 @theme {
   /* Brand Colors */
-  --color-brand-dark: #1A1A1A;
-  --color-brand-gold: #D4A843;
-  --color-brand-gold-light: #E5C26A;
-  --color-brand-gold-dark: #B8902F;
-  --color-brand-cream: #FAF8F5;
-  --color-brand-green: #2D5016;
-  --color-brand-red: #C74B2A;
+  --color-brand-dark: #2E2311;
+  --color-brand-gold: #CB7E29;
+  --color-brand-gold-light: #F49E5A;
+  --color-brand-gold-dark: #CB7E29;
+  --color-brand-cream: #EBE2E8;
+  --color-brand-green: #33803F;
+  --color-brand-red: #B92825;
+  --color-brand-teal: #4A99A9;
+  --color-brand-blue: #3C577A;
+  --color-brand-purple: #413061;
 
   /* Typography */
   --font-family-sans: var(--font-plus-jakarta), system-ui, -apple-system, sans-serif;

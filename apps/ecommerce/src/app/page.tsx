@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Image from 'next/image'
 import HeroSection from '@/components/home/HeroSection'
 import HomeProductGrid from '@/components/home/HomeProductGrid'
 import BrandStory from '@/components/home/BrandStory'
@@ -14,12 +15,31 @@ export const metadata: Metadata = {
   },
 }
 
+function LogoDivider() {
+  return (
+    <div className="flex items-center justify-center gap-4 py-4">
+      <div className="h-px w-16 bg-brand-gold/30" />
+      <Image
+        src="/images/hummingbird-logo.png"
+        alt=""
+        width={32}
+        height={32}
+        className="opacity-40"
+      />
+      <div className="h-px w-16 bg-brand-gold/30" />
+    </div>
+  )
+}
+
 export default function Home() {
   return (
     <>
       <HeroSection />
+      <LogoDivider />
       <HomeProductGrid />
+      <LogoDivider />
       <BrandStory />
+      <LogoDivider />
       <SocialProof />
     </>
   )

@@ -15,7 +15,7 @@ export default function StoryHero({ title, subtitle, image }: StoryHeroProps) {
         alt=""
         fill
         priority
-        className="object-cover"
+        className="object-cover object-top"
         sizes="100vw"
       />
 

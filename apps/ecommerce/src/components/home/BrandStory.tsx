@@ -7,17 +7,19 @@ export default function BrandStory() {
       <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left column - Image placeholder */}
-          <div className="aspect-square bg-gradient-to-br from-brand-gold/20 to-brand-gold/5 rounded-lg flex flex-col items-center justify-center">
+          <div className="relative aspect-square rounded-lg overflow-hidden">
             <Image
-              src="/images/hummingbird-logo.svg"
-              alt="Jamaica House Brand"
-              width={120}
-              height={120}
-              className="opacity-60"
+              src="/images/story/chef-anthony.jpg"
+              alt="Chef Anthony"
+              fill
+              className="object-cover object-top"
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
-            <p className="text-brand-gold font-semibold mt-4 text-lg">
-              Chef Anthony
-            </p>
+            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-brand-dark/80 to-transparent p-4">
+              <p className="text-brand-gold font-semibold text-lg">
+                Chef Anthony
+              </p>
+            </div>
           </div>
 
           {/* Right column - Story text */}
@@ -30,13 +32,13 @@ export default function BrandStory() {
             </h2>
             <div className="text-gray-300 leading-relaxed space-y-4">
               <p>
-                What started as Chef Anthony&apos;s secret recipe at his first South Florida restaurant quickly became legendary.
+                Chef Anthony grew up in his father&apos;s Jamaica House restaurants, where 30 years of authentic Jamaican cooking became a South Florida institution.
               </p>
               <p>
-                When 92% of customers started asking to buy the sauce by the bottle, we knew we had something special.
+                When 92% of customers started asking to buy the sauce by the bottle, we knew it was time to extend the family legacy.
               </p>
               <p>
-                Three restaurants and 30 years later, we&apos;re bringing that same authentic Jamaican flavor directly to your table.
+                Now we&apos;re bringing the same beloved recipes from the restaurant directly to your table.
               </p>
             </div>
             <Link
