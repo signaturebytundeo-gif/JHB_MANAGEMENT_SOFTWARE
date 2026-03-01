@@ -41,8 +41,23 @@ export async function POST(request: NextRequest) {
       quantity: item.quantity,
     }))
 
-    // Add shipping line item if cart contains a free sample
-    if (hasFreeSample) {
+    // Add shipping line item
+    // Free sample only: $5.99 | Regular orders under $50: $12.99 | Over $50: free
+    const paidItemsTotal = items.reduce(
+      (sum, item) => sum + (item.isFreeSample ? 0 : item.price * item.quantity),
+      0
+    )
+    const hasPaidItems = paidItemsTotal > 0
+
+    let shippingAmount = 0
+    if (hasFreeSample && !hasPaidItems) {
+      shippingAmount = 599 // $5.99 for free sample only
+    } else if (paidItemsTotal < 5000) {
+      shippingAmount = 1299 // $12.99 for orders under $50
+    }
+    // else: free shipping for orders $50+
+
+    if (shippingAmount > 0) {
       line_items.push({
         price_data: {
           currency: 'usd',
@@ -50,7 +65,7 @@ export async function POST(request: NextRequest) {
             name: 'Shipping & Handling',
             images: [],
           },
-          unit_amount: 599, // $5.99
+          unit_amount: shippingAmount,
         },
         quantity: 1,
       })

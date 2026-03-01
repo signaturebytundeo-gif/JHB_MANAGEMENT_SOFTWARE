@@ -12,17 +12,12 @@ export default function FreeSamplePopup() {
   const { popupShown, popupDismissed, setPopupShown, dismissPopup, openUpsell } = useSampleStore()
 
   useEffect(() => {
-    // Don't show if already shown, dismissed, has cart items, or recently dismissed
-    if (popupShown || popupDismissed || items.length > 0) return
-    if (isDismissedRecently()) return
-
     const timer = setTimeout(() => {
       setIsOpen(true)
-      setPopupShown()
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [popupShown, popupDismissed, items.length, setPopupShown])
+  }, [])
 
   function handleClaim() {
     addItem({
