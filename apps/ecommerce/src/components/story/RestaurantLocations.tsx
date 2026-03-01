@@ -65,13 +65,31 @@ export default function RestaurantLocations() {
                   </p>
                 ) : (
                   <>
-                    {/* Address */}
-                    <p className="text-gray-300 mb-1">
-                      {restaurant.address}
-                    </p>
-                    <p className="text-gray-300 mb-4">
-                      {restaurant.city}, {restaurant.state} {restaurant.zip}
-                    </p>
+                    {/* Address — links to Google Maps */}
+                    {restaurant.mapsUrl ? (
+                      <a
+                        href={restaurant.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mb-4 hover:text-brand-gold transition-colors"
+                      >
+                        <p className="text-gray-300 mb-1">
+                          {restaurant.address}
+                        </p>
+                        <p className="text-gray-300">
+                          {restaurant.city}, {restaurant.state} {restaurant.zip}
+                        </p>
+                      </a>
+                    ) : (
+                      <>
+                        <p className="text-gray-300 mb-1">
+                          {restaurant.address}
+                        </p>
+                        <p className="text-gray-300 mb-4">
+                          {restaurant.city}, {restaurant.state} {restaurant.zip}
+                        </p>
+                      </>
+                    )}
 
                     {/* Phone */}
                     <a href={`tel:${restaurant.phone}`} className="text-brand-gold font-semibold hover:text-brand-gold-light transition-colors">

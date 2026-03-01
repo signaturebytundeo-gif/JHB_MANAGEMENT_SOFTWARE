@@ -54,8 +54,8 @@ export default function Footer() {
               </li>
               <li className="mt-4 pt-4 border-t border-brand-gold/10">
                 <div className="font-semibold text-white mb-2">Restaurant Locations</div>
-                <div>Miami (The Original)</div>
-                <div>Fort Lauderdale</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=19555+NW+2nd+Ave+Miami+FL+33169" target="_blank" rel="noopener noreferrer" className="block hover:text-brand-gold transition-colors">Miami (The Original)</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=3351+W+Broward+Blvd+Fort+Lauderdale+FL+33312" target="_blank" rel="noopener noreferrer" className="block hover:text-brand-gold transition-colors">Fort Lauderdale</a>
                 <div>Miramar (Coming Soon)</div>
               </li>
             </ul>

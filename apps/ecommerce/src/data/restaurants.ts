@@ -10,6 +10,7 @@ export const restaurants: Restaurant[] = [
     zip: '33169',
     phone: '(305) 651-0083',
     image: '/images/restaurants/miami.jpg',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=19555+NW+2nd+Ave+Miami+FL+33169',
     badge: 'The Original',
   },
   {
@@ -21,6 +22,7 @@ export const restaurants: Restaurant[] = [
     zip: '33312',
     phone: '(954) 530-2698',
     image: '/images/restaurants/broward.jpg',
+    mapsUrl: 'https://www.google.com/maps/search/?api=1&query=3351+W+Broward+Blvd+Fort+Lauderdale+FL+33312',
   },
   {
     id: 'miramar',
