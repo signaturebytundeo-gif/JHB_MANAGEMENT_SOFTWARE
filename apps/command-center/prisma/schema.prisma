@@ -87,6 +87,14 @@ enum ShipmentStatus {
   VOIDED
 }
 
+enum OrderStatus {
+  NEW
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 // ============================================================================
 // USER & AUTHENTICATION MODELS
 // ============================================================================
@@ -551,4 +559,46 @@ model Shipment {
   @@index([trackingNumber])
   @@index([stripePaymentIntentId])
   @@index([createdAt])
+}
+
+// ============================================================================
+// CUSTOMER & WEBSITE ORDER MODELS
+// ============================================================================
+
+model Customer {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  firstName  String
+  lastName   String
+  phone      String?
+  orderCount Int      @default(0)
+  totalSpent Decimal  @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  orders WebsiteOrder[]
+
+  @@index([email])
+  @@index([lastName])
+}
+
+model WebsiteOrder {
+  id           String      @id @default(cuid())
+  orderId      String      @unique // from website (e.g. Stripe PI id)
+  customerId   String
+  items        String      // JSON array of line items
+  shippingCost Decimal
+  orderTotal   Decimal
+  status       OrderStatus @default(NEW)
+  orderDate    DateTime
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([status])
+  @@index([orderDate])
+  @@index([customerId])
 }
