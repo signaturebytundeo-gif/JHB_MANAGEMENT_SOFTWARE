@@ -15,7 +15,6 @@ export const products: Product[] = [
     callouts: ['Zero Calories', 'All Natural', '30-Year Recipe'],
     images: [
       '/images/products/jerk-sauce-2oz.jpg',
-      '/images/products/product-lineup.jpg',
     ],
   },
   {
@@ -32,7 +31,6 @@ export const products: Product[] = [
     callouts: ['Zero Calories', 'All Natural', '30-Year Recipe'],
     images: [
       '/images/products/jerk-sauce-5oz.jpg',
-      '/images/products/product-lineup.jpg',
     ],
   },
   {
@@ -41,15 +39,14 @@ export const products: Product[] = [
     description: 'Authentic Jamaican jerk sauce crafted from a 30-year-old family recipe. Features allspice, thyme, and Scotch bonnet peppers. Zero calories, all natural ingredients.',
     price: 1999, // $19.99 in cents
     size: '10oz',
-    image: '/images/products/jerk-sauce-10oz.jpg',
+    image: '/images/products/jerk-sauce-5oz.jpg',
     slug: 'jerk-sauce-10oz',
     category: 'sauce',
     inStock: true,
     rating: 4.7,
     callouts: ['Zero Calories', 'All Natural', '30-Year Recipe'],
     images: [
-      '/images/products/jerk-sauce-10oz.jpg',
-      '/images/products/product-lineup.jpg',
+      '/images/products/jerk-sauce-5oz.jpg',
     ],
   },
   {
@@ -66,7 +63,6 @@ export const products: Product[] = [
     callouts: ['All Natural', 'Handcrafted', 'Authentic Recipe'],
     images: [
       '/images/products/pikliz-12oz.jpg',
-      '/images/products/product-lineup.jpg',
     ],
   },
   {
@@ -83,9 +79,6 @@ export const products: Product[] = [
     callouts: ['Best Value', 'Save $5+', 'Complete Collection'],
     images: [
       '/images/products/product-lineup.jpg',
-      '/images/products/jerk-sauce-2oz.jpg',
-      '/images/products/jerk-sauce-5oz.jpg',
-      '/images/products/pikliz-12oz.jpg',
     ],
   },
 ]

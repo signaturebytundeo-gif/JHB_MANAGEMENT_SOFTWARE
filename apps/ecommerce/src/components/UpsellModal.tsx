@@ -21,7 +21,7 @@ const upsellProducts = [
     size: '10oz',
     originalPrice: 1999,
     discountedPrice: 1399,
-    image: '/images/products/jerk-sauce-10oz.jpg',
+    image: '/images/products/jerk-sauce-5oz.jpg',
   },
   {
     id: 'escovitch-pikliz-12oz',

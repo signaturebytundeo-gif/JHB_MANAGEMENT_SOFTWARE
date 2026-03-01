@@ -48,13 +48,14 @@ export default function FreeSamplePopup() {
       <div className="fixed inset-0 bg-black/60" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <DialogPanel className="bg-brand-dark border border-brand-gold/30 rounded-2xl max-w-md w-full p-8 shadow-2xl">
-          {/* Logo */}
+          {/* 2oz Sample Bottle */}
           <div className="flex justify-center mb-6">
             <Image
-              src="/images/hummingbird-logo.png"
-              alt="Jamaica House Brand"
-              width={64}
-              height={64}
+              src="/images/products/jerk-sauce-2oz.jpg"
+              alt="Free 2oz Jerk Sauce Sample"
+              width={120}
+              height={160}
+              className="rounded-lg"
             />
           </div>
 

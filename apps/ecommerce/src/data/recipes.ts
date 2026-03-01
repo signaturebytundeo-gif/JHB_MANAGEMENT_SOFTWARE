@@ -9,8 +9,6 @@ export const recipes: Recipe[] = [
     image: '/images/recipes/recipe-1.jpg',
     images: [
       '/images/recipes/recipe-1.jpg',
-      '/images/recipes/recipe-1b.jpg',
-      '/images/recipes/recipe-1c.jpg',
     ],
     prepTime: 15,
     cookTime: 45,
@@ -40,8 +38,6 @@ export const recipes: Recipe[] = [
     image: '/images/recipes/recipe-2.jpg',
     images: [
       '/images/recipes/recipe-2.jpg',
-      '/images/recipes/recipe-2b.jpg',
-      '/images/recipes/recipe-2c.jpg',
     ],
     prepTime: 20,
     cookTime: 10,
@@ -73,8 +69,6 @@ export const recipes: Recipe[] = [
     image: '/images/recipes/recipe-3.jpg',
     images: [
       '/images/recipes/recipe-3.jpg',
-      '/images/recipes/recipe-3b.jpg',
-      '/images/recipes/recipe-3c.jpg',
     ],
     prepTime: 10,
     cookTime: 25,
@@ -108,8 +102,6 @@ export const recipes: Recipe[] = [
     image: '/images/recipes/recipe-4.jpg',
     images: [
       '/images/recipes/recipe-4.jpg',
-      '/images/recipes/recipe-4b.jpg',
-      '/images/recipes/recipe-4c.jpg',
     ],
     prepTime: 15,
     cookTime: 20,
@@ -140,8 +132,6 @@ export const recipes: Recipe[] = [
     image: '/images/recipes/recipe-5.jpg',
     images: [
       '/images/recipes/recipe-5.jpg',
-      '/images/recipes/recipe-5b.jpg',
-      '/images/recipes/recipe-5c.jpg',
     ],
     prepTime: 10,
     cookTime: 40,
@@ -171,8 +161,6 @@ export const recipes: Recipe[] = [
     image: '/images/recipes/recipe-6.jpg',
     images: [
       '/images/recipes/recipe-6.jpg',
-      '/images/recipes/recipe-6b.jpg',
-      '/images/recipes/recipe-6c.jpg',
     ],
     prepTime: 15,
     cookTime: 12,
