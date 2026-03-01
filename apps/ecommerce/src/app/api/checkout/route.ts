@@ -56,16 +56,25 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Serialize cart items into metadata for webhook order processing
+    const itemsSummary = items.map((item) => ({
+      name: item.isFreeSample ? 'Free 2oz Jerk Sauce Sample' : `${item.name} (${item.size})`,
+      quantity: item.quantity,
+      price: item.isFreeSample ? 0 : item.price,
+    }))
+
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
+      phone_number_collection: { enabled: true },
       success_url: `${request.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get('origin')}/shop`,
       metadata: {
         source: 'jamaica-house-brand-web',
         hasFreeSample: hasFreeSample ? 'true' : 'false',
+        items_json: JSON.stringify(itemsSummary),
       },
     })
 

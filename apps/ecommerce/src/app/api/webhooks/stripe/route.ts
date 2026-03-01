@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import Stripe from 'stripe'
+import { handleOrderComplete, type OrderItem } from '@/lib/order-handler'
 
 export async function POST(request: NextRequest) {
   const body = await request.text() // CRITICAL: Use raw body text for signature verification
@@ -40,11 +41,43 @@ export async function POST(request: NextRequest) {
         customerEmail: session.customer_details?.email,
       })
 
-      // NOTE: In production, this is where you would:
-      // 1. Check event.id against processed events store for idempotency
-      // 2. Create order in database
-      // 3. Send order confirmation email
-      // 4. Trigger fulfillment workflow
+      // Parse cart items from metadata
+      let items: OrderItem[] = []
+      try {
+        const itemsJson = session.metadata?.items_json
+        if (itemsJson) {
+          items = JSON.parse(itemsJson)
+        }
+      } catch {
+        console.error('Failed to parse items_json from session metadata')
+      }
+
+      // Determine shipping cost from line items
+      const shippingLineAmount = session.total_details?.amount_shipping ?? 0
+      // Fallback: if no Stripe shipping, check for $5.99 shipping line in metadata
+      const shippingCost = shippingLineAmount || (session.metadata?.hasFreeSample === 'true' ? 599 : 0)
+
+      // Trigger order processing (shipping calc + Mailchimp + Command Center)
+      const customerName = session.customer_details?.name || ''
+      try {
+        const result = await handleOrderComplete({
+          id: session.id,
+          customerEmail: session.customer_details?.email || '',
+          customerName,
+          customerPhone: session.customer_details?.phone || '',
+          items,
+          shippingCost,
+          total: session.amount_total || 0,
+        })
+        console.log('Order processing complete:', {
+          orderId: result.orderId,
+          commandCenter: result.commandCenter,
+          mailchimp: result.mailchimpSync?.success ?? false,
+        })
+      } catch (err) {
+        // Log but don't fail the webhook — payment already succeeded
+        console.error('Order processing error (non-fatal):', err)
+      }
 
       break
     }
