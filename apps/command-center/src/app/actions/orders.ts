@@ -3,10 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
-import type { OrderStatus } from '@prisma/client';
+import type { OrderStatus, OrderSource } from '@prisma/client';
 
 export async function getWebsiteOrders(filters?: {
   status?: OrderStatus;
+  source?: OrderSource;
   page?: number;
   pageSize?: number;
 }) {
@@ -17,7 +18,9 @@ export async function getWebsiteOrders(filters?: {
     const pageSize = filters?.pageSize ?? 25;
     const skip = (page - 1) * pageSize;
 
-    const where = filters?.status ? { status: filters.status } : undefined;
+    const where: Record<string, unknown> = {};
+    if (filters?.status) where.status = filters.status;
+    if (filters?.source) where.source = filters.source;
 
     const [orders, total] = await Promise.all([
       db.websiteOrder.findMany({

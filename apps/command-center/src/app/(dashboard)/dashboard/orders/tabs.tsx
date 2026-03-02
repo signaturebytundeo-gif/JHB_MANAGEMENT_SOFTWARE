@@ -5,10 +5,11 @@ import { useState, type ReactNode } from 'react';
 interface OrdersTabsProps {
   manualSales: ReactNode;
   websiteOrders: ReactNode;
+  marketplaceSync: ReactNode;
 }
 
-export function OrdersTabs({ manualSales, websiteOrders }: OrdersTabsProps) {
-  const [activeTab, setActiveTab] = useState<'manual' | 'website'>('manual');
+export function OrdersTabs({ manualSales, websiteOrders, marketplaceSync }: OrdersTabsProps) {
+  const [activeTab, setActiveTab] = useState<'manual' | 'website' | 'marketplace'>('manual');
 
   return (
     <div className="space-y-6">
@@ -33,9 +34,21 @@ export function OrdersTabs({ manualSales, websiteOrders }: OrdersTabsProps) {
         >
           Website Orders
         </button>
+        <button
+          onClick={() => setActiveTab('marketplace')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'marketplace'
+              ? 'border-caribbean-green text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Marketplace Sync
+        </button>
       </div>
 
-      {activeTab === 'manual' ? manualSales : websiteOrders}
+      {activeTab === 'manual' && manualSales}
+      {activeTab === 'website' && websiteOrders}
+      {activeTab === 'marketplace' && marketplaceSync}
     </div>
   );
 }

@@ -15,7 +15,7 @@ import { getWebsiteOrders, updateOrderStatus } from '@/app/actions/orders';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Circle } from 'lucide-react';
 import { format } from 'date-fns';
-import type { OrderStatus } from '@prisma/client';
+import type { OrderStatus, OrderSource } from '@prisma/client';
 
 type OrderRow = {
   id: string;
@@ -24,6 +24,7 @@ type OrderRow = {
   shippingCost: number | { toString(): string };
   orderTotal: number | { toString(): string };
   status: OrderStatus;
+  source?: OrderSource;
   orderDate: Date;
   customer: {
     id: string;
@@ -32,6 +33,14 @@ type OrderRow = {
     email: string;
   };
 };
+
+const SOURCE_BADGES: Record<string, { label: string; className: string }> = {
+  WEBSITE: { label: 'Website', className: 'bg-green-500 text-white' },
+  AMAZON: { label: 'Amazon', className: 'bg-orange-500 text-white' },
+  ETSY: { label: 'Etsy', className: 'bg-orange-600 text-white' },
+};
+
+const SOURCE_OPTIONS: string[] = ['', 'WEBSITE', 'AMAZON', 'ETSY'];
 
 interface WebsiteOrderListProps {
   initialOrders: OrderRow[];
@@ -76,13 +85,15 @@ export function WebsiteOrderList({
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [total, setTotal] = useState(initialTotal);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [sourceFilter, setSourceFilter] = useState<string>('');
   const [isPending, startTransition] = useTransition();
 
-  const fetchPage = (newPage: number, status?: string) => {
+  const fetchPage = (newPage: number, status?: string, source?: string) => {
     startTransition(async () => {
       const result = await getWebsiteOrders({
         page: newPage,
         status: status ? (status as OrderStatus) : undefined,
+        source: source ? (source as OrderSource) : undefined,
       });
       setOrders(result.orders as unknown as OrderRow[]);
       setPage(result.page);
@@ -95,7 +106,7 @@ export function WebsiteOrderList({
     const result = await updateOrderStatus(orderId, newStatus);
     if (result.success) {
       toast.success(result.message);
-      fetchPage(page, statusFilter || undefined);
+      fetchPage(page, statusFilter || undefined, sourceFilter || undefined);
     } else {
       toast.error(result.message);
     }
@@ -105,15 +116,15 @@ export function WebsiteOrderList({
 
   return (
     <div className="space-y-4">
-      {/* Filter */}
-      <div className="flex items-center gap-4">
+      {/* Filters */}
+      <div className="flex items-center gap-4 flex-wrap">
         <div className="flex gap-2 flex-wrap">
           {statuses.map((s) => (
             <button
               key={s || 'all'}
               onClick={() => {
                 setStatusFilter(s);
-                fetchPage(1, s);
+                fetchPage(1, s, sourceFilter || undefined);
               }}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                 statusFilter === s
@@ -122,6 +133,24 @@ export function WebsiteOrderList({
               }`}
             >
               {s || 'All'}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          {SOURCE_OPTIONS.map((s) => (
+            <button
+              key={s || 'all-source'}
+              onClick={() => {
+                setSourceFilter(s);
+                fetchPage(1, statusFilter || undefined, s);
+              }}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                sourceFilter === s
+                  ? 'bg-caribbean-green text-white'
+                  : 'bg-muted text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {s ? SOURCE_BADGES[s]?.label || s : 'All Sources'}
             </button>
           ))}
         </div>
@@ -136,6 +165,7 @@ export function WebsiteOrderList({
           <TableHeader>
             <TableRow>
               <TableHead>Date</TableHead>
+              <TableHead>Source</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Items</TableHead>
               <TableHead>Total</TableHead>
@@ -146,7 +176,7 @@ export function WebsiteOrderList({
           <TableBody>
             {orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   No website orders found
                 </TableCell>
               </TableRow>
@@ -158,6 +188,15 @@ export function WebsiteOrderList({
                   <TableRow key={order.id}>
                     <TableCell className="text-sm">
                       {format(new Date(order.orderDate), 'MMM d, yyyy')}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const src = order.source || 'WEBSITE';
+                        const badge = SOURCE_BADGES[src];
+                        return badge ? (
+                          <Badge className={badge.className}>{badge.label}</Badge>
+                        ) : null;
+                      })()}
                     </TableCell>
                     <TableCell>
                       <div className="font-medium text-sm">
@@ -218,7 +257,7 @@ export function WebsiteOrderList({
             variant="outline"
             size="sm"
             disabled={page <= 1 || isPending}
-            onClick={() => fetchPage(page - 1, statusFilter || undefined)}
+            onClick={() => fetchPage(page - 1, statusFilter || undefined, sourceFilter || undefined)}
             className="border-caribbean-gold"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
@@ -231,7 +270,7 @@ export function WebsiteOrderList({
             variant="outline"
             size="sm"
             disabled={page >= totalPages || isPending}
-            onClick={() => fetchPage(page + 1, statusFilter || undefined)}
+            onClick={() => fetchPage(page + 1, statusFilter || undefined, sourceFilter || undefined)}
             className="border-caribbean-gold"
           >
             Next

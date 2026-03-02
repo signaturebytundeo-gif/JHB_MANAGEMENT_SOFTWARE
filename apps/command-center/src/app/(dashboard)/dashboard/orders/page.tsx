@@ -1,9 +1,11 @@
 import { Suspense } from 'react';
 import { getSales, getChannels, getProducts } from '@/app/actions/sales';
 import { getWebsiteOrders } from '@/app/actions/orders';
+import { getMarketplaceStatus, getSyncHistory } from '@/app/actions/marketplace-sync';
 import { SaleForm } from '@/components/sales/SaleForm';
 import { SaleList } from '@/components/sales/SaleList';
 import { WebsiteOrderList } from '@/components/orders/WebsiteOrderList';
+import { MarketplaceSyncPanel } from '@/components/marketplace/MarketplaceSyncPanel';
 import { OrdersTabs } from './tabs';
 
 async function SalesContent() {
@@ -45,6 +47,22 @@ async function WebsiteOrdersContent() {
         initialTotal={result.total}
         initialPage={result.page}
         initialTotalPages={result.totalPages}
+      />
+    </div>
+  );
+}
+
+async function MarketplaceSyncContent() {
+  const [statuses, history] = await Promise.all([
+    getMarketplaceStatus(),
+    getSyncHistory(),
+  ]);
+
+  return (
+    <div className="rounded-lg border bg-card p-6">
+      <MarketplaceSyncPanel
+        initialStatuses={statuses}
+        initialHistory={history as any}
       />
     </div>
   );
@@ -101,6 +119,11 @@ export default function OrdersPage() {
         websiteOrders={
           <Suspense fallback={<OrdersLoading />}>
             <WebsiteOrdersContent />
+          </Suspense>
+        }
+        marketplaceSync={
+          <Suspense fallback={<OrdersLoading />}>
+            <MarketplaceSyncContent />
           </Suspense>
         }
       />
