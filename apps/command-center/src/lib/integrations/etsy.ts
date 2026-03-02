@@ -19,11 +19,91 @@ export interface EtsyOrderData {
 }
 
 const ETSY_API_BASE = 'https://openapi.etsy.com';
+const TOKEN_URL = 'https://api.etsy.com/v3/public/oauth/token';
 const MAX_PAGES = 10;
 const PAGE_DELAY_MS = 200;
 
+// In-memory cache for refreshed access token (survives across calls within
+// the same server process, avoids hitting .env.local on every request).
+let cachedAccessToken: string | null = null;
+
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Refresh the Etsy access token using the refresh token.
+ * Returns the new access token or throws on failure.
+ */
+async function refreshAccessToken(): Promise<string> {
+  const config = getEtsyConfig();
+  const refreshToken = process.env.ETSY_REFRESH_TOKEN;
+
+  if (!refreshToken) {
+    throw new Error(
+      'Etsy token expired and no ETSY_REFRESH_TOKEN is set. ' +
+      'Run `npx tsx scripts/etsy-oauth.ts` to re-authenticate.'
+    );
+  }
+
+  const res = await fetch(TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: config.apiKey,
+      refresh_token: refreshToken,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `Etsy token refresh failed (${res.status}): ${body}. ` +
+      'Run `npx tsx scripts/etsy-oauth.ts` to re-authenticate.'
+    );
+  }
+
+  const data = await res.json();
+  cachedAccessToken = data.access_token;
+
+  // Update the in-process env so subsequent getEtsyConfig() calls pick it up
+  process.env.ETSY_ACCESS_TOKEN = data.access_token;
+  if (data.refresh_token) {
+    process.env.ETSY_REFRESH_TOKEN = data.refresh_token;
+  }
+
+  console.log('Etsy: access token refreshed successfully');
+  return data.access_token;
+}
+
+/**
+ * Make an authenticated Etsy API request with automatic token refresh on 401.
+ */
+async function etsyFetch(url: string, apiKey: string): Promise<Response> {
+  const token = cachedAccessToken ?? getEtsyConfig().accessToken;
+
+  const res = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  // If unauthorized, try refreshing the token once and retry
+  if (res.status === 401) {
+    const newToken = await refreshAccessToken();
+    return fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${newToken}`,
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  return res;
 }
 
 export async function getRecentEtsyOrders(
@@ -54,13 +134,7 @@ export async function getRecentEtsyOrders(
     url.searchParams.set('sort_on', 'created');
     url.searchParams.set('sort_order', 'desc');
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': `Bearer ${config.accessToken}`,
-        'x-api-key': config.apiKey,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await etsyFetch(url.toString(), config.apiKey);
 
     if (!response.ok) {
       const errorText = await response.text();
