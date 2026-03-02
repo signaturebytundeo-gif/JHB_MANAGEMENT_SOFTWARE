@@ -114,7 +114,11 @@ export async function getSales(filters?: {
       },
     });
 
-    return sales;
+    return sales.map((s) => ({
+      ...s,
+      unitPrice: Number(s.unitPrice),
+      totalAmount: Number(s.totalAmount),
+    }));
   } catch (error) {
     console.error('Error fetching sales:', error);
     return [];

@@ -40,7 +40,11 @@ export async function getWebsiteOrders(filters?: {
     ]);
 
     return {
-      orders,
+      orders: orders.map((o) => ({
+        ...o,
+        shippingCost: Number(o.shippingCost),
+        orderTotal: Number(o.orderTotal),
+      })),
       total,
       page,
       totalPages: Math.ceil(total / pageSize),

@@ -29,7 +29,10 @@ export async function getCustomers(search?: string) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return customers;
+    return customers.map((c) => ({
+      ...c,
+      totalSpent: Number(c.totalSpent),
+    }));
   } catch (error) {
     console.error('Error fetching customers:', error);
     return [];
@@ -49,7 +52,17 @@ export async function getCustomerById(id: string) {
       },
     });
 
-    return customer;
+    if (!customer) return null;
+
+    return {
+      ...customer,
+      totalSpent: Number(customer.totalSpent),
+      orders: customer.orders.map((o) => ({
+        ...o,
+        shippingCost: Number(o.shippingCost),
+        orderTotal: Number(o.orderTotal),
+      })),
+    };
   } catch (error) {
     console.error('Error fetching customer:', error);
     return null;
@@ -86,7 +99,10 @@ export async function getCustomerMetrics() {
     return {
       totalCustomers,
       newThisMonth,
-      topSpenders,
+      topSpenders: topSpenders.map((s) => ({
+        ...s,
+        totalSpent: Number(s.totalSpent),
+      })),
     };
   } catch (error) {
     console.error('Error fetching customer metrics:', error);

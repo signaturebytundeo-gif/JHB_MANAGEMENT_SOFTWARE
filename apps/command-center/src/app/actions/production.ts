@@ -401,7 +401,13 @@ export async function getBatches(filters?: {
       },
     });
 
-    return batches;
+    return batches.map((b) => ({
+      ...b,
+      qcTests: b.qcTests.map((t) => ({
+        ...t,
+        phLevel: t.phLevel ? Number(t.phLevel) : null,
+      })),
+    }));
   } catch (error) {
     console.error('Error fetching batches:', error);
     return [];
@@ -446,7 +452,23 @@ export async function getBatchById(id: string) {
       },
     });
 
-    return batch;
+    if (!batch) return null;
+
+    return {
+      ...batch,
+      qcTests: batch.qcTests.map((t) => ({
+        ...t,
+        phLevel: t.phLevel ? Number(t.phLevel) : null,
+      })),
+      materials: batch.materials.map((m) => ({
+        ...m,
+        quantityUsed: Number(m.quantityUsed),
+        rawMaterial: {
+          ...m.rawMaterial,
+          quantity: Number(m.rawMaterial.quantity),
+        },
+      })),
+    };
   } catch (error) {
     console.error('Error fetching batch:', error);
     return null;
