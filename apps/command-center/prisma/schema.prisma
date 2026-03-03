@@ -604,17 +604,18 @@ model Customer {
 }
 
 model WebsiteOrder {
-  id           String      @id @default(cuid())
-  orderId      String      @unique // from website (e.g. Stripe PI id)
-  customerId   String
-  items        String      // JSON array of line items
-  shippingCost Decimal
-  orderTotal   Decimal
-  status       OrderStatus @default(NEW)
-  source       OrderSource @default(WEBSITE)
-  orderDate    DateTime
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  orderId        String      @unique // from website (e.g. Stripe PI id)
+  stripeEventId  String?     @unique // Stripe checkout.session.completed event ID — idempotency key
+  customerId     String
+  items          String      // JSON array of line items
+  shippingCost   Decimal
+  orderTotal     Decimal
+  status         OrderStatus @default(NEW)
+  source         OrderSource @default(WEBSITE)
+  orderDate      DateTime
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   // Relations
   customer Customer @relation(fields: [customerId], references: [id])
