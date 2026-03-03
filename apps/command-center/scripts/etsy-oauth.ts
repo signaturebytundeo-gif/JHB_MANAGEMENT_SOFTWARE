@@ -61,13 +61,19 @@ function generatePKCE() {
 }
 
 function openBrowser(url: string) {
-  const cmd =
-    process.platform === 'darwin'
-      ? `open "${url}"`
-      : process.platform === 'win32'
-        ? `start "${url}"`
-        : `xdg-open "${url}"`;
-  execSync(cmd);
+  try {
+    const cmd =
+      process.platform === 'darwin'
+        ? `open "${url}"`
+        : process.platform === 'win32'
+          ? `start "${url}"`
+          : `xdg-open "${url}"`;
+    execSync(cmd);
+  } catch {
+    // Fallback: print URL for manual copy
+  }
+  console.log('If the browser did not open, copy and paste this URL:\n');
+  console.log(url + '\n');
 }
 
 // ---------------------------------------------------------------------------
