@@ -6,14 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 2 Complete — ready for Phase 3
+**Current focus:** Phase 3 In Progress — Inventory Management
 
 ## Current Position
 
-Phase: 2 of 8 (Production & Quality Control)
-Plan: 4 of 4 in current phase
-Status: Phase Complete — Verified (6/6 must-haves passed)
-Last activity: 2026-02-17 — Phase 2 verification passed
+Phase: 3 of 8 (Inventory Management)
+Plan: 1 of 4 in current phase — Complete
+Status: In Progress
+Last activity: 2026-03-06 — Phase 3 Plan 1 executed (database foundation + utilities)
 
 Progress: [████████░░] 80%
 
@@ -30,9 +30,10 @@ Progress: [████████░░] 80%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 4 | 28m | 7m |
 | 02-production-quality-control | 4 | 17m | 4.3m |
+| 03-inventory-management | 1 | 4m | 4m |
 
 **Recent Trend:**
-- Last 5 plans: 01-04 (7m), 02-01 (4m), 02-02 (3m), 02-04 (6m), 02-03 (4m)
+- Last 5 plans: 02-01 (4m), 02-02 (3m), 02-04 (6m), 02-03 (4m), 03-01 (4m)
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
@@ -82,6 +83,10 @@ Recent decisions affecting current work:
 - Client-side batch filtering - Small dataset (dozens of batches), faster than server round-trips, instant UI updates
 - Responsive table-to-cards transform - Desktop gets dense tables, mobile gets touch-friendly cards (no horizontal scroll)
 - Real-time pH validation feedback - Shows target range/safe/unsafe as user types, prevents 4.6 threshold errors
+- InventoryAdjustmentReason separate from AdjustmentReason - preserves StockAdjustment backward compat while giving InventoryMovement its own reason set
+- FIFO available quantity = initial BatchAllocation + inbound InventoryMovements - outbound InventoryMovements
+- Zod v4 enum params use 'error' key (not 'required_error'/'invalid_type_error' from Zod v3)
+- Named Prisma relations on InventoryMovement for disambiguation: 'FromLocation', 'ToLocation', 'MovementCreator', 'MovementApprover'
 
 ### Pending Todos
 
@@ -93,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: Phase 2 complete and verified — all 4 plans executed, 6/6 must-haves passed
-Resume file: .planning/phases/02-production-quality-control/02-VERIFICATION.md
+Last session: 2026-03-06
+Stopped at: Completed 03-01-PLAN.md — InventoryMovement schema, FIFO utility, reorder-point utility, validators
+Resume file: .planning/phases/03-inventory-management/03-02-PLAN.md
