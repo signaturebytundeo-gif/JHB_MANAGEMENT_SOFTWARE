@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { OrderStatusControls } from '@/components/orders/OrderStatusControls';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -231,6 +232,20 @@ export default async function OrderDetailPage({ params }: PageProps) {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Order Actions Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OrderStatusControls
+            orderId={order.id}
+            currentStatus={order.status}
+            customerName={`${order.customer.firstName} ${order.customer.lastName}`}
+          />
         </CardContent>
       </Card>
     </div>
