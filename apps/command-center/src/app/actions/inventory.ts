@@ -843,3 +843,155 @@ export async function getPendingAdjustments() {
     return [];
   }
 }
+
+// ============================================================================
+// PHASE 9 ACTIONS — Website Order Inventory Aggregation
+// ============================================================================
+
+/**
+ * Exported type for a single per-SKU inventory aggregation row.
+ */
+export type InventoryAggregationRow = {
+  productId: string;
+  productName: string;
+  sku: string;
+  size: string;
+  reorderPoint: number;
+  totalProduced: number;
+  allocated: number;
+  available: number;
+  stockLevel: 'HEALTHY' | 'REORDER' | 'CRITICAL';
+};
+
+/**
+ * Maps a line item name string to a product via size suffix matching.
+ * Primary: matches parenthetical suffix e.g. "Original Jerk Sauce (5oz)" -> "5oz"
+ * Fallback: matches inline size e.g. "Free 2oz Jerk Sauce Sample" -> "2oz"
+ * Items without a size match (e.g. "Shipping & Handling") return undefined.
+ */
+function resolveItemToProduct<T extends { size: string }>(
+  itemName: string,
+  sizeToProduct: Map<string, T>
+): T | undefined {
+  // Primary: parenthetical suffix "(5oz)"
+  const parentheticalMatch = itemName.match(/\((\w+)\)$/);
+  if (parentheticalMatch) {
+    return sizeToProduct.get(parentheticalMatch[1].toLowerCase());
+  }
+
+  // Fallback: inline size "2oz"
+  const inlineSizeMatch = itemName.match(/(\d+oz)/i);
+  if (inlineSizeMatch) {
+    return sizeToProduct.get(inlineSizeMatch[1].toLowerCase());
+  }
+
+  // No size match — skip (e.g. "Shipping & Handling")
+  return undefined;
+}
+
+/**
+ * Aggregates per-SKU inventory: released batch totals minus non-cancelled website order quantities.
+ * Returns an array of InventoryAggregationRow for all active products.
+ */
+export async function getInventoryAggregation(): Promise<InventoryAggregationRow[]> {
+  try {
+    const [products, batchTotals, orders] = await Promise.all([
+      db.product.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, sku: true, size: true, reorderPoint: true },
+      }),
+      db.batch.groupBy({
+        by: ['productId'],
+        where: { status: 'RELEASED', isActive: true },
+        _sum: { totalUnits: true },
+      }),
+      db.websiteOrder.findMany({
+        where: { status: { not: 'CANCELLED' } },
+        select: { items: true },
+      }),
+    ]);
+
+    // Build supply map: productId -> totalProduced
+    const producedMap = new Map<string, number>();
+    for (const row of batchTotals) {
+      producedMap.set(row.productId, row._sum.totalUnits ?? 0);
+    }
+
+    // Build size lookup: size.toLowerCase() -> product
+    const sizeToProduct = new Map<string, (typeof products)[number]>();
+    for (const product of products) {
+      sizeToProduct.set(product.size.toLowerCase(), product);
+    }
+
+    // Build demand map: productId -> allocated (non-cancelled orders)
+    const allocatedMap = new Map<string, number>();
+    for (const order of orders) {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(order.items);
+      } catch {
+        continue;
+      }
+      if (!Array.isArray(parsed)) continue;
+
+      for (const item of parsed as Record<string, unknown>[]) {
+        const itemName = String(item.name ?? item.product ?? '');
+        const quantity = Number(item.quantity ?? item.qty ?? 1);
+        const product = resolveItemToProduct(itemName, sizeToProduct);
+        if (!product) continue;
+
+        allocatedMap.set(product.id, (allocatedMap.get(product.id) ?? 0) + quantity);
+      }
+    }
+
+    return products.map((product) => {
+      const totalProduced = producedMap.get(product.id) ?? 0;
+      const allocated = allocatedMap.get(product.id) ?? 0;
+      const available = Math.max(0, totalProduced - allocated);
+      return {
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku,
+        size: product.size,
+        reorderPoint: product.reorderPoint,
+        totalProduced,
+        allocated,
+        available,
+        stockLevel: classifyStockLevel(available, product.reorderPoint),
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching inventory aggregation:', error);
+    return [];
+  }
+}
+
+/**
+ * Updates Product.reorderPoint for a given product.
+ * Requires manager or above. Validates reorderPoint is a non-negative integer.
+ */
+export async function updateProductThreshold(
+  productId: string,
+  reorderPoint: number
+): Promise<{ success?: boolean; message?: string }> {
+  try {
+    await verifyManagerOrAbove();
+
+    if (!Number.isInteger(reorderPoint) || reorderPoint < 0) {
+      return { message: 'Threshold must be a non-negative integer' };
+    }
+
+    await db.product.update({
+      where: { id: productId },
+      data: { reorderPoint },
+    });
+
+    revalidatePath('/dashboard/inventory');
+
+    return { success: true, message: 'Threshold updated' };
+  } catch (error) {
+    console.error('Error updating product threshold:', error);
+    return { message: 'Failed to update threshold' };
+  }
+}
