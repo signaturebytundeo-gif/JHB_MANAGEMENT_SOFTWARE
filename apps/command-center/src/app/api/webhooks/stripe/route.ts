@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { db } from '@/lib/db';
+import { sendOrderConfirmationEmail } from '@/lib/emails/customer-emails';
+import { notifyOrderEmailFailed } from '@/lib/integrations/slack';
 
 // ============================================================================
 // Stripe Webhook — checkout.session.completed
@@ -172,6 +174,42 @@ async function handleCheckoutCompleted(
     console.log(
       `Order created for session ${session.id}, event ${stripeEventId}`
     );
+
+    // Fire-and-forget: send order confirmation email
+    try {
+      const emailResult = await sendOrderConfirmationEmail({
+        customerFirstName: firstName,
+        customerEmail,
+        orderId: session.id,
+        items,
+        shippingCost,
+        orderTotal,
+      });
+
+      if (emailResult.success) {
+        await db.websiteOrder.update({
+          where: { stripeEventId },
+          data: { confirmationEmailSentAt: new Date() },
+        });
+      } else {
+        await notifyOrderEmailFailed({
+          customerName: customerName,
+          customerEmail,
+          orderId: session.id,
+          orderTotal,
+          errorMessage: emailResult.error || 'Unknown error',
+        });
+      }
+    } catch (emailError) {
+      console.error('Order confirmation email error:', emailError);
+      await notifyOrderEmailFailed({
+        customerName: customerName,
+        customerEmail,
+        orderId: session.id,
+        orderTotal,
+        errorMessage: emailError instanceof Error ? emailError.message : 'Unknown error',
+      }).catch(() => {}); // swallow Slack errors
+    }
   } catch (error: any) {
     if (error?.code === 'P2002') {
       // Unique constraint violation — race condition where two deliveries arrived simultaneously
