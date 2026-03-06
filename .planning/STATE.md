@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 ## Current Position
 
 Phase: 3 of 8 (Inventory Management)
-Plan: 1 of 4 in current phase — Complete
+Plan: 4 of 4 in current phase — Complete
 Status: In Progress
-Last activity: 2026-03-06 — Phase 3 Plan 1 executed (database foundation + utilities)
+Last activity: 2026-03-06 — Phase 3 Plan 4 executed (packaging materials CRUD, reorder alerts, FIFO valuation report)
 
 Progress: [████████░░] 80%
 
@@ -30,7 +30,7 @@ Progress: [████████░░] 80%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 4 | 28m | 7m |
 | 02-production-quality-control | 4 | 17m | 4.3m |
-| 03-inventory-management | 1 | 4m | 4m |
+| 03-inventory-management | 4 | 10m | 2.5m |
 
 **Recent Trend:**
 - Last 5 plans: 02-01 (4m), 02-02 (3m), 02-04 (6m), 02-03 (4m), 03-01 (4m)
@@ -87,6 +87,10 @@ Recent decisions affecting current work:
 - FIFO available quantity = initial BatchAllocation + inbound InventoryMovements - outbound InventoryMovements
 - Zod v4 enum params use 'error' key (not 'required_error'/'invalid_type_error' from Zod v3)
 - Named Prisma relations on InventoryMovement for disambiguation: 'FromLocation', 'ToLocation', 'MovementCreator', 'MovementApprover'
+- Inline JS filtering for packaging reorder alerts — avoids Prisma cross-column comparison limitation, safe for small dataset
+- FIFO valuation uses 40% of wholesale cash price as COGS estimate — full material/labor/overhead COGS deferred to Phase 6
+- ReorderAlertPanel as server component receiving typed props — no client interactivity needed
+- updatePackagingMaterial bound via Function.bind(null, id) — Next.js pattern for parameterized server actions
 
 ### Pending Todos
 
@@ -99,5 +103,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 03-01-PLAN.md — InventoryMovement schema, FIFO utility, reorder-point utility, validators
-Resume file: .planning/phases/03-inventory-management/03-02-PLAN.md
+Stopped at: Completed 03-04-PLAN.md — packaging materials CRUD, ReorderAlertPanel, FIFO valuation report
+Resume file: .planning/phases/03-inventory-management/03-03-PLAN.md
