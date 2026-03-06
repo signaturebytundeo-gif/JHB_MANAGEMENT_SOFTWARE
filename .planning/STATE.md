@@ -87,6 +87,9 @@ Recent decisions affecting current work:
 - FIFO available quantity = initial BatchAllocation + inbound InventoryMovements - outbound InventoryMovements
 - Zod v4 enum params use 'error' key (not 'required_error'/'invalid_type_error' from Zod v3)
 - Named Prisma relations on InventoryMovement for disambiguation: 'FromLocation', 'ToLocation', 'MovementCreator', 'MovementApprover'
+- getStockLevels fetches all allocations + movements in 4 parallel queries then aggregates in memory (avoids N×M DB round-trips)
+- Phase 3 inventory actions appended to existing inventory.ts — preserves legacy Phase 2 exports for backwards compat
+- Inventory page renders Phase 3 StockLevelGrid + legacy InventoryPageClient in separate Suspense boundaries
 - Inline JS filtering for packaging reorder alerts — avoids Prisma cross-column comparison limitation, safe for small dataset
 - FIFO valuation uses 40% of wholesale cash price as COGS estimate — full material/labor/overhead COGS deferred to Phase 6
 - ReorderAlertPanel as server component receiving typed props — no client interactivity needed
