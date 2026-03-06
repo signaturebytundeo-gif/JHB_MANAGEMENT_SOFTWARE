@@ -772,3 +772,74 @@ export async function getLocationsForTransfer() {
     return [];
   }
 }
+
+/**
+ * Returns RELEASED batches with product name for the adjustment form dropdown.
+ */
+export async function getReleasedBatches() {
+  try {
+    const batches = await db.batch.findMany({
+      where: { status: 'RELEASED', isActive: true },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        batchCode: true,
+        product: { select: { name: true } },
+      },
+    });
+    return batches.map((b) => ({
+      id: b.id,
+      batchCode: b.batchCode,
+      productName: b.product.name,
+    }));
+  } catch (error) {
+    console.error('Error fetching released batches:', error);
+    return [];
+  }
+}
+
+/**
+ * Returns pending inventory adjustments awaiting admin approval.
+ * Includes createdById for the creator-not-approver dual-control check in the UI.
+ */
+export async function getPendingAdjustments() {
+  try {
+    const movements = await db.inventoryMovement.findMany({
+      where: {
+        movementType: 'ADJUSTMENT',
+        requiresApproval: true,
+        approvedAt: null,
+      },
+      include: {
+        batch: {
+          select: {
+            batchCode: true,
+            product: { select: { name: true } },
+          },
+        },
+        fromLocation: { select: { name: true } },
+        toLocation: { select: { name: true } },
+        createdBy: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return movements.map((m) => ({
+      id: m.id,
+      batchCode: m.batch.batchCode,
+      productName: m.batch.product.name,
+      fromLocation: m.fromLocation?.name ?? null,
+      toLocation: m.toLocation?.name ?? null,
+      quantity: m.quantity,
+      reason: m.reason,
+      notes: m.notes,
+      createdBy: m.createdBy.name,
+      createdById: m.createdById,
+      createdAt: m.createdAt.toISOString(),
+      requiresApproval: m.requiresApproval,
+    }));
+  } catch (error) {
+    console.error('Error fetching pending adjustments:', error);
+    return [];
+  }
+}
