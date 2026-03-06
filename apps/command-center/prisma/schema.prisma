@@ -71,6 +71,22 @@ enum AdjustmentReason {
   OTHER
 }
 
+enum MovementType {
+  PRODUCTION
+  TRANSFER
+  ADJUSTMENT
+  ALLOCATION
+  DEDUCTION
+}
+
+enum InventoryAdjustmentReason {
+  DAMAGE
+  SHRINKAGE
+  SAMPLING
+  EXPIRED
+  COUNT_CORRECTION
+}
+
 enum TransactionType {
   BATCH_COMPLETION
   TRANSFER_IN
@@ -138,6 +154,8 @@ model User {
   inventoryTransactions InventoryTransaction[]
   shipments             Shipment[]
   marketplaceSyncs      MarketplaceSync[]
+  createdMovements      InventoryMovement[] @relation("MovementCreator")
+  approvedMovements     InventoryMovement[] @relation("MovementApprover")
 
   @@index([email])
   @@index([role])
@@ -179,15 +197,17 @@ model MagicLinkToken {
 // ============================================================================
 
 model Product {
-  id           String   @id @default(cuid())
-  name         String
-  sku          String   @unique
-  size         String
-  unitsPerCase Int?     // Nullable for TBD packaging
-  description  String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  sku           String   @unique
+  size          String
+  unitsPerCase  Int?     // Nullable for TBD packaging
+  description   String?
+  reorderPoint  Int      @default(0)  // Default reorder threshold in units
+  leadTimeDays  Int      @default(14) // Default production/procurement lead time
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
   pricingTiers          PricingTier[]
@@ -259,6 +279,8 @@ model Location {
   stockAdjustments      StockAdjustment[]
   inventoryTransactions InventoryTransaction[]
   shipments             Shipment[]
+  movementsFrom         InventoryMovement[] @relation("FromLocation")
+  movementsTo           InventoryMovement[] @relation("ToLocation")
 
   @@index([name])
   @@index([type])
@@ -357,12 +379,13 @@ model Batch {
   updatedAt              DateTime         @updatedAt
 
   // Relations
-  product         Product            @relation(fields: [productId], references: [id])
-  coPackerPartner CoPackerPartner?   @relation(fields: [coPackerPartnerId], references: [id])
-  createdBy       User               @relation(fields: [createdById], references: [id])
-  qcTests         QCTest[]
-  allocations     BatchAllocation[]
-  materials       BatchMaterial[]
+  product            Product            @relation(fields: [productId], references: [id])
+  coPackerPartner    CoPackerPartner?   @relation(fields: [coPackerPartnerId], references: [id])
+  createdBy          User               @relation(fields: [createdById], references: [id])
+  qcTests            QCTest[]
+  allocations        BatchAllocation[]
+  materials          BatchMaterial[]
+  inventoryMovements InventoryMovement[]
 
   @@index([batchCode])
   @@index([productId])
@@ -448,6 +471,56 @@ model BatchMaterial {
 // ============================================================================
 // INVENTORY MODEL
 // ============================================================================
+
+model InventoryMovement {
+  id               String                     @id @default(cuid())
+  movementType     MovementType
+  batchId          String
+  fromLocationId   String?
+  toLocationId     String?
+  quantity         Int                        // Always positive; direction determined by from/to
+  reason           InventoryAdjustmentReason? // Required for ADJUSTMENT type
+  notes            String?
+  requiresApproval Boolean                    @default(false)
+  approvedById     String?
+  approvedAt       DateTime?
+  createdById      String
+  createdAt        DateTime                   @default(now())
+
+  // Relations
+  batch        Batch     @relation(fields: [batchId], references: [id])
+  fromLocation Location? @relation("FromLocation", fields: [fromLocationId], references: [id])
+  toLocation   Location? @relation("ToLocation", fields: [toLocationId], references: [id])
+  approvedBy   User?     @relation("MovementApprover", fields: [approvedById], references: [id])
+  createdBy    User      @relation("MovementCreator", fields: [createdById], references: [id])
+
+  @@index([batchId])
+  @@index([fromLocationId])
+  @@index([toLocationId])
+  @@index([movementType])
+  @@index([createdAt])
+  @@index([createdById])
+}
+
+model PackagingMaterial {
+  id              String    @id @default(cuid())
+  name            String    // e.g., "5oz Glass Bottle", "Standard Cap", "Front Label"
+  type            String    // BOTTLE, CAP, LABEL, BOX, OTHER
+  supplier        String
+  currentQuantity Int       @default(0)
+  unit            String    // e.g., "units", "rolls", "sheets"
+  reorderPoint    Int       @default(0)
+  leadTimeDays    Int       @default(14)
+  costPerUnit     Decimal?
+  lastOrderDate   DateTime?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([name])
+  @@index([type])
+  @@index([isActive])
+}
 
 model StockAdjustment {
   id             String           @id @default(cuid())
@@ -614,6 +687,11 @@ model WebsiteOrder {
   status         OrderStatus @default(NEW)
   source         OrderSource @default(WEBSITE)
   orderDate      DateTime
+  trackingNumber          String?
+  carrier                 String?
+  shippedAt               DateTime?
+  confirmationEmailSentAt DateTime?
+  shippingEmailSentAt     DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 

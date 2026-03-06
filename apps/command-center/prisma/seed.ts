@@ -760,6 +760,111 @@ async function main() {
 
   console.log("✅ Created/verified 2 co-packer partners");
 
+  // ============================================================================
+  // PRODUCT REORDER SETTINGS (03-01)
+  // ============================================================================
+  console.log("📦 Updating product reorder settings...");
+
+  const productSkus = [
+    "JHB-OJS-2OZ",
+    "JHB-OJS-5OZ",
+    "JHB-OJS-10OZ",
+    "JHB-EP-12OZ",
+    "JHB-OJS-1GAL",
+    "JHB-OJS-9G",
+  ];
+
+  for (const sku of productSkus) {
+    await prisma.product.updateMany({
+      where: { sku },
+      data: {
+        reorderPoint: 100,
+        leadTimeDays: 14,
+      },
+    });
+  }
+
+  console.log("✅ Updated all products with reorder settings");
+
+  // ============================================================================
+  // PACKAGING MATERIALS (03-01)
+  // ============================================================================
+  console.log("🏷️  Seeding packaging materials...");
+
+  const packagingMaterials = [
+    {
+      name: "5oz Glass Bottle",
+      type: "BOTTLE",
+      supplier: "TBD",
+      currentQuantity: 0,
+      unit: "units",
+      reorderPoint: 500,
+      leadTimeDays: 21,
+      isActive: true,
+    },
+    {
+      name: "10oz Glass Bottle",
+      type: "BOTTLE",
+      supplier: "TBD",
+      currentQuantity: 0,
+      unit: "units",
+      reorderPoint: 500,
+      leadTimeDays: 21,
+      isActive: true,
+    },
+    {
+      name: "Standard Cap",
+      type: "CAP",
+      supplier: "TBD",
+      currentQuantity: 0,
+      unit: "units",
+      reorderPoint: 1000,
+      leadTimeDays: 14,
+      isActive: true,
+    },
+    {
+      name: "Front Label - 5oz",
+      type: "LABEL",
+      supplier: "TBD",
+      currentQuantity: 0,
+      unit: "units",
+      reorderPoint: 500,
+      leadTimeDays: 14,
+      isActive: true,
+    },
+    {
+      name: "Front Label - 10oz",
+      type: "LABEL",
+      supplier: "TBD",
+      currentQuantity: 0,
+      unit: "units",
+      reorderPoint: 500,
+      leadTimeDays: 14,
+      isActive: true,
+    },
+    {
+      name: "Shipping Box - 12 pack",
+      type: "BOX",
+      supplier: "TBD",
+      currentQuantity: 0,
+      unit: "units",
+      reorderPoint: 200,
+      leadTimeDays: 7,
+      isActive: true,
+    },
+  ];
+
+  for (const material of packagingMaterials) {
+    const existing = await prisma.packagingMaterial.findFirst({
+      where: { name: material.name },
+    });
+    if (!existing) {
+      await prisma.packagingMaterial.create({ data: material });
+    }
+  }
+
+  console.log("✅ Created/verified 6 packaging materials");
+
   console.log("\n🎉 Database seed completed successfully!");
 }
 
