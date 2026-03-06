@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { verifySession } from '@/lib/dal';
-import { getStockLevels } from '@/app/actions/inventory';
+import { getStockLevels, getInventoryAggregation } from '@/app/actions/inventory';
 import { getInventorySummary, getTransactionLog, getLocations } from '@/app/actions/inventory';
 import { getProducts } from '@/app/actions/sales';
 import { StockLevelGrid } from '@/components/inventory/StockLevelGrid';
+import { InventoryAggregationTable } from '@/components/inventory/InventoryAggregationTable';
 import { InventoryPageClient } from './client';
 
 async function StockLevelContent() {
@@ -71,6 +72,11 @@ async function LegacyInventoryContent() {
   );
 }
 
+async function AggregationContent() {
+  const data = await getInventoryAggregation();
+  return <InventoryAggregationTable data={data} />;
+}
+
 function InventoryLoading() {
   return (
     <div className="space-y-6 animate-pulse">
@@ -135,6 +141,17 @@ export default async function InventoryPage() {
       <Suspense fallback={<InventoryLoading />}>
         <StockLevelContent />
       </Suspense>
+
+      {/* Phase 9 — Website Order Inventory aggregation */}
+      <div className="pt-4 border-t border-border">
+        <h2 className="text-lg font-semibold mb-2">Website Order Inventory</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Available units = released batches produced minus non-cancelled website orders
+        </p>
+        <Suspense fallback={<InventoryLoading />}>
+          <AggregationContent />
+        </Suspense>
+      </div>
 
       {/* Legacy inventory management (transfers, adjustments, transaction log) */}
       <div className="pt-4 border-t border-border">
