@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -13,9 +14,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getWebsiteOrders, updateOrderStatus } from '@/app/actions/orders';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, Circle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Circle, Truck } from 'lucide-react';
 import { format } from 'date-fns';
 import type { OrderStatus, OrderSource } from '@prisma/client';
+import { FulfillmentModal } from './FulfillmentModal';
 
 type OrderRow = {
   id: string;
@@ -26,6 +28,9 @@ type OrderRow = {
   status: OrderStatus;
   source?: OrderSource;
   orderDate: Date;
+  trackingNumber?: string | null;
+  carrier?: string | null;
+  shippedAt?: Date | null;
   customer: {
     id: string;
     firstName: string;
@@ -87,6 +92,7 @@ export function WebsiteOrderList({
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [sourceFilter, setSourceFilter] = useState<string>('');
   const [isPending, startTransition] = useTransition();
+  const [fulfillmentOrder, setFulfillmentOrder] = useState<OrderRow | null>(null);
 
   const fetchPage = (newPage: number, status?: string, source?: string) => {
     startTransition(async () => {
@@ -103,6 +109,15 @@ export function WebsiteOrderList({
   };
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    // Intercept SHIPPED — open FulfillmentModal instead of direct status change
+    if (newStatus === 'SHIPPED') {
+      const order = orders.find((o) => o.id === orderId);
+      if (order) {
+        setFulfillmentOrder(order);
+        return;
+      }
+    }
+
     const result = await updateOrderStatus(orderId, newStatus);
     if (result.success) {
       toast.success(result.message);
@@ -171,12 +186,13 @@ export function WebsiteOrderList({
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                   No website orders found
                 </TableCell>
               </TableRow>
@@ -226,6 +242,12 @@ export function WebsiteOrderList({
                     </TableCell>
                     <TableCell>
                       <Badge className={badge.className}>{badge.label}</Badge>
+                      {order.trackingNumber && order.carrier && (
+                        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                          <Truck className="w-3 h-3" />
+                          {order.carrier} — {order.trackingNumber}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <select
@@ -241,6 +263,14 @@ export function WebsiteOrderList({
                           </option>
                         ))}
                       </select>
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/dashboard/orders/${order.id}`}
+                        className="text-xs text-muted-foreground hover:text-caribbean-green underline"
+                      >
+                        View
+                      </Link>
                     </TableCell>
                   </TableRow>
                 );
@@ -277,6 +307,16 @@ export function WebsiteOrderList({
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
+      )}
+
+      {/* Fulfillment Modal */}
+      {fulfillmentOrder && (
+        <FulfillmentModal
+          orderId={fulfillmentOrder.id}
+          customerName={`${fulfillmentOrder.customer.firstName} ${fulfillmentOrder.customer.lastName}`}
+          onClose={() => setFulfillmentOrder(null)}
+          onSuccess={() => fetchPage(page, statusFilter || undefined, sourceFilter || undefined)}
+        />
       )}
     </div>
   );
