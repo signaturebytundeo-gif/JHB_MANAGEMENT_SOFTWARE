@@ -14,6 +14,7 @@ import { KPICard } from '@/components/dashboard/KPICard';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { getProductionMetrics } from '@/app/actions/production';
 import { getSalesMetrics } from '@/app/actions/sales';
+import { getOrderMetrics } from '@/app/actions/orders';
 import {
   DollarSign,
   Package,
@@ -29,9 +30,10 @@ import {
 } from 'lucide-react';
 
 async function KPICards({ role }: { role: string }) {
-  const [productionMetrics, salesMetrics] = await Promise.all([
+  const [productionMetrics, salesMetrics, orderMetrics] = await Promise.all([
     getProductionMetrics(),
     getSalesMetrics(),
+    getOrderMetrics(),
   ]);
 
   if (role === 'ADMIN' || role === 'MANAGER') {
@@ -39,14 +41,14 @@ async function KPICards({ role }: { role: string }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <KPICard
           title="Today's Revenue"
-          value={`$${salesMetrics.todayRevenue.toFixed(2)}`}
-          subtitle={`${salesMetrics.todaySaleCount} sale${salesMetrics.todaySaleCount !== 1 ? 's' : ''} today`}
+          value={`$${(salesMetrics.todayRevenue + orderMetrics.revenueToday).toFixed(2)}`}
+          subtitle={`${salesMetrics.todaySaleCount + orderMetrics.ordersToday} orders today`}
           icon={<DollarSign className="h-5 w-5" />}
         />
         <KPICard
           title="MTD Revenue"
-          value={`$${salesMetrics.mtdRevenue.toFixed(2)}`}
-          subtitle={`${salesMetrics.mtdSaleCount} sale${salesMetrics.mtdSaleCount !== 1 ? 's' : ''} this month`}
+          value={`$${(salesMetrics.mtdRevenue + orderMetrics.revenueMTD).toFixed(2)}`}
+          subtitle={`${salesMetrics.mtdSaleCount + orderMetrics.ordersMTD} orders this month`}
           icon={<TrendingUp className="h-5 w-5" />}
         />
         <KPICard
@@ -63,8 +65,8 @@ async function KPICards({ role }: { role: string }) {
         />
         <KPICard
           title="Open Orders"
-          value={salesMetrics.openOrderCount.toString()}
-          subtitle={`${salesMetrics.openOrderCount} order${salesMetrics.openOrderCount !== 1 ? 's' : ''} this month`}
+          value={orderMetrics.newOrders.toString()}
+          subtitle="Awaiting fulfillment"
           icon={<ShoppingCart className="h-5 w-5" />}
         />
         <KPICard

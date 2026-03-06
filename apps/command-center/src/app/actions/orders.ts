@@ -117,7 +117,7 @@ export async function getOrderMetrics() {
     await verifySession();
 
     const newOrders = await db.websiteOrder.count({
-      where: { status: 'NEW' },
+      where: { status: { in: ['NEW', 'PROCESSING'] } },
     });
 
     const today = new Date();
