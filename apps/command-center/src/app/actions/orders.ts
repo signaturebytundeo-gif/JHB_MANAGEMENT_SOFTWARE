@@ -4,6 +4,40 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 import type { OrderStatus, OrderSource } from '@prisma/client';
+import { sendShippingConfirmationEmail } from '@/lib/emails/customer-emails';
+import { notifyShippingEmailSent } from '@/lib/integrations/slack';
+
+export async function getWebsiteOrderById(id: string) {
+  try {
+    await verifySession();
+
+    const order = await db.websiteOrder.findUnique({
+      where: { id },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!order) return null;
+
+    return {
+      ...order,
+      shippingCost: Number(order.shippingCost),
+      orderTotal: Number(order.orderTotal),
+    };
+  } catch (error) {
+    console.error('Error fetching order by id:', error);
+    return null;
+  }
+}
 
 export async function getWebsiteOrders(filters?: {
   status?: OrderStatus;
@@ -68,6 +102,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
     });
 
     revalidatePath('/dashboard/orders');
+    revalidatePath('/dashboard/orders/' + orderId);
     revalidatePath('/dashboard/customers');
 
     return { success: true, message: `Order updated to ${status}` };
@@ -126,5 +161,91 @@ export async function getOrderMetrics() {
       ordersToday: 0,
       ordersMTD: 0,
     };
+  }
+}
+
+export async function fulfillOrder(
+  orderId: string,
+  data: { trackingNumber: string; carrier: string; estimatedDelivery?: string }
+) {
+  try {
+    await verifySession();
+
+    const order = await db.websiteOrder.findUnique({
+      where: { id: orderId },
+      include: {
+        customer: { select: { firstName: true, lastName: true, email: true } },
+      },
+    });
+
+    if (!order) {
+      return { success: false, message: 'Order not found' };
+    }
+
+    if (order.status === 'SHIPPED') {
+      return { success: false, message: 'Order is already shipped' };
+    }
+
+    // Update order with fulfillment data
+    await db.websiteOrder.update({
+      where: { id: orderId },
+      data: {
+        status: 'SHIPPED',
+        trackingNumber: data.trackingNumber,
+        carrier: data.carrier,
+        shippedAt: new Date(),
+      },
+    });
+
+    // Send shipping confirmation email
+    let emailSuccess = false;
+    let emailError: string | undefined;
+
+    try {
+      const emailResult = await sendShippingConfirmationEmail({
+        customerFirstName: order.customer.firstName,
+        customerEmail: order.customer.email,
+        orderId: order.orderId,
+        carrier: data.carrier,
+        trackingNumber: data.trackingNumber,
+        estimatedDelivery: data.estimatedDelivery,
+      });
+
+      emailSuccess = emailResult.success;
+      emailError = emailResult.error;
+
+      if (emailSuccess) {
+        await db.websiteOrder.update({
+          where: { id: orderId },
+          data: { shippingEmailSentAt: new Date() },
+        });
+      }
+    } catch (err) {
+      emailError = err instanceof Error ? err.message : 'Unknown error';
+    }
+
+    // Always send Slack notification
+    await notifyShippingEmailSent({
+      customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+      customerEmail: order.customer.email,
+      orderId: order.orderId,
+      carrier: data.carrier,
+      trackingNumber: data.trackingNumber,
+      emailSuccess,
+      errorMessage: emailError,
+    }).catch(() => {}); // swallow Slack errors
+
+    revalidatePath('/dashboard/orders');
+    revalidatePath('/dashboard/orders/' + orderId);
+    revalidatePath('/dashboard/customers');
+
+    const emailNote = emailSuccess
+      ? 'Shipping email sent to customer.'
+      : 'Order shipped but email failed — Slack alert sent.';
+
+    return { success: true, message: `Order marked as shipped. ${emailNote}` };
+  } catch (error) {
+    console.error('Error fulfilling order:', error);
+    return { success: false, message: 'Failed to fulfill order' };
   }
 }
