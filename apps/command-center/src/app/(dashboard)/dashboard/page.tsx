@@ -15,6 +15,8 @@ import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { getProductionMetrics } from '@/app/actions/production';
 import { getSalesMetrics } from '@/app/actions/sales';
 import { getOrderMetrics } from '@/app/actions/orders';
+import { getInventoryAggregation } from '@/app/actions/inventory';
+import { InventoryStatusSummary } from '@/components/dashboard/InventoryStatusSummary';
 import {
   DollarSign,
   Package,
@@ -111,6 +113,11 @@ async function KPICards({ role }: { role: string }) {
   }
 
   return null;
+}
+
+async function InventorySummary() {
+  const data = await getInventoryAggregation();
+  return <InventoryStatusSummary data={data} />;
 }
 
 export default async function DashboardPage() {
@@ -212,6 +219,16 @@ export default async function DashboardPage() {
             <KPICards role={user.role} />
           </Suspense>
         </div>
+
+        {/* Inventory Status */}
+        {(user.role === 'ADMIN' || user.role === 'MANAGER') && (
+          <div>
+            <h2 className="text-lg font-semibold mb-4">Inventory Status</h2>
+            <Suspense fallback={<DashboardSkeleton />}>
+              <InventorySummary />
+            </Suspense>
+          </div>
+        )}
       </div>
     </TooltipProvider>
   );
