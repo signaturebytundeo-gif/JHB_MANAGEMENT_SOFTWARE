@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 3 In Progress — Inventory Management
+**Current focus:** Phase 3 Complete — Moving to Phase 4
 
 ## Current Position
 
 Phase: 3 of 8 (Inventory Management)
-Plan: 4 of 4 in current phase — Complete
+Plan: 3 of 4 executed (out-of-order — Plan 3 executed after Plan 4)
 Status: In Progress
-Last activity: 2026-03-06 — Phase 3 Plan 4 executed (packaging materials CRUD, reorder alerts, FIFO valuation report)
+Last activity: 2026-03-06 — Phase 3 Plan 3 executed (transfer UI, adjustment UI with approval workflow, audit trail page)
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: 5 minutes
-- Total execution time: 0.73 hours
+- Total execution time: 0.81 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [████████░░] 80%
 |-------|-------|-------|----------|
 | 01-foundation-authentication | 4 | 28m | 7m |
 | 02-production-quality-control | 4 | 17m | 4.3m |
-| 03-inventory-management | 4 | 10m | 2.5m |
+| 03-inventory-management | 4 | 15m | 3.75m |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (4m), 02-02 (3m), 02-04 (6m), 02-03 (4m), 03-01 (4m)
+- Last 5 plans: 02-04 (6m), 02-03 (4m), 03-01 (4m), 03-04 (3m), 03-03 (5m)
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
@@ -94,6 +94,10 @@ Recent decisions affecting current work:
 - FIFO valuation uses 40% of wholesale cash price as COGS estimate — full material/labor/overhead COGS deferred to Phase 6
 - ReorderAlertPanel as server component receiving typed props — no client interactivity needed
 - updatePackagingMaterial bound via Function.bind(null, id) — Next.js pattern for parameterized server actions
+- getPendingAdjustments separate from getAuditTrail — needs createdById for dual-control UI check not returned by audit trail action
+- PendingApprovals uses direct async call (not useActionState) — per-card optimistic feedback without cross-card state pollution
+- TransferForm captures formValues before reset for post-success summary — useActionState state resets on next interaction
+- AuditTrailTable client-side filtering — 100-record cap makes server round-trips unnecessary, instant filter response
 
 ### Pending Todos
 
@@ -106,5 +110,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 03-04-PLAN.md — packaging materials CRUD, ReorderAlertPanel, FIFO valuation report
-Resume file: .planning/phases/03-inventory-management/03-03-PLAN.md
+Stopped at: Completed 03-03-PLAN.md — transfer UI, adjustment UI with approval workflow, audit trail page
+Resume file: .planning/phases/04-sales-customer-management/04-01-PLAN.md (if exists)
