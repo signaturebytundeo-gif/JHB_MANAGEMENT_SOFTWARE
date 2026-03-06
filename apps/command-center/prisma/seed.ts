@@ -3,7 +3,7 @@ config({ path: ".env.local" });
 config();
 import { PrismaClient, Role, LocationType, ChannelType } from "@prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import * as bcrypt from "bcrypt";
+import * as bcrypt from "bcryptjs";
 
 const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({

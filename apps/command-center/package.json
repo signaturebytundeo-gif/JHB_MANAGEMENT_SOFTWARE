@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && next build",
+    "deploy": "prisma generate && next build && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "preview": "prisma generate && next build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "start": "next start --port 3000",
     "lint": "next lint"
   },
@@ -18,6 +20,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^1.0.2",
+    "@opennextjs/cloudflare": "^1.17.1",
     "@prisma/adapter-neon": "^7.4.2",
     "@prisma/client": "^7.4.0",
     "@radix-ui/react-label": "^2.1.8",
@@ -29,7 +32,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.24",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -58,9 +61,10 @@
     "@databases/pg": "^5.5.0",
     "@databases/pg-test": "^3.1.2",
     "@eslint/eslintrc": "^3.3.3",
-    "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/ws": "^8.18.1",
     "tsx": "^4.21.0",
+    "wrangler": "^4.71.0",
     "ws": "^8.19.0"
   }
 }

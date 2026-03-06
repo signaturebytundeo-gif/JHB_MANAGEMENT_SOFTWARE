@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { createSession, deleteSession } from '@/lib/session';
 import {
