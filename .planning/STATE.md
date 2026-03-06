@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 3 Complete — Verified (14/14 must-haves passed). Ready for Phase 4.
+**Current focus:** Phase 11 (inserted) — Dashboard KPIs + Vercel Deployment. Plan 11-02 complete. App is deployment-ready.
 
 ## Current Position
 
-Phase: 3 of 8 (Inventory Management)
-Plan: 4 of 4 complete
-Status: Phase Complete — Verified (14/14 must-haves passed)
-Last activity: 2026-03-06 — Phase 3 execution complete, verification passed
+Phase: 11 (inserted) of 11+ (Dashboard KPIs + Vercel Deployment)
+Plan: 2 of 2 complete
+Status: Phase 11 Complete — App ready for Vercel production deployment
+Last activity: 2026-03-06 — Phase 11-02 execution complete, Vercel deployment configured
 
-Progress: [██████░░░░] 50%
+Progress: [██████░░░░] 55%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 14
 - Average duration: 5 minutes
-- Total execution time: 0.81 hours
+- Total execution time: 0.87 hours
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: [██████░░░░] 50%
 | 01-foundation-authentication | 4 | 28m | 7m |
 | 02-production-quality-control | 4 | 17m | 4.3m |
 | 03-inventory-management | 4 | 15m | 3.75m |
+| 11-dashboard-kpis-vercel-deployment | 2 | 6m | 3m |
 
 **Recent Trend:**
-- Last 5 plans: 02-04 (6m), 02-03 (4m), 03-01 (4m), 03-04 (3m), 03-03 (5m)
+- Last 5 plans: 03-03 (5m), 11-01 (3m), 11-02 (3m)
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
@@ -98,6 +99,10 @@ Recent decisions affecting current work:
 - PendingApprovals uses direct async call (not useActionState) — per-card optimistic feedback without cross-card state pollution
 - TransferForm captures formValues before reset for post-success summary — useActionState state resets on next interaction
 - AuditTrailTable client-side filtering — 100-record cap makes server round-trips unnecessary, instant filter response
+- vercel.json installCommand uses cd ../.. to install from monorepo root — npm workspaces require install from workspace root
+- Prisma schema datasource uses url + directUrl — pooled URL (PrismaNeon adapter) for runtime, direct URL for prisma migrate deploy DDL
+- DIRECT_URL for Neon migrations — pooled Neon connections cannot run DDL reliably; direct connection bypasses PgBouncer
+- .env.example restructured to production-first with Neon PostgreSQL template and all Vercel env vars documented
 
 ### Pending Todos
 
@@ -110,5 +115,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Phase 3 complete and verified — all 4 plans executed, 14/14 must-haves passed
-Resume file: .planning/phases/03-inventory-management/03-VERIFICATION.md
+Stopped at: Completed 11-dashboard-kpis-vercel-deployment plan 11-02 (Vercel deployment configuration)
+Resume file: .planning/phases/11-dashboard-kpis-vercel-deployment/11-02-SUMMARY.md
