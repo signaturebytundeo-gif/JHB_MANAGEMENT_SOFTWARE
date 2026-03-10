@@ -141,7 +141,7 @@ export function SaleEditModal({ sale, channels, products, onClose }: SaleEditMod
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-quantity">Quantity</Label>
               <Input
@@ -180,7 +180,7 @@ export function SaleEditModal({ sale, channels, products, onClose }: SaleEditMod
 
           <div className="space-y-2">
             <Label>Payment Method</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {Object.values(PaymentMethod).map((method) => (
                 <button
                   key={method}

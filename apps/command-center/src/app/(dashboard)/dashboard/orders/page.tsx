@@ -16,10 +16,10 @@ async function SalesContent() {
   ]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
       {/* Left: Sale Form */}
       <div className="lg:col-span-1">
-        <div className="rounded-lg border bg-card p-6 sticky top-24">
+        <div className="rounded-lg border bg-card p-4 lg:p-6 lg:sticky lg:top-24">
           <h2 className="text-lg font-semibold mb-4">Log a Sale</h2>
           <SaleForm channels={channels} products={products} />
         </div>
@@ -27,7 +27,7 @@ async function SalesContent() {
 
       {/* Right: Sales List */}
       <div className="lg:col-span-2">
-        <div className="rounded-lg border bg-card p-6">
+        <div className="rounded-lg border bg-card p-4 lg:p-6">
           <h2 className="text-lg font-semibold mb-4">Sales History</h2>
           <SaleList sales={sales} channels={channels} products={products} />
         </div>
@@ -40,7 +40,7 @@ async function WebsiteOrdersContent() {
   const result = await getWebsiteOrders();
 
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <div className="rounded-lg border bg-card p-4 lg:p-6">
       <h2 className="text-lg font-semibold mb-4">Website Orders</h2>
       <WebsiteOrderList
         initialOrders={result.orders as any}
@@ -104,7 +104,7 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Orders & Sales</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Orders & Sales</h1>
         <p className="text-muted-foreground mt-2">
           Log sales by channel and track revenue across all platforms.
         </p>

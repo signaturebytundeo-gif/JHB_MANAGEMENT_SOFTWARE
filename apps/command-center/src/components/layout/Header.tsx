@@ -20,7 +20,7 @@ export function Header({ user, onMenuToggle }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-caribbean-gold/20">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4">
         {/* Left side: Mobile menu + Title */}
         <div className="flex items-center space-x-4">
           {onMenuToggle && (
@@ -38,7 +38,7 @@ export function Header({ user, onMenuToggle }: HeaderProps) {
               className="w-8 h-8 rounded-full object-cover"
             />
             <div>
-              <h2 className="text-lg font-semibold text-foreground leading-tight">
+              <h2 className="text-base sm:text-lg font-semibold text-foreground leading-tight">
                 Jamaica House Brand
               </h2>
               <p className="text-xs text-caribbean-gold font-medium -mt-0.5">

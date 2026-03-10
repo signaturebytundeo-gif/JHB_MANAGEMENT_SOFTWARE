@@ -178,7 +178,7 @@ export function SaleList({ sales, channels, products }: SaleListProps) {
       {/* Filters + Actions */}
       <div className="flex flex-wrap gap-3">
         <Select value={channelFilter} onValueChange={setChannelFilter}>
-          <SelectTrigger className="w-[180px] h-10">
+          <SelectTrigger className="w-full sm:w-[180px] h-10">
             <SelectValue placeholder="All Channels" />
           </SelectTrigger>
           <SelectContent>
@@ -192,7 +192,7 @@ export function SaleList({ sales, channels, products }: SaleListProps) {
         </Select>
 
         <Select value={productFilter} onValueChange={setProductFilter}>
-          <SelectTrigger className="w-[180px] h-10">
+          <SelectTrigger className="w-full sm:w-[180px] h-10">
             <SelectValue placeholder="All Products" />
           </SelectTrigger>
           <SelectContent>
@@ -249,7 +249,9 @@ export function SaleList({ sales, channels, products }: SaleListProps) {
           No sales recorded yet. Use the form to log your first sale.
         </div>
       ) : (
-        <div className="rounded-lg border overflow-hidden">
+        <>
+        {/* Desktop Table */}
+        <div className="hidden md:block rounded-lg border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
@@ -321,6 +323,51 @@ export function SaleList({ sales, channels, products }: SaleListProps) {
             </table>
           </div>
         </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {filteredSales.map((sale) => (
+            <div
+              key={sale.id}
+              className="rounded-lg border bg-card p-4 space-y-2 cursor-pointer hover:border-caribbean-green/50 transition-colors"
+              onClick={() => setEditingSaleId(sale.id)}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {format(new Date(sale.saleDate), 'MMM d, yyyy')}
+                </span>
+                <Badge variant="outline" className="border-caribbean-gold/50 text-caribbean-gold">
+                  {sale.channel.name}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{sale.product.name}</span>
+                <span className="text-sm font-semibold text-caribbean-green">
+                  ${Number(sale.totalAmount).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{sale.quantity} x ${Number(sale.unitPrice).toFixed(2)}</span>
+                <Badge variant="secondary">
+                  {PAYMENT_LABELS[sale.paymentMethod] || sale.paymentMethod}
+                </Badge>
+              </div>
+              {sale.referenceNumber && (
+                <p className="text-xs text-muted-foreground">Ref: {sale.referenceNumber}</p>
+              )}
+              <div className="pt-1" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(sale.id)}
+                  onChange={() => toggleSelect(sale.id)}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-xs text-muted-foreground ml-2">Select</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       )}
 
       {/* Edit Modal */}

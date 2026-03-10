@@ -22,7 +22,7 @@ async function StockLevelContent() {
   return (
     <div className="space-y-6">
       {/* Summary metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         <div className="rounded-lg border bg-card p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Total SKUs</p>
           <p className="text-2xl font-bold mt-1">{totalSKUs}</p>
@@ -80,7 +80,7 @@ async function AggregationContent() {
 function InventoryLoading() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="h-20 bg-muted rounded-lg" />
         ))}
@@ -97,7 +97,7 @@ export default async function InventoryPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Inventory Management</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Inventory Management</h1>
         <p className="text-muted-foreground mt-2">
           Real-time stock levels across all locations with color-coded alerts.
         </p>

@@ -40,7 +40,7 @@ async function KPICards({ role }: { role: string }) {
 
   if (role === 'ADMIN' || role === 'MANAGER') {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
         <KPICard
           title="Today's Revenue"
           value={`$${(salesMetrics.todayRevenue + orderMetrics.revenueToday).toFixed(2)}`}
@@ -83,7 +83,7 @@ async function KPICards({ role }: { role: string }) {
 
   if (role === 'SALES_REP') {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
         <KPICard
           title="My Sales Today"
           value={salesMetrics.todaySaleCount.toString()}
@@ -157,7 +157,7 @@ export default async function DashboardPage() {
       <div className="space-y-8">
         {/* Welcome section */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Welcome back, {user.name}
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
         {quickActions.length > 0 && (
           <div>
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
               {quickActions.map((action) => {
                 const Icon = action.icon;
 

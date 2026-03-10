@@ -134,7 +134,7 @@ export function SaleForm({ channels, products }: SaleFormProps) {
       </div>
 
       {/* Quantity + Unit Price (side by side) */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="quantity">Quantity</Label>
           <Input
@@ -184,7 +184,7 @@ export function SaleForm({ channels, products }: SaleFormProps) {
       {/* Payment Method Toggle */}
       <div className="space-y-2">
         <Label>Payment Method</Label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {Object.values(PaymentMethod).map((method) => (
             <button
               key={method}

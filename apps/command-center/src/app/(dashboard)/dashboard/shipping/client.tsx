@@ -66,7 +66,7 @@ export function ShippingPageClient({
     <div className="space-y-6">
       {/* Tab Navigation */}
       <div className="border-b border-border">
-        <nav className="flex gap-4">
+        <nav className="flex gap-2 sm:gap-4 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -113,9 +113,9 @@ export function ShippingPageClient({
                   key={order.paymentIntentId}
                   className="rounded-lg border bg-card p-4 hover:border-caribbean-green/50 transition-colors"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold">{order.customerName}</h3>
                         <span className="text-sm text-caribbean-gold font-medium">
                           ${order.amount.toFixed(2)}
