@@ -80,16 +80,14 @@ export function Sidebar({ user, isOpen = false, onClose }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — mobile: completely hidden unless open; desktop: always visible */}
       <aside
         className={`
           fixed left-0 top-0 h-full bg-caribbean-black border-r border-caribbean-gold/20
-          transition-transform duration-300 ease-in-out z-50
+          z-50
           ${collapsed ? 'lg:w-16' : 'lg:w-64'}
           w-64
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0
-          ${!isOpen ? 'max-lg:invisible max-lg:pointer-events-none' : ''}
+          ${isOpen ? 'flex' : 'hidden'} lg:flex
         `}
       >
         <div className="flex flex-col h-full">
