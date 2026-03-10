@@ -84,11 +84,12 @@ export function Sidebar({ user, isOpen = false, onClose }: SidebarProps) {
       <aside
         className={`
           fixed left-0 top-0 h-full bg-caribbean-black border-r border-caribbean-gold/20
-          transition-all duration-300 ease-in-out z-50
+          transition-transform duration-300 ease-in-out z-50
           ${collapsed ? 'lg:w-16' : 'lg:w-64'}
           w-64
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
+          ${!isOpen ? 'max-lg:invisible max-lg:pointer-events-none' : ''}
         `}
       >
         <div className="flex flex-col h-full">

@@ -19,7 +19,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Sidebar
         user={user}
         isOpen={sidebarOpen}
