@@ -1,8 +1,7 @@
 import { type ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { getUser } from '@/lib/dal';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Header } from '@/components/layout/Header';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 
 export default async function DashboardLayout({
   children,
@@ -15,16 +14,5 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar user={user} />
-
-      {/* Main content area */}
-      <div className="lg:pl-64 transition-all duration-300">
-        <Header user={user} />
-        <main className="p-6">{children}</main>
-      </div>
-    </div>
-  );
+  return <DashboardShell user={user}>{children}</DashboardShell>;
 }

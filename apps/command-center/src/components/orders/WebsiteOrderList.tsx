@@ -174,8 +174,8 @@ export function WebsiteOrderList({
         </span>
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border bg-card">
+      {/* Desktop Table */}
+      <div className="hidden md:block rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -278,6 +278,83 @@ export function WebsiteOrderList({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {orders.length === 0 ? (
+          <div className="text-center text-muted-foreground py-8 text-sm">
+            No website orders found
+          </div>
+        ) : (
+          orders.map((order) => {
+            const badge = STATUS_BADGES[order.status];
+            const items = parseItems(order.items);
+            const src = order.source || 'WEBSITE';
+            const sourceBadge = SOURCE_BADGES[src];
+            return (
+              <div key={order.id} className="rounded-lg border bg-card p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(order.orderDate), 'MMM d, yyyy')}
+                  </span>
+                  {sourceBadge && (
+                    <Badge className={sourceBadge.className}>{sourceBadge.label}</Badge>
+                  )}
+                </div>
+                <div>
+                  <div className="font-medium text-sm">
+                    {order.status === 'NEW' && (
+                      <Circle className="w-2 h-2 fill-caribbean-gold text-caribbean-gold inline mr-1.5" />
+                    )}
+                    {order.customer.firstName} {order.customer.lastName}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {order.customer.email}
+                  </div>
+                </div>
+                {items.length > 0 && (
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {items.map((item) => `${item.name} x${item.qty}`).join(', ')}
+                  </p>
+                )}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-sm font-semibold">
+                    ${Number(order.orderTotal).toFixed(2)}
+                  </span>
+                  <Badge className={badge.className}>{badge.label}</Badge>
+                </div>
+                {order.trackingNumber && order.carrier && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Truck className="w-3 h-3" />
+                    {order.carrier} — {order.trackingNumber}
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-1 border-t border-border">
+                  <select
+                    value={order.status}
+                    onChange={(e) =>
+                      handleStatusChange(order.id, e.target.value as OrderStatus)
+                    }
+                    className="text-xs bg-muted border rounded px-2 py-1 text-foreground"
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {STATUS_BADGES[s].label}
+                      </option>
+                    ))}
+                  </select>
+                  <Link
+                    href={`/dashboard/orders/${order.id}`}
+                    className="text-xs text-muted-foreground hover:text-caribbean-green underline"
+                  >
+                    View
+                  </Link>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       {/* Pagination */}
