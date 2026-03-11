@@ -131,13 +131,13 @@ Plans:
   7. User can track subscription members with lifecycle status and 6-month loyalty rewards
   8. User can manage lead pipeline with stages and follow-up reminders
 
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 05-01: TBD during phase planning
-- [ ] 05-02: TBD during phase planning
-- [ ] 05-03: TBD during phase planning
-- [ ] 05-04: TBD during phase planning
+- [ ] 05-01-PLAN.md — CRM schema extensions (Customer fields, DistributorAgreement, SubscriptionMember, Lead, PromotionalPricing models), Zod validators, pricing calculation utility, discount seed data
+- [ ] 05-02-PLAN.md — Customer CRM hub with profiles, detail pages, purchase history, lifetime value, tabbed CRM navigation
+- [ ] 05-03-PLAN.md — Subscription member lifecycle management with renewal reminders, distributor agreements with territory and commission tracking
+- [ ] 05-04-PLAN.md — Lead pipeline with stage management and follow-up reminders, promotional pricing CRUD, price calculator widget
 
 ### Phase 6: Financial Management
 **Goal**: Users can track expenses with approval workflows, view revenue by channel, calculate COGS, and generate financial reports.
