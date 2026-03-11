@@ -6,14 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 04 — Order Management. Plan 04-02 complete. Operator order server actions, form, list, and detail page deployed.
+**Current focus:** Phase 04 — Order Management. Plan 04-03 complete. Order fulfillment engine with FIFO allocation, approval workflow, and pick/pack lists deployed.
 
 ## Current Position
 
 Phase: 04 (Order Management)
-Plan: 2 of 4 complete
-Status: In Progress — Order creation workflow complete, proceeding to order status transitions and FIFO deductions
-Last activity: 2026-03-11 — Phase 04-02 execution complete, operator order CRUD + UI deployed
+Plan: 3 of 4 complete
+Status: In Progress — Order fulfillment engine complete, proceeding to invoice generation (plan 04-04)
+Last activity: 2026-03-11 — Phase 04-03 execution complete, confirmOrder/approveOrder/updateOrderStatus/getPickPackList + OrderActions/PickPackList components deployed
 
 Progress: [████████░░] 65%
 
@@ -32,10 +32,10 @@ Progress: [████████░░] 65%
 | 02-production-quality-control | 4 | 17m | 4.3m |
 | 03-inventory-management | 4 | 15m | 3.75m |
 | 11-dashboard-kpis-vercel-deployment | 2 | 6m | 3m |
-| 04-order-management | 2 | 7m | 3.5m |
+| 04-order-management | 3 | 10m | 3.3m |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (5m), 11-01 (3m), 11-02 (3m)
+- Last 5 plans: 11-01 (3m), 11-02 (3m), 04-02 (3.5m), 04-03 (3m)
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
@@ -111,6 +111,8 @@ Recent decisions affecting current work:
 - User.name used in operator order server actions (not firstName/lastName) — User model has single name field unlike Customer model
 - Dual-dispatch in [id]/page.tsx — getOperatorOrderById checked first, null result falls through to WebsiteOrder for backward compat
 - OperatorOrderList client-side filtering — small manually-created dataset, instant response without server round-trips
+- [Phase 04-order-management]: confirmOrder wraps FIFO + DEDUCTION creation inside db.$transaction for atomicity
+- [Phase 04-order-management]: Approval thresholds queried from DB ApprovalThreshold table, approvalType string mapped to logic branches
 
 ### Pending Todos
 
@@ -123,5 +125,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-11
-Stopped at: Completed 04-order-management plan 04-02 (Operator Order Actions and UI)
-Resume file: .planning/phases/04-order-management/04-02-SUMMARY.md
+Stopped at: Completed 04-order-management plan 04-03 (Order Fulfillment Engine)
+Resume file: .planning/phases/04-order-management/04-03-SUMMARY.md
