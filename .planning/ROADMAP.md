@@ -106,12 +106,13 @@ Plans:
   5. System tracks invoice status and late payment interest at 1.5% per month
   6. User can view Accounts Receivable aging report (current, 30, 60, 90+ days)
 
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 04-01: TBD during phase planning
-- [ ] 04-02: TBD during phase planning
-- [ ] 04-03: TBD during phase planning
+- [ ] 04-01-PLAN.md — Prisma schema (Order, OrderLineItem, Invoice, InvoicePayment models, 3 new enums), Zod validators, order/invoice number generators
+- [ ] 04-02-PLAN.md — Operator order CRUD server actions, multi-line-item creation form, order list tab, order detail page
+- [ ] 04-03-PLAN.md — Order confirmation with FIFO allocation, approval workflow, status transitions, pick/pack list generation
+- [ ] 04-04-PLAN.md — Invoice generation, payment logging, branded print view, late fees, AR aging report, finance dashboard
 
 ### Phase 5: Sales Channels & CRM
 **Goal**: Users can track orders across all 9 sales channels, apply channel-specific pricing rules, and manage customer relationships with purchase history.
@@ -211,7 +212,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Foundation & Authentication | 4/4 | Complete | 2026-02-14 |
 | 2. Production & Quality Control | 4/4 | Complete | 2026-02-17 |
 | 3. Inventory Management | 4/4 | Complete | 2026-03-06 |
-| 4. Order Management | 0/3 | Not started | - |
+| 4. Order Management | 0/4 | Not started | - |
 | 5. Sales Channels & CRM | 0/4 | Not started | - |
 | 6. Financial Management | 0/3 | Not started | - |
 | 7. Dashboards & Reporting | 0/3 | Not started | - |
