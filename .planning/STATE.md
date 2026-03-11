@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 11 (inserted) — Dashboard KPIs + Vercel Deployment. Plan 11-02 complete. App is deployment-ready.
+**Current focus:** Phase 04 — Order Management. Plan 04-01 complete. Data foundation (schema models, validators, number generators) ready for action layer.
 
 ## Current Position
 
-Phase: 11 (inserted) of 11+ (Dashboard KPIs + Vercel Deployment)
-Plan: 2 of 2 complete
-Status: Phase 11 Complete — App ready for Vercel production deployment
-Last activity: 2026-03-06 — Phase 11-02 execution complete, Vercel deployment configured
+Phase: 04 (Order Management)
+Plan: 1 of 4 complete
+Status: In Progress — Data foundation complete, proceeding to order actions and UI
+Last activity: 2026-03-11 — Phase 04-01 execution complete, schema + validators + number generators deployed
 
-Progress: [██████░░░░] 55%
+Progress: [███████░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 5 minutes
-- Total execution time: 0.87 hours
+- Total execution time: 0.92 hours
 
 **By Phase:**
 
@@ -32,6 +32,7 @@ Progress: [██████░░░░] 55%
 | 02-production-quality-control | 4 | 17m | 4.3m |
 | 03-inventory-management | 4 | 15m | 3.75m |
 | 11-dashboard-kpis-vercel-deployment | 2 | 6m | 3m |
+| 04-order-management | 1 | 3m | 3m |
 
 **Recent Trend:**
 - Last 5 plans: 03-03 (5m), 11-01 (3m), 11-02 (3m)
@@ -103,6 +104,10 @@ Recent decisions affecting current work:
 - Prisma schema datasource uses url + directUrl — pooled URL (PrismaNeon adapter) for runtime, direct URL for prisma migrate deploy DDL
 - DIRECT_URL for Neon migrations — pooled Neon connections cannot run DDL reliably; direct connection bypasses PgBouncer
 - .env.example restructured to production-first with Neon PostgreSQL template and all Vercel env vars documented
+- OperatorOrderStatus separate from OrderStatus — existing enum is used by WebsiteOrder and typed as Record<OrderStatus, ...> in WebsiteOrderList; extending it would break existing components and pollute webhook-order domain
+- Named relation CustomerOperatorOrders on Customer — Customer already has orders WebsiteOrder[]; unnamed Order relation would cause Prisma validation error
+- eventDate field added to Order for CATERING type — required anchor for balanceDueDate (subDays(eventDate, 7)) per research pitfall 6
+- lineItems passed as JSON string in hidden input — FormData cannot serialize arrays; Zod .transform() parses on server before validation
 
 ### Pending Todos
 
@@ -114,6 +119,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Completed 11-dashboard-kpis-vercel-deployment plan 11-02 (Vercel deployment configuration)
-Resume file: .planning/phases/11-dashboard-kpis-vercel-deployment/11-02-SUMMARY.md
+Last session: 2026-03-11
+Stopped at: Completed 04-order-management plan 04-01 (Order Management Data Foundation)
+Resume file: .planning/phases/04-order-management/04-01-SUMMARY.md
