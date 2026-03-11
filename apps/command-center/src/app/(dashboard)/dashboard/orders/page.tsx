@@ -1,11 +1,15 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { getSales, getChannels, getProducts } from '@/app/actions/sales';
 import { getWebsiteOrders } from '@/app/actions/orders';
 import { getMarketplaceStatus, getSyncHistory } from '@/app/actions/marketplace-sync';
+import { getOperatorOrders } from '@/app/actions/operator-orders';
 import { SaleForm } from '@/components/sales/SaleForm';
 import { SaleList } from '@/components/sales/SaleList';
 import { WebsiteOrderList } from '@/components/orders/WebsiteOrderList';
 import { MarketplaceSyncPanel } from '@/components/marketplace/MarketplaceSyncPanel';
+import { OperatorOrderList } from '@/components/orders/OperatorOrderList';
 import { OrdersTabs } from './tabs';
 
 async function SalesContent() {
@@ -48,6 +52,26 @@ async function WebsiteOrdersContent() {
         initialPage={result.page}
         initialTotalPages={result.totalPages}
       />
+    </div>
+  );
+}
+
+async function OperatorOrdersContent() {
+  const orders = await getOperatorOrders();
+
+  return (
+    <div className="rounded-lg border bg-card p-4 lg:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Operator Orders</h2>
+        <Link
+          href="/dashboard/orders/new"
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-caribbean-green text-white text-sm font-medium hover:bg-caribbean-green/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          New Order
+        </Link>
+      </div>
+      <OperatorOrderList orders={orders} />
     </div>
   );
 }
@@ -103,11 +127,20 @@ function OrdersLoading() {
 export default function OrdersPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Orders & Sales</h1>
-        <p className="text-muted-foreground mt-2">
-          Log sales by channel and track revenue across all platforms.
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Orders & Sales</h1>
+          <p className="text-muted-foreground mt-2">
+            Log sales by channel and track revenue across all platforms.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/orders/new"
+          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-md bg-caribbean-green text-white text-sm font-medium hover:bg-caribbean-green/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          New Order
+        </Link>
       </div>
 
       <OrdersTabs
@@ -124,6 +157,11 @@ export default function OrdersPage() {
         marketplaceSync={
           <Suspense fallback={<OrdersLoading />}>
             <MarketplaceSyncContent />
+          </Suspense>
+        }
+        operatorOrders={
+          <Suspense fallback={<OrdersLoading />}>
+            <OperatorOrdersContent />
           </Suspense>
         }
       />

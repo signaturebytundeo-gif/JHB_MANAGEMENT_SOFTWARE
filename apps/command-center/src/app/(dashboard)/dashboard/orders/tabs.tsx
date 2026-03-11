@@ -6,10 +6,11 @@ interface OrdersTabsProps {
   manualSales: ReactNode;
   websiteOrders: ReactNode;
   marketplaceSync: ReactNode;
+  operatorOrders: ReactNode;
 }
 
-export function OrdersTabs({ manualSales, websiteOrders, marketplaceSync }: OrdersTabsProps) {
-  const [activeTab, setActiveTab] = useState<'manual' | 'website' | 'marketplace'>('manual');
+export function OrdersTabs({ manualSales, websiteOrders, marketplaceSync, operatorOrders }: OrdersTabsProps) {
+  const [activeTab, setActiveTab] = useState<'manual' | 'website' | 'marketplace' | 'operator'>('manual');
 
   return (
     <div className="space-y-6">
@@ -44,11 +45,22 @@ export function OrdersTabs({ manualSales, websiteOrders, marketplaceSync }: Orde
         >
           Marketplace Sync
         </button>
+        <button
+          onClick={() => setActiveTab('operator')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'operator'
+              ? 'border-caribbean-green text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Operator Orders
+        </button>
       </div>
 
       {activeTab === 'manual' && manualSales}
       {activeTab === 'website' && websiteOrders}
       {activeTab === 'marketplace' && marketplaceSync}
+      {activeTab === 'operator' && operatorOrders}
     </div>
   );
 }

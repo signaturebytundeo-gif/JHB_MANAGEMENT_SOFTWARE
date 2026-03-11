@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { ChevronLeft, Package, User, CreditCard, Truck } from 'lucide-react';
+import { ChevronLeft, Package, User, CreditCard, Truck, MapPin, ClipboardList } from 'lucide-react';
 import { verifySession } from '@/lib/dal';
 import { getWebsiteOrderById } from '@/app/actions/orders';
+import { getOperatorOrderById } from '@/app/actions/operator-orders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { OrderStatusControls } from '@/components/orders/OrderStatusControls';
+import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -47,6 +49,12 @@ const STATUS_BADGES: Record<string, { label: string; className: string }> = {
 export default async function OrderDetailPage({ params }: PageProps) {
   await verifySession();
   const { id } = await params;
+
+  // Try operator order first (has orderNumber field)
+  const operatorOrder = await getOperatorOrderById(id);
+  if (operatorOrder) {
+    return <OperatorOrderDetail order={operatorOrder} />;
+  }
 
   const order = await getWebsiteOrderById(id);
   if (!order) notFound();
@@ -246,6 +254,243 @@ export default async function OrderDetailPage({ params }: PageProps) {
             currentStatus={order.status}
             customerName={`${order.customer.firstName} ${order.customer.lastName}`}
           />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Operator Order Detail ──────────────────────────────────────────────────────
+
+import type { OperatorOrderDetail } from '@/app/actions/operator-orders';
+
+function OperatorOrderDetail({ order }: { order: NonNullable<OperatorOrderDetail> }) {
+  const PAYMENT_LABELS: Record<string, string> = {
+    CASH: 'Cash',
+    CREDIT_CARD: 'Credit Card',
+    SQUARE: 'Square',
+    STRIPE: 'Stripe',
+    ZELLE: 'Zelle',
+    CHECK: 'Check',
+    NET_30: 'Net 30',
+    AMAZON_PAY: 'Amazon Pay',
+    OTHER: 'Other',
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Back link */}
+      <div>
+        <Link
+          href="/dashboard/orders"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Orders
+        </Link>
+      </div>
+
+      {/* Header */}
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-mono">{order.orderNumber}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {order.orderType.replace('_', ' ')} Order ·{' '}
+            Created {format(new Date(order.createdAt), 'MMMM d, yyyy')}
+            {order.createdBy && ` by ${order.createdBy.name}`}
+          </p>
+        </div>
+        <OrderStatusBadge status={order.status} />
+      </div>
+
+      {/* Line Items */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            Line Items
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Qty</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {order.lineItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">
+                      {item.product.name}
+                      <span className="ml-2 text-xs text-muted-foreground font-normal">
+                        ({item.product.sku})
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">{item.quantity}</TableCell>
+                    <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${item.totalPrice.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="bg-muted/50 font-semibold">
+                  <TableCell colSpan={3} className="font-semibold text-right">
+                    Order Total
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">
+                    ${order.totalAmount.toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Customer (if linked) */}
+      {order.customer && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Customer
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Name</div>
+                <div className="mt-1">
+                  {order.customer.firstName} {order.customer.lastName}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Email</div>
+                <div className="mt-1">{order.customer.email}</div>
+              </div>
+              {order.customer.phone && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Phone</div>
+                  <div className="mt-1">{order.customer.phone}</div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Order Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Order Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Channel</div>
+              <div className="mt-1">{order.channel.name}</div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Location</div>
+              <div className="mt-1">{order.location.name}</div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">Payment Method</div>
+              <div className="mt-1">{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</div>
+            </div>
+            {order.notes && (
+              <div className="sm:col-span-2">
+                <div className="text-sm font-medium text-muted-foreground">Notes</div>
+                <div className="mt-1 text-sm">{order.notes}</div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Catering Details */}
+      {order.orderType === 'CATERING' && (
+        <Card className="border-blue-500/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-500">
+              <ClipboardList className="h-5 w-5" />
+              Catering Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {order.depositAmount !== null && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Deposit Amount</div>
+                  <div className="mt-1 font-semibold">${order.depositAmount.toFixed(2)}</div>
+                </div>
+              )}
+              {order.eventDate && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Event Date</div>
+                  <div className="mt-1">{format(new Date(order.eventDate), 'MMMM d, yyyy')}</div>
+                </div>
+              )}
+              {order.balanceDueDate && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Balance Due Date</div>
+                  <div className="mt-1">{format(new Date(order.balanceDueDate), 'MMMM d, yyyy')}</div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Farmers Market Details */}
+      {order.orderType === 'FARMERS_MARKET' && (
+        <Card className="border-yellow-500/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-600">
+              <MapPin className="h-5 w-5" />
+              Farmer's Market Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {order.eventLocation && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Event Location</div>
+                  <div className="mt-1">{order.eventLocation}</div>
+                </div>
+              )}
+              {order.weatherNotes && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Weather Notes</div>
+                  <div className="mt-1 text-sm">{order.weatherNotes}</div>
+                </div>
+              )}
+              {order.footTrafficNotes && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">Foot Traffic Notes</div>
+                  <div className="mt-1 text-sm">{order.footTrafficNotes}</div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Actions placeholder — wired in plan 04-03 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Status transitions (Confirm, Ship, Complete) will be available in the next phase.
+          </p>
         </CardContent>
       </Card>
     </div>
