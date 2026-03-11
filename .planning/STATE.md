@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 04 — Order Management. Plan 04-03 complete. Order fulfillment engine with FIFO allocation, approval workflow, and pick/pack lists deployed.
+**Current focus:** Phase 04 — Order Management complete. All 4 plans executed. Invoicing system with Net 30, late fees, AR aging, and branded print invoices deployed.
 
 ## Current Position
 
 Phase: 04 (Order Management)
-Plan: 3 of 4 complete
-Status: In Progress — Order fulfillment engine complete, proceeding to invoice generation (plan 04-04)
-Last activity: 2026-03-11 — Phase 04-03 execution complete, confirmOrder/approveOrder/updateOrderStatus/getPickPackList + OrderActions/PickPackList components deployed
+Plan: 4 of 4 complete
+Status: Complete — Invoice system deployed; createInvoice/logPayment/flagOverdueInvoices/getARAgingReport + InvoiceList/InvoiceDetail/PaymentModal/CreateInvoiceModal/ARAgingReport components live
+Last activity: 2026-03-11 — Phase 04-04 execution complete, invoicing system fully implemented
 
-Progress: [████████░░] 65%
+Progress: [█████████░] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: 5 minutes
-- Total execution time: 0.92 hours
+- Total execution time: 0.97 hours
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [████████░░] 65%
 | 02-production-quality-control | 4 | 17m | 4.3m |
 | 03-inventory-management | 4 | 15m | 3.75m |
 | 11-dashboard-kpis-vercel-deployment | 2 | 6m | 3m |
-| 04-order-management | 3 | 10m | 3.3m |
+| 04-order-management | 4 | 15m | 3.75m |
 
 **Recent Trend:**
-- Last 5 plans: 11-01 (3m), 11-02 (3m), 04-02 (3.5m), 04-03 (3m)
+- Last 5 plans: 11-02 (3m), 04-02 (3.5m), 04-03 (3m), 04-04 (5m)
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
@@ -113,6 +113,9 @@ Recent decisions affecting current work:
 - OperatorOrderList client-side filtering — small manually-created dataset, instant response without server round-trips
 - [Phase 04-order-management]: confirmOrder wraps FIFO + DEDUCTION creation inside db.$transaction for atomicity
 - [Phase 04-order-management]: Approval thresholds queried from DB ApprovalThreshold table, approvalType string mapped to logic branches
+- [Phase 04-04 invoices]: Finance page flags overdue invoices on each load — eliminates cron job dependency, ensures real-time overdue detection
+- [Phase 04-04 invoices]: FinanceDashboardClient + InvoiceDetailClient thin wrapper pattern — server page fetches all data, client component handles modal state only
+- [Phase 04-04 invoices]: lateFeeAmount stored on invoice at flagging time and recomputed on read — stored value used for AR aging summary totals
 
 ### Pending Todos
 
@@ -125,5 +128,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-11
-Stopped at: Completed 04-order-management plan 04-03 (Order Fulfillment Engine)
-Resume file: .planning/phases/04-order-management/04-03-SUMMARY.md
+Stopped at: Completed 04-order-management plan 04-04 (Invoice System & AR Aging)
+Resume file: .planning/phases/04-order-management/04-04-SUMMARY.md
