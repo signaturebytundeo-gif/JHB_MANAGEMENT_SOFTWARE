@@ -122,10 +122,10 @@ Plans:
 **Requirements**: PRICE-06, PRICE-07, PRICE-08, PRICE-09, CRM-01, CRM-02, CRM-03, CRM-04, CRM-05, CRM-06, CRM-07, CRM-08, CRM-09, CRM-10, CRM-11
 
 **Success Criteria** (what must be TRUE):
-  1. User can create orders from any of 9 channels with channel-specific workflows
+  1. ~~User can create orders from any of 9 channels with channel-specific workflows~~ (Delivered in Phase 4: OperatorOrderForm with channel selection and order type toggle)
   2. System automatically calculates volume discounts (5% at 6-10 cases, 10% at 11+ cases)
   3. System applies frequency discounts (quarterly 2%, annual 5%) and promotional pricing
-  4. User can log farmers market/event sales with location, weather, foot traffic notes
+  4. ~~User can log farmers market/event sales with location, weather, foot traffic notes~~ (Delivered in Phase 4: OperatorOrderForm conditional CATERING/FARMERS_MARKET sections)
   5. User can manage customer profiles with purchase history, lifetime value, and payment terms
   6. User can manage distributor agreements with territory assignments and commission tracking
   7. User can track subscription members with lifecycle status and 6-month loyalty rewards
