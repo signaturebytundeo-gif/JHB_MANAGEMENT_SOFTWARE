@@ -111,6 +111,32 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum OperatorOrderStatus {
+  DRAFT
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIAL
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum OperatorOrderType {
+  STANDARD
+  CATERING
+  FARMERS_MARKET
+}
+
 enum OrderSource {
   WEBSITE
   AMAZON
@@ -156,6 +182,10 @@ model User {
   marketplaceSyncs      MarketplaceSync[]
   createdMovements      InventoryMovement[] @relation("MovementCreator")
   approvedMovements     InventoryMovement[] @relation("MovementApprover")
+  createdOrders         Order[]             @relation("OrderCreator")
+  approvedOrders        Order[]             @relation("OrderApprover")
+  secondApprovedOrders  Order[]             @relation("OrderSecondApprover")
+  invoicePayments       InvoicePayment[]
 
   @@index([email])
   @@index([role])
@@ -215,6 +245,7 @@ model Product {
   sales                 Sale[]
   stockAdjustments      StockAdjustment[]
   inventoryTransactions InventoryTransaction[]
+  orderLineItems        OrderLineItem[]
 
   @@index([sku])
   @@index([isActive])
@@ -281,6 +312,7 @@ model Location {
   shipments             Shipment[]
   movementsFrom         InventoryMovement[] @relation("FromLocation")
   movementsTo           InventoryMovement[] @relation("ToLocation")
+  orders                Order[]
 
   @@index([name])
   @@index([type])
@@ -297,7 +329,8 @@ model SalesChannel {
   updatedAt   DateTime    @updatedAt
 
   // Relations
-  sales Sale[]
+  sales  Sale[]
+  orders Order[]
 
   @@index([name])
   @@index([type])
@@ -485,6 +518,7 @@ model InventoryMovement {
   approvedById     String?
   approvedAt       DateTime?
   createdById      String
+  orderId          String?
   createdAt        DateTime                   @default(now())
 
   // Relations
@@ -493,6 +527,7 @@ model InventoryMovement {
   toLocation   Location? @relation("ToLocation", fields: [toLocationId], references: [id])
   approvedBy   User?     @relation("MovementApprover", fields: [approvedById], references: [id])
   createdBy    User      @relation("MovementCreator", fields: [createdById], references: [id])
+  order        Order?    @relation("OrderMovements", fields: [orderId], references: [id])
 
   @@index([batchId])
   @@index([fromLocationId])
@@ -670,7 +705,9 @@ model Customer {
   updatedAt  DateTime @updatedAt
 
   // Relations
-  orders WebsiteOrder[]
+  orders         WebsiteOrder[]
+  operatorOrders Order[]         @relation("CustomerOperatorOrders")
+  invoices       Invoice[]
 
   @@index([email])
   @@index([lastName])
@@ -727,4 +764,126 @@ model MarketplaceSync {
   @@index([platform])
   @@index([status])
   @@index([startedAt])
+}
+
+// ============================================================================
+// ORDER MANAGEMENT MODELS (Phase 4)
+// ============================================================================
+
+model Order {
+  id                 String              @id @default(cuid())
+  orderNumber        String              @unique
+  status             OperatorOrderStatus @default(DRAFT)
+  orderType          OperatorOrderType   @default(STANDARD)
+  customerId         String?
+  channelId          String
+  locationId         String
+  paymentMethod      PaymentMethod
+  orderDate          DateTime            @default(now())
+  notes              String?
+
+  // Catering-specific fields (ORD-09)
+  depositAmount      Decimal?
+  depositPaidAt      DateTime?
+  balanceDueDate     DateTime?
+  eventDate          DateTime?
+
+  // Farmers market / event fields (ORD-08)
+  eventLocation      String?
+  weatherNotes       String?
+  footTrafficNotes   String?
+
+  // Approval tracking (ORD-06)
+  totalAmount        Decimal             @default(0)
+  approvalStatus     String?
+  approvedById       String?
+  secondApprovedById String?
+  approvedAt         DateTime?
+
+  // Audit
+  createdById        String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Relations
+  customer           Customer?           @relation("CustomerOperatorOrders", fields: [customerId], references: [id])
+  channel            SalesChannel        @relation(fields: [channelId], references: [id])
+  location           Location            @relation(fields: [locationId], references: [id])
+  createdBy          User                @relation("OrderCreator", fields: [createdById], references: [id])
+  approvedBy         User?               @relation("OrderApprover", fields: [approvedById], references: [id])
+  secondApprovedBy   User?               @relation("OrderSecondApprover", fields: [secondApprovedById], references: [id])
+  lineItems          OrderLineItem[]
+  invoice            Invoice?
+  inventoryMovements InventoryMovement[] @relation("OrderMovements")
+
+  @@index([status])
+  @@index([customerId])
+  @@index([channelId])
+  @@index([orderDate])
+  @@index([orderType])
+}
+
+model OrderLineItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  productId  String
+  quantity   Int
+  unitPrice  Decimal
+  totalPrice Decimal
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  orderId       String        @unique
+  customerId    String?
+  status        InvoiceStatus @default(DRAFT)
+  subtotal      Decimal
+  taxAmount     Decimal       @default(0)
+  totalAmount   Decimal
+  paidAmount    Decimal       @default(0)
+  issuedAt      DateTime?
+  dueDate       DateTime?
+  paidAt        DateTime?
+  viewedAt      DateTime?
+  overdueAt     DateTime?
+  lateFeeAmount Decimal       @default(0)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  order    Order            @relation(fields: [orderId], references: [id])
+  customer Customer?        @relation(fields: [customerId], references: [id])
+  payments InvoicePayment[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([dueDate])
+  @@index([issuedAt])
+}
+
+model InvoicePayment {
+  id            String        @id @default(cuid())
+  invoiceId     String
+  amount        Decimal
+  paymentMethod PaymentMethod
+  paidAt        DateTime
+  notes         String?
+  createdById   String
+  createdAt     DateTime      @default(now())
+
+  // Relations
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  createdBy User    @relation(fields: [createdById], references: [id])
+
+  @@index([invoiceId])
+  @@index([paidAt])
 }
