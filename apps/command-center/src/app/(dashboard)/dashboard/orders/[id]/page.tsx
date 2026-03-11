@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/table';
 import { OrderStatusControls } from '@/components/orders/OrderStatusControls';
 import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
+import { OrderActions } from '@/components/orders/OrderActions';
+import { PickPackList } from '@/components/orders/PickPackList';
+import { getPickPackList } from '@/app/actions/operator-orders';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -53,7 +56,12 @@ export default async function OrderDetailPage({ params }: PageProps) {
   // Try operator order first (has orderNumber field)
   const operatorOrder = await getOperatorOrderById(id);
   if (operatorOrder) {
-    return <OperatorOrderDetail order={operatorOrder} />;
+    // Fetch pick/pack data for CONFIRMED and later statuses
+    const PICK_PACK_STATUSES = ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'];
+    const pickPackData = PICK_PACK_STATUSES.includes(operatorOrder.status)
+      ? await getPickPackList(id)
+      : null;
+    return <OperatorOrderDetail order={operatorOrder} pickPackData={pickPackData} />;
   }
 
   const order = await getWebsiteOrderById(id);
@@ -262,9 +270,15 @@ export default async function OrderDetailPage({ params }: PageProps) {
 
 // ── Operator Order Detail ──────────────────────────────────────────────────────
 
-import type { OperatorOrderDetail } from '@/app/actions/operator-orders';
+import type { OperatorOrderDetail, PickPackList as PickPackListType } from '@/app/actions/operator-orders';
 
-function OperatorOrderDetail({ order }: { order: NonNullable<OperatorOrderDetail> }) {
+function OperatorOrderDetail({
+  order,
+  pickPackData,
+}: {
+  order: NonNullable<OperatorOrderDetail>;
+  pickPackData?: PickPackListType | null;
+}) {
   const PAYMENT_LABELS: Record<string, string> = {
     CASH: 'Cash',
     CREDIT_CARD: 'Credit Card',
@@ -482,17 +496,41 @@ function OperatorOrderDetail({ order }: { order: NonNullable<OperatorOrderDetail
         </Card>
       )}
 
-      {/* Actions placeholder — wired in plan 04-03 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Status transitions (Confirm, Ship, Complete) will be available in the next phase.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Order Actions — status transitions and FIFO confirmation */}
+      {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Order Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrderActions
+              order={{
+                id: order.id,
+                status: order.status,
+                approvalStatus: order.approvalStatus,
+                totalAmount: order.totalAmount,
+                approvedById: order.approvedById,
+              }}
+              pickPackData={pickPackData}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pick/Pack List — always visible for PROCESSING */}
+      {order.status === 'PROCESSING' && pickPackData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5" />
+              Pick / Pack List
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PickPackList data={pickPackData} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
