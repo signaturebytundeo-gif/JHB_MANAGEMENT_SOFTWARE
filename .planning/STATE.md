@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 04 — Order Management. Plan 04-01 complete. Data foundation (schema models, validators, number generators) ready for action layer.
+**Current focus:** Phase 04 — Order Management. Plan 04-02 complete. Operator order server actions, form, list, and detail page deployed.
 
 ## Current Position
 
 Phase: 04 (Order Management)
-Plan: 1 of 4 complete
-Status: In Progress — Data foundation complete, proceeding to order actions and UI
-Last activity: 2026-03-11 — Phase 04-01 execution complete, schema + validators + number generators deployed
+Plan: 2 of 4 complete
+Status: In Progress — Order creation workflow complete, proceeding to order status transitions and FIFO deductions
+Last activity: 2026-03-11 — Phase 04-02 execution complete, operator order CRUD + UI deployed
 
-Progress: [███████░░░] 60%
+Progress: [████████░░] 65%
 
 ## Performance Metrics
 
@@ -32,7 +32,7 @@ Progress: [███████░░░] 60%
 | 02-production-quality-control | 4 | 17m | 4.3m |
 | 03-inventory-management | 4 | 15m | 3.75m |
 | 11-dashboard-kpis-vercel-deployment | 2 | 6m | 3m |
-| 04-order-management | 1 | 3m | 3m |
+| 04-order-management | 2 | 7m | 3.5m |
 
 **Recent Trend:**
 - Last 5 plans: 03-03 (5m), 11-01 (3m), 11-02 (3m)
@@ -108,6 +108,9 @@ Recent decisions affecting current work:
 - Named relation CustomerOperatorOrders on Customer — Customer already has orders WebsiteOrder[]; unnamed Order relation would cause Prisma validation error
 - eventDate field added to Order for CATERING type — required anchor for balanceDueDate (subDays(eventDate, 7)) per research pitfall 6
 - lineItems passed as JSON string in hidden input — FormData cannot serialize arrays; Zod .transform() parses on server before validation
+- User.name used in operator order server actions (not firstName/lastName) — User model has single name field unlike Customer model
+- Dual-dispatch in [id]/page.tsx — getOperatorOrderById checked first, null result falls through to WebsiteOrder for backward compat
+- OperatorOrderList client-side filtering — small manually-created dataset, instant response without server round-trips
 
 ### Pending Todos
 
@@ -120,5 +123,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-11
-Stopped at: Completed 04-order-management plan 04-01 (Order Management Data Foundation)
-Resume file: .planning/phases/04-order-management/04-01-SUMMARY.md
+Stopped at: Completed 04-order-management plan 04-02 (Operator Order Actions and UI)
+Resume file: .planning/phases/04-order-management/04-02-SUMMARY.md
