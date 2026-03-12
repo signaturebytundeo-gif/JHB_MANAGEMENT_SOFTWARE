@@ -13,6 +13,31 @@ datasource db {
 // ENUMS
 // ============================================================================
 
+enum CustomerType {
+  RETAIL
+  WHOLESALE
+  DISTRIBUTOR
+  RESTAURANT
+  SUBSCRIPTION
+  EVENT
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  EXPIRED
+}
+
+enum LeadStage {
+  LEAD
+  CONTACTED
+  MEETING
+  PROPOSAL
+  NEGOTIATION
+  CLOSED
+}
+
 enum Role {
   ADMIN
   MANAGER
@@ -186,6 +211,8 @@ model User {
   approvedOrders        Order[]             @relation("OrderApprover")
   secondApprovedOrders  Order[]             @relation("OrderSecondApprover")
   invoicePayments       InvoicePayment[]
+  leadsAssigned         Lead[]              @relation("LeadAssignee")
+  leadsCreated          Lead[]              @relation("LeadCreator")
 
   @@index([email])
   @@index([role])
@@ -246,6 +273,7 @@ model Product {
   stockAdjustments      StockAdjustment[]
   inventoryTransactions InventoryTransaction[]
   orderLineItems        OrderLineItem[]
+  promotionalPricings   PromotionalPricing[]
 
   @@index([sku])
   @@index([isActive])
@@ -352,6 +380,9 @@ model SubscriptionPlan {
   isActive           Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  // Relations
+  members SubscriptionMember[] @relation("PlanMembers")
 
   @@index([name])
   @@index([billingCycle])
@@ -694,23 +725,39 @@ model Shipment {
 // ============================================================================
 
 model Customer {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  firstName  String
-  lastName   String
-  phone      String?
-  orderCount Int      @default(0)
-  totalSpent Decimal  @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String       @id @default(cuid())
+  email          String       @unique
+  firstName      String
+  lastName       String
+  phone          String?
+  orderCount     Int          @default(0)
+  totalSpent     Decimal      @default(0)
+
+  // CRM fields (Phase 5)
+  customerType   CustomerType @default(RETAIL)
+  company        String?
+  paymentTerms   String?      // "net_30", "net_15", "cash"
+  creditLimit    Decimal?
+  billingAddress String?
+  shippingAddress String?
+  city           String?
+  state          String?
+  zip            String?
+  notes          String?
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   // Relations
-  orders         WebsiteOrder[]
-  operatorOrders Order[]         @relation("CustomerOperatorOrders")
-  invoices       Invoice[]
+  orders                WebsiteOrder[]
+  operatorOrders        Order[]                @relation("CustomerOperatorOrders")
+  invoices              Invoice[]
+  distributorAgreements DistributorAgreement[]
+  subscriptionMembers   SubscriptionMember[]   @relation("CustomerSubscriptions")
 
   @@index([email])
   @@index([lastName])
+  @@index([customerType])
 }
 
 model WebsiteOrder {
@@ -824,12 +871,14 @@ model Order {
 }
 
 model OrderLineItem {
-  id         String   @id @default(cuid())
-  orderId    String
-  productId  String
-  quantity   Int
-  unitPrice  Decimal
-  totalPrice Decimal
+  id              String   @id @default(cuid())
+  orderId         String
+  productId       String
+  quantity        Int
+  unitPrice       Decimal
+  totalPrice      Decimal
+  discountPercent Decimal? // Discount applied (volume, frequency, or promotional)
+  discountReason  String?  // "volume", "frequency", "promotional"
 
   // Relations
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -886,4 +935,97 @@ model InvoicePayment {
 
   @@index([invoiceId])
   @@index([paidAt])
+}
+
+// ============================================================================
+// CRM MODELS (Phase 5)
+// ============================================================================
+
+model DistributorAgreement {
+  id             String    @id @default(cuid())
+  customerId     String
+  territory      String
+  commissionRate Decimal
+  startDate      DateTime
+  endDate        DateTime?
+  status         String    @default("active")
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model SubscriptionMember {
+  id                      String             @id @default(cuid())
+  customerId              String
+  planId                  String
+  status                  SubscriptionStatus @default(ACTIVE)
+  startDate               DateTime
+  renewalDate             DateTime?
+  cancelledAt             DateTime?
+  loyaltyMonths           Int                @default(0)
+  loyaltyRewardAt         DateTime?
+  renewalReminderSentAt   DateTime?          // Idempotent reminder tracking
+  notes                   String?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  // Relations
+  customer Customer         @relation("CustomerSubscriptions", fields: [customerId], references: [id])
+  plan     SubscriptionPlan @relation("PlanMembers", fields: [planId], references: [id])
+
+  @@index([customerId])
+  @@index([status])
+  @@index([renewalDate])
+}
+
+model Lead {
+  id           String    @id @default(cuid())
+  name         String
+  company      String?
+  email        String?
+  phone        String?
+  source       String?
+  stage        LeadStage @default(LEAD)
+  notes        String?
+  followUpAt   DateTime?
+  closedAt     DateTime?
+  assignedToId String?
+  createdById  String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  assignedTo User? @relation("LeadAssignee", fields: [assignedToId], references: [id])
+  createdBy  User  @relation("LeadCreator", fields: [createdById], references: [id])
+
+  @@index([stage])
+  @@index([followUpAt])
+  @@index([assignedToId])
+}
+
+model PromotionalPricing {
+  id              String   @id @default(cuid())
+  productId       String
+  name            String
+  discountPercent Decimal?
+  fixedPrice      Decimal?
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([productId])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([isActive])
 }
