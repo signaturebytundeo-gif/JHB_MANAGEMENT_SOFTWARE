@@ -6,14 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 07 — Dashboards & Reporting. Plan 01 complete.
+**Current focus:** Phase 07 — Dashboards & Reporting. Plan 02 complete.
 
 ## Current Position
 
 Phase: 07 (Dashboards & Reporting) — IN PROGRESS
-Plan: 01 complete (executive dashboard KPI wiring — getDashboardKPIs, MTDRevenueVsTarget, ARAgingWidget, quick actions)
-Status: DASH-01 through DASH-07 complete — all 6 KPI cards wired with accurate data, 5 quick action buttons enabled
-Last activity: 2026-03-12 — Phase 07 Plan 01 executed and committed
+Plan: 02 complete (investor dashboard — recharts line chart, pie chart, capacity gauge, dark mode, PDF export)
+Status: INVST-01 through INVST-07 complete — investor portal fully wired with live data, charts, dark mode toggle, window.print() export
+Last activity: 2026-03-12 — Phase 07 Plan 02 executed and committed
 
 Progress: [██████████] 87%
 
@@ -166,5 +166,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 07-dashboards-reporting-01-PLAN.md — executive dashboard KPI wiring, MTDRevenueVsTarget, ARAgingWidget, quick actions live
+Stopped at: Completed 07-dashboards-reporting-02-PLAN.md — investor dashboard live with recharts line chart, channel pie chart, capacity gauge, dark mode toggle, window.print() PDF export
+Resume file: Next plan (07-03 or as directed)
 Resume file: Next phase (Phase 07 or as directed)
