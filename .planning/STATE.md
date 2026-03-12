@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 06 — Financial Management. Plans 01-02 complete, Plan 03 remaining.
+**Current focus:** Phase 06 — Financial Management COMPLETE. All 3 plans executed.
 
 ## Current Position
 
-Phase: 06 (Financial Management) — IN PROGRESS
-Plan: 02 complete (revenue analytics + COGS/gross margin pages)
-Status: FIN-03, FIN-04, FIN-05, FIN-06 complete — revenue by channel chart, monthly vs projection chart, COGS per batch, product gross margin table
-Last activity: 2026-03-12 — Phase 06 Plan 02 executed and committed
+Phase: 06 (Financial Management) — COMPLETE
+Plan: 03 complete (financial reports — P&L, cash flow, projection, budget, weekly cash position)
+Status: FIN-07 through FIN-11 complete — P&L generator, cash flow statement, 90-day projection chart, budget vs actual, weekly cash position
+Last activity: 2026-03-12 — Phase 06 Plan 03 executed and committed
 
-Progress: [██████████] 80%
+Progress: [██████████] 85%
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [██████████] 80%
 | Phase 05-sales-channels-crm P03 | 5 | 2 tasks | 8 files |
 | Phase 06-financial-management P01 | 6 | 2 tasks | 10 files |
 | Phase 06-financial-management P02 | 4 | 2 tasks | 8 files |
+| Phase 06-financial-management P03 | 5 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -139,6 +140,11 @@ Recent decisions affecting current work:
 - [Phase 06-02]: getGrossMarginByProduct calls getBatchCOGS internally — avoids duplicate batch query, natural dependency
 - [Phase 06-02]: avgSalePrice uses actual Sale.unitPrice average when available, falls back to PricingTier wholesale price — real data preferred over nominal pricing
 - [Phase 06-02]: COMPLETED status included in Order revenue aggregation — delivered operator orders should count toward revenue
+- [Phase 06-03]: getPeriodRange helper encapsulates monthly/quarterly/annual date logic — avoids repetition across P&L and cash flow functions
+- [Phase 06-03]: Per-row useActionState in BudgetEntryForm — each category row has independent form state with success flash, avoids cross-row state pollution
+- [Phase 06-03]: Cash inflows use CASH/CREDIT_CARD/SQUARE/STRIPE/ZELLE payment methods as immediate cash — NET_30/CHECK captured separately via invoice payments
+- [Phase 06-03]: BudgetVsActualTable skips categories with zero budget AND zero actual — avoids showing 10 empty rows when no data exists
+- [Phase 06-03]: Old /dashboard/reports redirects to /dashboard/finance/reports — preserves bookmark compatibility while delivering reports under finance namespace
 
 ### Pending Todos
 
@@ -151,5 +157,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 06-financial-management-02-PLAN.md — revenue analytics and COGS pages live
-Resume file: .planning/phases/06-financial-management/06-03-PLAN.md
+Stopped at: Completed 06-financial-management-03-PLAN.md — P&L, cash flow, projection, budget, weekly cash position live
+Resume file: Next phase (Phase 07 or as directed)
