@@ -34,16 +34,27 @@ Production tracking is the foundation — every unit must be traceable from batc
 
 ### Active
 
-(None — next milestone requirements TBD via `/gsd:new-milestone`)
+- [ ] Amazon Seller Central full sync — orders, FBA inventory levels, sales reports, returns, fee tracking
+- [ ] Square POS full sync — sales transactions, inventory counts, item catalog, customer data, payments from 3 restaurant locations
+- [ ] Stripe full integration — payment processing, subscription management, refunds, data sync
+- [ ] ShipStation integration — shipping labels, multi-carrier support (USPS/UPS/FedEx), tracking numbers, delivery notifications
+- [ ] Proactive alert delivery — email/SMS for low inventory, overdue invoices, QC failures, expense approvals
+
+## Current Milestone: v2.0 Connected
+
+**Goal:** Transform the Command Center from a standalone system to a fully connected platform with live data sync from Amazon, Square, and Stripe, integrated shipping via ShipStation, and proactive email/SMS alerts.
+
+**Target features:**
+- Amazon Seller Central full sync (orders, inventory, sales, returns, fees)
+- Square POS full sync (transactions, inventory, catalog, customers, payments)
+- Stripe full integration (payment processing, subscriptions, refunds)
+- ShipStation shipping (labels, tracking, multi-carrier)
+- Email/SMS alert delivery (replacing in-app only)
 
 ### Out of Scope
 
 - Social media integration (analytics + content scheduling/publishing) — deferred to future milestone after core operations are solid
-- Amazon Seller Central API integration — CSV import first, API later
-- Square POS live integration — CSV import first, API later
-- Stripe live integration — CSV import first, API later
-- QuickBooks/Xero sync — CSV export for accountants first
-- ShipStation integration — manual shipping management first
+- QuickBooks/Xero sync — CSV export for accountants first, API deferred
 - Native mobile app — responsive web first, native later
 - Real-time chat — not core to operations management
 - Video content in documents — standard file uploads only
@@ -147,4 +158,4 @@ Amazon, Restaurant Retail (3 locations), Wholesale/Distribution (Net 30), Farmer
 | Named Prisma relations throughout | Avoids ambiguous relation errors on multi-FK models | ✓ Good — consistent pattern |
 
 ---
-*Last updated: 2026-03-12 after v1.0 milestone*
+*Last updated: 2026-03-12 after v2.0 milestone start*

@@ -6,15 +6,16 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** v1.0 MVP shipped. Planning next milestone.
+**Current focus:** v2.0 Connected — API integrations (Amazon, Square, Stripe), ShipStation shipping, email/SMS alerts.
 
 ## Current Position
 
-Milestone: v1.0 MVP — SHIPPED 2026-03-12
-Status: All 8 phases complete. 29 plans executed. 53,698 LOC.
-Next: `/gsd:new-milestone` to start v1.1
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-12 — Milestone v2.0 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Accumulated Context
 
@@ -33,5 +34,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: v1.0 milestone archived
-Resume file: `/gsd:new-milestone`
+Stopped at: Milestone v2.0 initialization
+Resume file: Defining requirements
