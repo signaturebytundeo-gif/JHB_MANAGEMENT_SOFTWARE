@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  FileText,
 } from 'lucide-react';
 import { hasPermission } from '@/lib/auth/permissions';
 import { logout } from '@/app/actions/auth';
@@ -54,6 +55,7 @@ const navItems: NavItem[] = [
   { label: 'Revenue', href: '/dashboard/finance/revenue', icon: TrendingUp, permission: 'finance' },
   { label: 'COGS', href: '/dashboard/finance/cogs', icon: BarChart, permission: 'finance' },
   { label: 'Reports', href: '/dashboard/finance/reports', icon: BarChart, permission: 'finance' },
+  { label: 'Documents', href: '/dashboard/documents', icon: FileText, permission: 'documents' },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings, permission: 'settings' },
   { label: 'Investor Portal', href: '/dashboard/investor', icon: TrendingUp, permission: 'investor' },
 ];
