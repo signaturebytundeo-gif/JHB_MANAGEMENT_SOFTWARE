@@ -6,14 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 08 — Document Management. Plan 01 complete.
+**Current focus:** Phase 08 — Document Management. All 3 plans complete.
 
 ## Current Position
 
-Phase: 08 (Document Management) — IN PROGRESS
-Plan: 1/3 complete
-Status: Document+DocumentVersion schema live, 6 server actions, Zod validators, permissions updated
-Last activity: 2026-03-12 — Phase 08 Plan 01 complete
+Phase: 08 (Document Management) — COMPLETE
+Plan: 3/3 complete
+Status: Template Library component + seed data complete; all 4 DOC requirements satisfied (DOC-01 through DOC-04)
+Last activity: 2026-03-12 — Phase 08 Plan 03 complete
 
 Progress: [██████████] 94%
 
@@ -49,6 +49,8 @@ Progress: [██████████] 94%
 | Phase 07-dashboards-reporting P02 | 7 | 2 tasks | 8 files |
 | Phase 07-dashboards-reporting P03 | 12 | 2 tasks | 11 files |
 | Phase 08-document-management P01 | 3 | 2 tasks | 5 files |
+| Phase 08-document-management P02 | — | 2 tasks | 5 files |
+| Phase 08-document-management P03 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -165,6 +167,9 @@ Recent decisions affecting current work:
 - [Phase 08-01]: Polymorphic nullable FKs (customerId/orderId/batchId) with at-most-one constraint enforced in application layer
 - [Phase 08-01]: BLOB_READ_WRITE_TOKEN guard returns error (not silent skip) for document uploads — files are required unlike optional receipts
 - [Phase 08-01]: prisma generate required after db push — Prisma client does not auto-regenerate, must be run explicitly
+- [Phase 08-03]: Static description map keyed by template name — avoids nullable description column on Document model for 3 placeholder templates
+- [Phase 08-03]: findFirst-before-create for template seed deduplication — Document model has no unique composite on (name, isTemplate)
+- [Phase 08-03]: TemplateLibrary renders conditional download link vs pending-upload notice based on currentBlobUrl emptiness
 
 ### Pending Todos
 
@@ -177,5 +182,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 08-01-PLAN.md — Document+DocumentVersion schema, 6 server actions, Zod validators, permissions
-Resume file: Next plan (08-02)
+Stopped at: Completed 08-03-PLAN.md — Template Library seeded and integrated into documents page; Phase 08 complete
+Resume file: Next phase
