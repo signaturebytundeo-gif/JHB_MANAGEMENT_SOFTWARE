@@ -197,10 +197,12 @@ Plans:
   3. System tracks document versions and shows version history
   4. Template library provides downloadable templates for invoices, purchase orders, wholesale agreements
 
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 08-01: TBD during phase planning
+- [ ] 08-01-PLAN.md — Prisma schema (Document, DocumentVersion models), Zod validators, server actions (upload, version, list, delete), next.config.ts body size limit, permissions
+- [ ] 08-02-PLAN.md — Documents list page with upload form, category filtering, record linking, document detail page with version history, sidebar navigation
+- [ ] 08-03-PLAN.md — Template library (seed data, template grid component, integration into documents page)
 
 ## Progress
 
@@ -216,4 +218,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Sales Channels & CRM | 4/4 | Complete | 2026-03-12 |
 | 6. Financial Management | 3/3 | Complete | 2026-03-12 |
 | 7. Dashboards & Reporting | 3/3 | Complete | 2026-03-12 |
-| 8. Document Management | 0/1 | Not started | - |
+| 8. Document Management | 0/3 | Not started | - |
