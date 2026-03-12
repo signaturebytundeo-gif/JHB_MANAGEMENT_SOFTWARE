@@ -213,6 +213,9 @@ model User {
   invoicePayments       InvoicePayment[]
   leadsAssigned         Lead[]              @relation("LeadAssignee")
   leadsCreated          Lead[]              @relation("LeadCreator")
+  expensesCreated       Expense[]           @relation("ExpenseCreator")
+  expensesApproved      Expense[]           @relation("ExpenseApprover")
+  expensesSecondApproved Expense[]          @relation("ExpenseSecondApprover")
 
   @@index([email])
   @@index([role])
@@ -435,6 +438,8 @@ model Batch {
   coPackerPartnerId      String?
   coPackerLotNumber      String?
   coPackerReceivingDate  DateTime?
+  laborCostTotal         Decimal?         @default(0)
+  overheadCostTotal      Decimal?         @default(0)
   createdById            String
   isActive               Boolean          @default(true)
   deletedAt              DateTime?
@@ -504,6 +509,7 @@ model RawMaterial {
   receivedDate   DateTime
   quantity       Decimal
   unit           String
+  costPerUnit    Decimal?
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -935,6 +941,64 @@ model InvoicePayment {
 
   @@index([invoiceId])
   @@index([paidAt])
+}
+
+// ============================================================================
+// FINANCIAL MANAGEMENT MODELS (Phase 6)
+// ============================================================================
+
+enum ExpenseCategory {
+  INGREDIENTS
+  PACKAGING
+  LABOR
+  EQUIPMENT
+  MARKETING
+  SHIPPING
+  UTILITIES
+  RENT
+  INSURANCE
+  OTHER
+}
+
+model Expense {
+  id                   String          @id @default(cuid())
+  description          String
+  amount               Decimal
+  category             ExpenseCategory
+  expenseDate          DateTime
+  receiptUrl           String?
+  vendorName           String?
+  notes                String?
+  approvalStatus       String?         // "auto_approved", "pending_single", "pending_dual", "pending_bank", "approved", "rejected"
+  approvedById         String?
+  secondApprovedById   String?
+  approvedAt           DateTime?
+  bankAuthorizationRef String?
+  createdById          String
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  // Relations
+  createdBy        User  @relation("ExpenseCreator", fields: [createdById], references: [id])
+  approvedBy       User? @relation("ExpenseApprover", fields: [approvedById], references: [id])
+  secondApprovedBy User? @relation("ExpenseSecondApprover", fields: [secondApprovedById], references: [id])
+
+  @@index([expenseDate])
+  @@index([category])
+  @@index([approvalStatus])
+  @@index([createdById])
+}
+
+model Budget {
+  id              String          @id @default(cuid())
+  period          String          // "YYYY-MM"
+  category        ExpenseCategory
+  budgetedAmount  Decimal
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([period, category])
+  @@index([period])
 }
 
 // ============================================================================
