@@ -2,7 +2,9 @@
 
 ## What This Is
 
-A full-stack operations management application for Jamaica House Brand LLC — a Caribbean food products company (jerk sauce, Escovitch/Pikliz) based in Fort Lauderdale, FL. The app unifies production tracking, multi-location inventory, multi-channel sales, financial management, and investor reporting into a single system. Built for two founders (Anthony and Tunde) who currently manage operations across fragmented tools (Square, Amazon Seller Central, spreadsheets) with no unified visibility.
+A full-stack operations management application for Jamaica House Brand LLC — a Caribbean food products company (jerk sauce, Escovitch/Pikliz) based in Fort Lauderdale, FL. The app unifies production tracking, multi-location inventory, multi-channel sales, CRM, financial management, reporting, and document management into a single system. Built for two founders (Anthony and Tunde) who previously managed operations across fragmented tools (Square, Amazon Seller Central, spreadsheets).
+
+**Shipped v1.0 MVP** — 53,698 LOC TypeScript across 498 files. Deployed on Vercel + Neon PostgreSQL.
 
 ## Core Value
 
@@ -12,31 +14,31 @@ Production tracking is the foundation — every unit must be traceable from batc
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Authentication with 4 role levels (Admin, Manager, Sales Rep, Investor) and invite system — v1.0
+- ✓ Production batch tracking with MMDDYY batch codes, in-house and co-packer support, required QC (pH, temp, pass/fail) — v1.0
+- ✓ Multi-location inventory tracking across 7+ locations with real-time stock levels, color-coded alerts, and full movement audit trail — v1.0
+- ✓ Raw materials and packaging materials tracking with FIFO, lot numbers, expiration dates, and reorder alerts — v1.0
+- ✓ Order management with multi-channel support (9 channels) and FIFO inventory allocation — v1.0
+- ✓ Invoicing with Net 30 terms, overdue flagging, 1.5% monthly late interest, and AR aging — v1.0
+- ✓ Pricing engine with wholesale/retail tiers, volume discounts (5%/10%), frequency discounts (2%/5%), and promotional pricing — v1.0
+- ✓ Customer/Partner CRM with customer types, purchase history, lifetime value — v1.0
+- ✓ Subscription management with lifecycle tracking and loyalty rewards — v1.0
+- ✓ Distributor management with territory assignments, performance metrics, and commission tracking — v1.0
+- ✓ Lead pipeline with stages and follow-up reminders — v1.0
+- ✓ Executive dashboard with KPI cards, revenue by channel, production vs. capacity — v1.0
+- ✓ Financial management: revenue tracking, COGS, expense tracking with 4-tier approval workflow, P&L, cash flow, budget vs actual — v1.0
+- ✓ Investor dashboard (read-only portal) with revenue trends, growth metrics, dark mode, PDF export — v1.0
+- ✓ Reporting with 7 pre-built reports and CSV/PDF/Excel export — v1.0
+- ✓ Document management with categories, version tracking, record linking, and template library — v1.0
+- ✓ Pre-seeded database with all products, locations, channels, pricing, subscription plans, and company data — v1.0
 
 ### Active
 
-- [ ] Authentication with 4 role levels (Admin, Manager, Sales Rep, Investor) and invite system
-- [ ] Production batch tracking with MMDDYY batch codes, in-house and co-packer support, required QC (pH, temp, pass/fail), and optional location allocation at creation
-- [ ] Multi-location inventory tracking across 7+ locations with real-time stock levels, color-coded alerts, and full movement audit trail
-- [ ] Raw materials and packaging materials tracking with FIFO, lot numbers, expiration dates, and reorder alerts (2-week and 4-week lead times)
-- [ ] Order management with multi-channel support (Amazon, Restaurant, Wholesale, Farmers Markets, DTC, Subscription, Catering, Events)
-- [ ] Invoicing with Net 30 terms, overdue flagging, 1.5% monthly late interest, and AR aging
-- [ ] Pricing engine with wholesale/retail tiers, volume discounts (5%/10%), frequency discounts (2%/5%), and promotional pricing
-- [ ] Customer/Partner CRM with customer types, purchase history, lifetime value, and communication log
-- [ ] Subscription management (Standard $75/yr or $13/mo, Premium $125/yr or $20/mo) with lifecycle tracking and loyalty rewards
-- [ ] Distributor management with territory assignments, performance metrics, and commission tracking
-- [ ] Lead pipeline (H-E-B, Costco, Whole Foods LEAP, potential investors) with stages and follow-up reminders
-- [ ] Executive dashboard with KPI cards, revenue by channel, production vs. capacity, inventory levels, margin trends
-- [ ] Financial management: revenue tracking, cost management, expense tracking with approval workflows ($150/$500/$2,500 thresholds), cash flow, and full financial reports (P&L, Balance Sheet, Cash Flow Statement)
-- [ ] Investor dashboard (read-only portal) with revenue trends, growth metrics, market traction, unit economics, and ownership/equity visualization
-- [ ] Reporting & analytics with 10+ pre-built reports, custom report builder, and configurable alerts/notifications
-- [ ] Document management with categories, version tracking, and template library
-- [ ] Pre-seeded database with all products, locations, channels, pricing, subscription plans, and company data
+(None — next milestone requirements TBD via `/gsd:new-milestone`)
 
 ### Out of Scope
 
-- Social media integration (analytics + content scheduling/publishing) — deferred to future Module 11 after core operations are solid
+- Social media integration (analytics + content scheduling/publishing) — deferred to future milestone after core operations are solid
 - Amazon Seller Central API integration — CSV import first, API later
 - Square POS live integration — CSV import first, API later
 - Stripe live integration — CSV import first, API later
@@ -45,8 +47,25 @@ Production tracking is the foundation — every unit must be traceable from batc
 - Native mobile app — responsive web first, native later
 - Real-time chat — not core to operations management
 - Video content in documents — standard file uploads only
+- Custom report builder — 7 pre-built reports cover current needs
+- Balance sheet — requires asset/liability tracking not yet modeled
 
 ## Context
+
+### Current State
+
+Shipped v1.0 MVP with 53,698 LOC TypeScript.
+
+**Tech stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS v4, shadcn/ui, Prisma 7.4 + Neon PostgreSQL, Zod v4, recharts, exceljs, @vercel/blob, jose (JWT), bcrypt, Resend (email), date-fns. Deployed on Vercel.
+
+**Architecture:** Monorepo (`apps/command-center`). Server components + server actions pattern. React 19 `useActionState` for forms. FIFO inventory allocation via database transactions. 4-tier expense approval workflow. Role-based access control (Admin, Manager, Sales Rep, Investor).
+
+**Known limitations:**
+- No API integrations yet (Amazon, Square, Stripe) — CSV import is the bridge
+- COGS uses 40% wholesale price proxy when batch materials/labor not entered
+- Cash flow opening/closing balance not tracked (no bank account model)
+- No custom report builder — 7 pre-built reports only
+- No alert delivery system beyond in-app status panel
 
 ### Company Information
 - **Entity:** Jamaica House Brand LLC
@@ -58,14 +77,6 @@ Production tracking is the foundation — every unit must be traceable from batc
   - Olutomiwa Ogunjulugbe — Creative Director
   - Xavier Artis — Business Development
   - Alejandra — Sales Representative
-
-### Current State
-- Using multiple disconnected tools (Square for POS, Amazon Seller Central, spreadsheets)
-- No unified inventory visibility across locations
-- Difficulty reconciling revenue/expenses across channels
-- Investor conversations coming in the next few months — need professional reporting
-- Amazon channel showing 3,500%+ YoY growth ($2,038.59 YTD, 133 units Jan-Jul 2025)
-- 15,000+ Instagram followers, 4.8% engagement rate, 92% customer satisfaction
 
 ### Product Catalog (6 SKUs)
 
@@ -79,7 +90,7 @@ Production tracking is the foundation — every unit must be traceable from batc
 | Original Jerk Sauce | 9g sachet | TBD | — | — | — |
 
 ### Locations (7)
-1. Miami Gardens Restaurant — Production facility + restaurant + retail (some locations open, some planned)
+1. Miami Gardens Restaurant — Production facility + restaurant + retail
 2. Broward Blvd Restaurant — Restaurant + retail (weekly delivery)
 3. Miramar Restaurant — Restaurant + retail (weekly delivery)
 4. Amazon FBA Warehouse — E-commerce fulfillment
@@ -90,74 +101,50 @@ Production tracking is the foundation — every unit must be traceable from batc
 ### Sales Channels (9)
 Amazon, Restaurant Retail (3 locations), Wholesale/Distribution (Net 30), Farmers Markets (Square/cash), E-commerce/Website (Stripe), Etsy, Subscription/Membership, Catering, Events/Tailgates
 
-### Production Workflow (from Anthony)
+### Production Workflow
 - Batch codes: MMDDYY format, append letter for multiples (021326A, 021326B)
-- **In-house production:** Anthony at Miami Gardens. Simple: date, product, quantity, QC
-- **Co-packer production:** Space Coast Sauces (first partner), Tabanero Holdings (potential). Stores their lot number, receiving date, quantity received alongside our internal batch code
-- **QC:** pH level (required before release), visual/taste check (pass/fail + notes), temperature monitoring. Failed QC = batch on Hold, not available inventory
-- **Allocation:** Optional at batch creation — split units to locations (must sum to total), or leave all at production location and transfer later
-- **Form must be clean and fast** — mobile-friendly, minimal required fields: date/batch code, source, product, quantity, pH, pass/fail, optional location splits
+- In-house production: Anthony at Miami Gardens
+- Co-packer production: Space Coast Sauces (first partner), Tabanero Holdings (potential)
+- QC: pH level (auto-fail at ≥4.6), visual/taste check (pass/fail + notes), temperature monitoring
 - Current capacity: 15,000 units/month at 85% efficiency target
 
-### Financial Rules (from Operating Agreement)
+### Financial Rules
 - Under $150: Auto-approve
 - $150-$500: Single member approval + notification
 - Over $500: Dual authorization required
 - Over $2,500: Dual bank authorization required
-- Monthly financial statements (internal), quarterly (external firm)
-- Weekly cash flow reports, daily bank reconciliation
-
-### Volume Discounts
-- 1-5 cases: Standard price
-- 6-10 cases: 5% discount
-- 11+ cases: 10% discount
-- Quarterly orders: +2% discount
-- Annual contracts: +5% discount + priority allocation
-
-### Revenue Projections (benchmarks)
-- Year 1: $1.2M
-- Year 2: $3.5M
-- Year 3: $7.2M
-- Target margins: 70% (Y1), 72% (Y2), 75% (Y3)
-
-### Co-Packing Partners
-- Space Coast Sauces — confirmed first co-packing partner
-- Tabanero Holdings — potential future partner
-- Partner list should be configurable in settings (add/edit without code changes)
-
-### Subscription Plans
-- Standard Annual: $75/yr — 1x 5oz monthly + gift bottle
-- Premium Annual: $125/yr — 1x 10oz monthly + gift bottle
-- Standard Monthly: $13/mo — 2x 5oz monthly
-- Premium Monthly: $20/mo — 2x 10oz monthly
-- 6-month loyalty reward: 1 month free
-- Cancellation requires 30 days written notice
 
 ## Constraints
 
-- **Tech Stack:** Next.js 14+ (App Router), TypeScript, Tailwind CSS, Prisma ORM, PostgreSQL — flexible on specifics but this is the direction. Deploy-ready for Vercel + Supabase
-- **Authentication:** NextAuth.js with credentials provider (email/password) + optional magic link
-- **Data Visualization:** Recharts
-- **Validation:** Zod (form level) + Prisma constraints (database level)
-- **Performance:** Server components and server actions where possible, optimistic UI updates, database transactions for inventory changes
-- **Mobile-first:** Responsive design — managers log batches and sales on their phones at restaurants and farmers markets
+- **Tech Stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS v4, Prisma 7.4 + Neon PostgreSQL, shadcn/ui, Zod v4. Deployed on Vercel.
+- **Authentication:** JWT sessions via jose, bcrypt password hashing, magic link via Resend
+- **Data Visualization:** Recharts via shadcn/ui ChartContainer
+- **Validation:** Zod v4 (form level) + Prisma constraints (database level)
+- **Performance:** Server components and server actions, parallel Promise.all queries, client-side filtering for small datasets
+- **Mobile-first:** Responsive design — managers log batches and sales on phones at restaurants and farmers markets
 - **Branding:** Caribbean-inspired colors — deep green, gold, black, hummingbird brand mark
-- **Accessibility:** ARIA labels, keyboard navigation, screen reader support
-- **Data Integrity:** FIFO inventory, production batch records retained 2+ years (never deletable), audit trail on all inventory movements, all data changes logged with before/after values
-- **Food Safety:** HACCP critical control points enforced — ingredient receiving, cooking temp/time, pH levels, bottle sealing, final storage. pH testing every batch, temperature monitoring, monthly microbiological testing
-- **Regulatory:** Batch records retained minimum 2 years, full lot traceability from production through sale
+- **Data Integrity:** FIFO inventory, batch records retained 2+ years (soft delete only), audit trail on all inventory movements
+- **Food Safety:** pH auto-fail at ≥4.6, batch status state machine with enforced transitions
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Production tracking as first module | Everything flows from knowing what was produced and where it is — inventory, sales, and finances all depend on batch data | — Pending |
-| Build all 10 modules (full vision) | The founders want the complete system, not an MVP — investor conversations approaching and operations need full coverage | — Pending |
-| CSV import before API integration | Pragmatic bridge — gets data flowing immediately without API complexity. Amazon, Square, Stripe, QuickBooks APIs come later | — Pending |
-| Social media as future Module 11 | Analytics + content scheduling deferred until core operations modules are solid | — Pending |
-| MMDDYY batch code format | Matches existing manual workflow Anthony already uses — zero adoption friction | — Pending |
-| Co-packer as configurable list | Space Coast Sauces is first, but more partners likely — settings-managed list avoids code changes | — Pending |
-| Founders-only initial users | Anthony and Tunde first, expand to team (Alejandra, Xavier, market reps) once workflows are proven | — Pending |
+| Production tracking as first module | Everything flows from knowing what was produced and where it is | ✓ Good — batch data is foundation for inventory, orders, and finance |
+| Build all 8 modules (full vision) | Founders want complete system for investor conversations | ✓ Good — delivered in 28 days |
+| CSV import before API integration | Pragmatic bridge — gets data flowing immediately | — Pending — APIs not yet needed |
+| MMDDYY batch code format | Matches existing manual workflow Anthony uses | ✓ Good — zero adoption friction |
+| Founders-only initial users | Anthony and Tunde first, expand to team once workflows proven | — Pending |
+| Tailwind CSS v4 + shadcn/ui | Latest version with improved performance, customizable components | ✓ Good |
+| Prisma v7 with Neon PostgreSQL | Adapter pattern for connection pooling, direct URL for migrations | ✓ Good |
+| jose for JWT (not jsonwebtoken) | ESM-native, Edge runtime compatible | ✓ Good |
+| Resend for transactional email | Excellent DX, generous free tier | ✓ Good |
+| FIFO valuation at 40% wholesale proxy | Placeholder COGS until material/labor data entered | ⚠️ Revisit — need real COGS data |
+| prisma db push (not migrate dev) | Migration history drift from direct Neon deploys | ⚠️ Revisit — should move to migrate for production |
+| window.print() for PDF export | Zero dependencies, Tailwind print: variants | ✓ Good — simple and effective |
+| exceljs for Excel export | CVE-free alternative to xlsx package | ✓ Good |
+| Polymorphic nullable FKs for documents | At-most-one constraint enforced in application layer | ✓ Good |
+| Named Prisma relations throughout | Avoids ambiguous relation errors on multi-FK models | ✓ Good — consistent pattern |
 
 ---
-*Last updated: 2026-02-13 after initialization*
+*Last updated: 2026-03-12 after v1.0 milestone*
