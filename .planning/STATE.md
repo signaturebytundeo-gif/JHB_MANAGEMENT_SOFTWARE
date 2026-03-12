@@ -6,14 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 06 — Financial Management. Plan 01 complete, Plans 02-03 remaining.
+**Current focus:** Phase 06 — Financial Management. Plans 01-02 complete, Plan 03 remaining.
 
 ## Current Position
 
 Phase: 06 (Financial Management) — IN PROGRESS
-Plan: 01 complete (expense tracking + approval workflow)
-Status: FIN-01 and FIN-02 complete — expense logging with receipt upload, four-tier approval routing, approve/reject UI live
-Last activity: 2026-03-12 — Phase 06 Plan 01 executed and committed
+Plan: 02 complete (revenue analytics + COGS/gross margin pages)
+Status: FIN-03, FIN-04, FIN-05, FIN-06 complete — revenue by channel chart, monthly vs projection chart, COGS per batch, product gross margin table
+Last activity: 2026-03-12 — Phase 06 Plan 02 executed and committed
 
 Progress: [██████████] 80%
 
@@ -43,6 +43,7 @@ Progress: [██████████] 80%
 | Phase 05-sales-channels-crm P02 | 4 | 2 tasks | 7 files |
 | Phase 05-sales-channels-crm P03 | 5 | 2 tasks | 8 files |
 | Phase 06-financial-management P01 | 6 | 2 tasks | 10 files |
+| Phase 06-financial-management P02 | 4 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -134,6 +135,10 @@ Recent decisions affecting current work:
 - [Phase 06-financial-management]: prisma db push used instead of migrate dev — migration history drift from prior direct deploys to Neon
 - [Phase 06-financial-management]: [Phase 06-01]: approvalStatus as String on Expense (not enum) — consistent with Order.approvalStatus pattern from Phase 4
 - [Phase 06-financial-management]: [Phase 06-01]: currentUserId passed from server page to client components as prop — avoids useSession client-side call, server-side enforcement retained
+- [Phase 06-02]: BatchStatus filter uses in[] with valid enum values — schema has no QUARANTINED status (PLANNED/IN_PROGRESS/QC_REVIEW/RELEASED/HOLD)
+- [Phase 06-02]: getGrossMarginByProduct calls getBatchCOGS internally — avoids duplicate batch query, natural dependency
+- [Phase 06-02]: avgSalePrice uses actual Sale.unitPrice average when available, falls back to PricingTier wholesale price — real data preferred over nominal pricing
+- [Phase 06-02]: COMPLETED status included in Order revenue aggregation — delivered operator orders should count toward revenue
 
 ### Pending Todos
 
@@ -146,5 +151,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 06-financial-management-01-PLAN.md — expense tracking system live
-Resume file: .planning/phases/06-financial-management/06-02-PLAN.md
+Stopped at: Completed 06-financial-management-02-PLAN.md — revenue analytics and COGS pages live
+Resume file: .planning/phases/06-financial-management/06-03-PLAN.md
