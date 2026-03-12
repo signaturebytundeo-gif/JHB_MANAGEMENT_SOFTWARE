@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 07 — Dashboards & Reporting. Plan 02 complete.
+**Current focus:** Phase 07 — Dashboards & Reporting. Plan 03 complete.
 
 ## Current Position
 
 Phase: 07 (Dashboards & Reporting) — IN PROGRESS
-Plan: 02 complete (investor dashboard — recharts line chart, pie chart, capacity gauge, dark mode, PDF export)
-Status: INVST-01 through INVST-07 complete — investor portal fully wired with live data, charts, dark mode toggle, window.print() export
-Last activity: 2026-03-12 — Phase 07 Plan 02 executed and committed
+Plan: 03 complete (reports hub — 7 pre-built reports, CSV/PDF/Excel export, alert status panel)
+Status: RPT-01 through RPT-09 complete — reports hub live at /dashboard/reports with all report types, 3-format export, and alert monitoring
+Last activity: 2026-03-12 — Phase 07 Plan 03 executed and committed
 
-Progress: [██████████] 87%
+Progress: [██████████] 89%
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [██████████] 87%
 | Phase 06-financial-management P03 | 5 | 2 tasks | 11 files |
 | Phase 07-dashboards-reporting P01 | 8 | 2 tasks | 4 files |
 | Phase 07-dashboards-reporting P02 | 7 | 2 tasks | 8 files |
+| Phase 07-dashboards-reporting P03 | 12 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -154,6 +155,10 @@ Recent decisions affecting current work:
 - [Phase 07-dashboards-reporting]: Customer model has no isActive field — investor metrics counts all customers via db.customer.count() without filter
 - [Phase 07-dashboards-reporting]: CapacityGauge is a server component (no recharts) — CSS progress bar sufficient, avoids client bundle weight for simple gauge
 - [Phase 07-dashboards-reporting]: getInvestorMetrics parallel fetch — Promise.all over 7 data sources for single investor page load
+- [Phase 07-dashboards-reporting]: OrderLineItem.totalPrice used (not lineTotal) — correct field name per Prisma schema
+- [Phase 07-dashboards-reporting]: Subscription MRR normalizes annual plans by dividing price by 12 (research pitfall 5)
+- [Phase 07-dashboards-reporting]: Farmers Market report filters SalesChannel.type IN ('EVENT', 'MARKETPLACE') — not by channel name (research pitfall 6)
+- [Phase 07-dashboards-reporting]: Inventory valuation uses 40% wholesale tier price as COGS proxy — consistent with Phase 3 convention
 
 ### Pending Todos
 
@@ -166,6 +171,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 07-dashboards-reporting-02-PLAN.md — investor dashboard live with recharts line chart, channel pie chart, capacity gauge, dark mode toggle, window.print() PDF export
+Stopped at: Completed 07-dashboards-reporting-03-PLAN.md — reports hub with 7 pre-built reports, CSV/PDF/Excel export, alert status panel
 Resume file: Next plan (07-03 or as directed)
 Resume file: Next phase (Phase 07 or as directed)
