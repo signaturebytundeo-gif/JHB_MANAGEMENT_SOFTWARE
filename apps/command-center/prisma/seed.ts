@@ -865,6 +865,75 @@ async function main() {
 
   console.log("✅ Created/verified 6 packaging materials");
 
+  // ============================================================================
+  // TEMPLATE DOCUMENTS (08-03 DOC-04)
+  // ============================================================================
+  console.log("📄 Seeding template documents...");
+
+  // Use first admin user as uploader for templates
+  const adminUser = await prisma.user.findFirst({
+    where: { role: Role.ADMIN },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  if (adminUser) {
+    const templateDefs = [
+      {
+        name: 'Invoice Template',
+        category: 'TEMPLATE' as const,
+        currentBlobUrl: '',
+        isTemplate: true,
+      },
+      {
+        name: 'Purchase Order Template',
+        category: 'TEMPLATE' as const,
+        currentBlobUrl: '',
+        isTemplate: true,
+      },
+      {
+        name: 'Wholesale Agreement Template',
+        category: 'TEMPLATE' as const,
+        currentBlobUrl: '',
+        isTemplate: true,
+      },
+    ];
+
+    for (const def of templateDefs) {
+      // Find existing template by name + isTemplate flag to avoid duplicates on re-seed
+      const existing = await prisma.document.findFirst({
+        where: { name: def.name, isTemplate: true },
+      });
+
+      if (!existing) {
+        const doc = await prisma.document.create({
+          data: {
+            name: def.name,
+            category: def.category,
+            currentBlobUrl: def.currentBlobUrl,
+            isTemplate: def.isTemplate,
+            uploadedById: adminUser.id,
+          },
+        });
+
+        // Create initial DocumentVersion placeholder (no real file yet)
+        await prisma.documentVersion.create({
+          data: {
+            documentId: doc.id,
+            versionNumber: 1,
+            blobUrl: '',
+            fileName: 'pending',
+            fileSize: 0,
+            uploadedById: adminUser.id,
+          },
+        });
+      }
+    }
+
+    console.log("✅ Created/verified 3 template documents");
+  } else {
+    console.log("⚠️  No admin user found — skipping template seed");
+  }
+
   console.log("\n🎉 Database seed completed successfully!");
 }
 
