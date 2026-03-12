@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 07 — Dashboards & Reporting. Next up for planning and execution.
+**Current focus:** Phase 07 — Dashboards & Reporting. Plan 01 complete.
 
 ## Current Position
 
-Phase: 06 (Financial Management) — COMPLETE
-Plan: 03 complete (financial reports — P&L, cash flow, projection, budget, weekly cash position)
-Status: FIN-07 through FIN-11 complete — P&L generator, cash flow statement, 90-day projection chart, budget vs actual, weekly cash position
-Last activity: 2026-03-12 — Phase 06 Plan 03 executed and committed
+Phase: 07 (Dashboards & Reporting) — IN PROGRESS
+Plan: 01 complete (executive dashboard KPI wiring — getDashboardKPIs, MTDRevenueVsTarget, ARAgingWidget, quick actions)
+Status: DASH-01 through DASH-07 complete — all 6 KPI cards wired with accurate data, 5 quick action buttons enabled
+Last activity: 2026-03-12 — Phase 07 Plan 01 executed and committed
 
-Progress: [██████████] 85%
+Progress: [██████████] 87%
 
 ## Performance Metrics
 
@@ -45,6 +45,8 @@ Progress: [██████████] 85%
 | Phase 06-financial-management P01 | 6 | 2 tasks | 10 files |
 | Phase 06-financial-management P02 | 4 | 2 tasks | 8 files |
 | Phase 06-financial-management P03 | 5 | 2 tasks | 11 files |
+| Phase 07-dashboards-reporting P01 | 8 | 2 tasks | 4 files |
+| Phase 07-dashboards-reporting P02 | 7 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -145,6 +147,13 @@ Recent decisions affecting current work:
 - [Phase 06-03]: Cash inflows use CASH/CREDIT_CARD/SQUARE/STRIPE/ZELLE payment methods as immediate cash — NET_30/CHECK captured separately via invoice payments
 - [Phase 06-03]: BudgetVsActualTable skips categories with zero budget AND zero actual — avoids showing 10 empty rows when no data exists
 - [Phase 06-03]: Old /dashboard/reports redirects to /dashboard/finance/reports — preserves bookmark compatibility while delivering reports under finance namespace
+- [Phase 07-01]: getDashboardKPIs uses single Promise.all with 13 parallel queries — avoids sequential waterfall on dashboard load
+- [Phase 07-01]: Open Orders count fixed to sum WebsiteOrder (NEW|PROCESSING) + operator Order (DRAFT|CONFIRMED|PROCESSING) — was previously WebsiteOrder only
+- [Phase 07-01]: Inventory value = lowest PricingTier.unitPrice × BatchAllocation.quantity per product — conservative dollar valuation
+- [Phase 07-01]: AR overdue detection uses status=OVERDUE OR dueDate < now — catches both explicitly flagged and implicitly overdue invoices
+- [Phase 07-dashboards-reporting]: Customer model has no isActive field — investor metrics counts all customers via db.customer.count() without filter
+- [Phase 07-dashboards-reporting]: CapacityGauge is a server component (no recharts) — CSS progress bar sufficient, avoids client bundle weight for simple gauge
+- [Phase 07-dashboards-reporting]: getInvestorMetrics parallel fetch — Promise.all over 7 data sources for single investor page load
 
 ### Pending Todos
 
@@ -157,5 +166,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 06-financial-management-03-PLAN.md — P&L, cash flow, projection, budget, weekly cash position live
+Stopped at: Completed 07-dashboards-reporting-01-PLAN.md — executive dashboard KPI wiring, MTDRevenueVsTarget, ARAgingWidget, quick actions live
 Resume file: Next phase (Phase 07 or as directed)
