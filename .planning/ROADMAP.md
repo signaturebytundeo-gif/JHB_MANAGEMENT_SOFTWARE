@@ -154,12 +154,12 @@ Plans:
   5. User can generate P&L report, Cash Flow Statement, and view 90-day cash flow projections
   6. User can compare budget vs actual spending
 
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: TBD during phase planning
-- [ ] 06-02: TBD during phase planning
-- [ ] 06-03: TBD during phase planning
+- [ ] 06-01-PLAN.md — Schema (Expense, Budget models, COGS fields), dependencies (recharts, @vercel/blob, shadcn chart), expense tracking with approval workflows
+- [ ] 06-02-PLAN.md — Revenue analytics (daily by channel, monthly vs projections), COGS per batch, gross margin by product
+- [ ] 06-03-PLAN.md — P&L report, Cash Flow Statement, 90-day projection, budget vs actual, weekly cash position
 
 ### Phase 7: Dashboards & Reporting
 **Goal**: Executives see real-time KPIs and quick actions, investors see read-only metrics, and users can generate operational reports.
