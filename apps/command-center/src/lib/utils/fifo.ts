@@ -29,12 +29,17 @@ export async function allocateInventoryFIFO(
   quantityNeeded: number,
   tx: PrismaClient = db
 ): Promise<FIFOAllocation[]> {
-  // 1. Get all RELEASED batches for this product at this location, ordered by productionDate ASC (oldest first)
+  // 1. Get all RELEASED batches for this product that have stock at this location
+  //    via initial allocation OR via inbound movements (transfers/adjustments)
   const batches = await tx.batch.findMany({
     where: {
       productId,
       status: 'RELEASED',
-      allocations: { some: { locationId } },
+      isActive: true,
+      OR: [
+        { allocations: { some: { locationId } } },
+        { inventoryMovements: { some: { toLocationId: locationId, approvedAt: { not: null } } } },
+      ],
     },
     include: {
       allocations: { where: { locationId } },
@@ -42,20 +47,20 @@ export async function allocateInventoryFIFO(
     orderBy: { productionDate: 'asc' },
   });
 
-  // 2. For each batch, calculate available = initial allocation + inbound movements - outbound movements
+  // 2. For each batch, calculate available = initial allocation + approved inbound - approved outbound
   const batchesWithAvailable = await Promise.all(
     batches.map(async (batch) => {
       const initialAllocation = batch.allocations[0]?.quantity ?? 0;
 
-      // Sum inbound movements (toLocationId = this location, for this batch)
+      // Sum approved inbound movements (toLocationId = this location, for this batch)
       const inbound = await tx.inventoryMovement.aggregate({
-        where: { batchId: batch.id, toLocationId: locationId },
+        where: { batchId: batch.id, toLocationId: locationId, approvedAt: { not: null } },
         _sum: { quantity: true },
       });
 
-      // Sum outbound movements (fromLocationId = this location, for this batch)
+      // Sum approved outbound movements (fromLocationId = this location, for this batch)
       const outbound = await tx.inventoryMovement.aggregate({
-        where: { batchId: batch.id, fromLocationId: locationId },
+        where: { batchId: batch.id, fromLocationId: locationId, approvedAt: { not: null } },
         _sum: { quantity: true },
       });
 
@@ -120,7 +125,11 @@ export async function getAvailableStock(
     where: {
       productId,
       status: 'RELEASED',
-      allocations: { some: { locationId } },
+      isActive: true,
+      OR: [
+        { allocations: { some: { locationId } } },
+        { inventoryMovements: { some: { toLocationId: locationId, approvedAt: { not: null } } } },
+      ],
     },
     include: {
       allocations: { where: { locationId } },
@@ -133,12 +142,12 @@ export async function getAvailableStock(
     const initialAllocation = batch.allocations[0]?.quantity ?? 0;
 
     const inbound = await tx.inventoryMovement.aggregate({
-      where: { batchId: batch.id, toLocationId: locationId },
+      where: { batchId: batch.id, toLocationId: locationId, approvedAt: { not: null } },
       _sum: { quantity: true },
     });
 
     const outbound = await tx.inventoryMovement.aggregate({
-      where: { batchId: batch.id, fromLocationId: locationId },
+      where: { batchId: batch.id, fromLocationId: locationId, approvedAt: { not: null } },
       _sum: { quantity: true },
     });
 

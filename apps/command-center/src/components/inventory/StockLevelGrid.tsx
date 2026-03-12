@@ -33,8 +33,8 @@ interface StockLevelGridProps {
 export function StockLevelGrid({ data }: StockLevelGridProps) {
   const [search, setSearch] = useState('');
   const [levelFilter, setLevelFilter] = useState<StockLevelFilter>('ALL');
-  const [sortKey, setSortKey] = useState<SortKey>('name');
-  const [sortAsc, setSortAsc] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>('total');
+  const [sortAsc, setSortAsc] = useState(false);
 
   // Derive unique locations from data (preserving order)
   const locations = useMemo(() => {
@@ -239,7 +239,9 @@ export function StockLevelGrid({ data }: StockLevelGridProps) {
                 </div>
               </div>
               <div className="space-y-1.5">
-                {row.locations.map((l) => (
+                {row.locations
+                  .filter((l) => l.quantity > 0)
+                  .map((l) => (
                   <div
                     key={l.location.id}
                     className="flex items-center justify-between text-sm"
@@ -251,6 +253,9 @@ export function StockLevelGrid({ data }: StockLevelGridProps) {
                     />
                   </div>
                 ))}
+                {row.locations.every((l) => l.quantity === 0) && (
+                  <p className="text-xs text-muted-foreground">No stock at any location</p>
+                )}
               </div>
             </div>
           ))

@@ -416,10 +416,25 @@ export async function getStockLevels() {
       }
     }
 
-    // Build output shape
-    return products.map((product) => {
+    // Sort locations by total stock across all products (highest first)
+    // so the main warehouse / highest-stock location appears first
+    const locationTotals = new Map<string, number>();
+    for (const location of locations) {
+      let locTotal = 0;
+      for (const product of products) {
+        const locMap = stockMap.get(product.id);
+        if (locMap) locTotal += Math.max(0, locMap.get(location.id) ?? 0);
+      }
+      locationTotals.set(location.id, locTotal);
+    }
+    const sortedLocations = [...locations].sort(
+      (a, b) => (locationTotals.get(b.id) ?? 0) - (locationTotals.get(a.id) ?? 0)
+    );
+
+    // Build output shape — products sorted by total stock descending
+    const result = products.map((product) => {
       const locMap = stockMap.get(product.id) ?? new Map<string, number>();
-      const locationStocks = locations.map((location) => {
+      const locationStocks = sortedLocations.map((location) => {
         const quantity = Math.max(0, locMap.get(location.id) ?? 0);
         return {
           location: { id: location.id, name: location.name, type: location.type },
@@ -434,6 +449,9 @@ export async function getStockLevels() {
         total,
       };
     });
+
+    result.sort((a, b) => b.total - a.total);
+    return result;
   } catch (error) {
     console.error('Error fetching stock levels:', error);
     return [];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, useCallback } from 'react';
 import { transferInventory } from '@/app/actions/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,47 +31,56 @@ export function TransferForm({ products, locations }: TransferFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [fromLocationId, setFromLocationId] = useState('');
   const [lastTransfer, setLastTransfer] = useState<LastTransfer | null>(null);
-  const [formValues, setFormValues] = useState<{
-    productId: string;
-    fromLocationId: string;
-    toLocationId: string;
-    quantity: string;
-  }>({ productId: '', fromLocationId: '', toLocationId: '', quantity: '' });
+  // Key to force re-mount of Select components (which are uncontrolled)
+  const [formKey, setFormKey] = useState(0);
+  // Track form values for the success summary
+  const formValuesRef = useRef({ productId: '', fromLocationId: '', toLocationId: '', quantity: '' });
+  // Track whether success message should show (auto-dismiss on next interaction)
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (state?.success) {
       // Capture summary before reset
-      const product = products.find((p) => p.id === formValues.productId);
-      const fromLoc = locations.find((l) => l.id === formValues.fromLocationId);
-      const toLoc = locations.find((l) => l.id === formValues.toLocationId);
-      if (product && fromLoc && toLoc && formValues.quantity) {
+      const vals = formValuesRef.current;
+      const product = products.find((p) => p.id === vals.productId);
+      const fromLoc = locations.find((l) => l.id === vals.fromLocationId);
+      const toLoc = locations.find((l) => l.id === vals.toLocationId);
+      if (product && fromLoc && toLoc && vals.quantity) {
         setLastTransfer({
-          quantity: formValues.quantity,
+          quantity: vals.quantity,
           productName: `${product.name} (${product.sku})`,
           fromLocationName: fromLoc.name,
           toLocationName: toLoc.name,
         });
       }
+      // Reset form: bump key to re-mount Selects, reset native inputs
       formRef.current?.reset();
       setFromLocationId('');
-      setFormValues({ productId: '', fromLocationId: '', toLocationId: '', quantity: '' });
+      formValuesRef.current = { productId: '', fromLocationId: '', toLocationId: '', quantity: '' };
+      setFormKey((k) => k + 1);
+      setShowSuccess(true);
     }
-  }, [state, products, locations, formValues]);
+  }, [state, products, locations]);
+
+  // Clear success message when user starts interacting with the form again
+  const clearSuccess = useCallback(() => {
+    if (showSuccess) setShowSuccess(false);
+  }, [showSuccess]);
 
   // Filter destination locations to exclude the currently selected source
   const destinationLocations = locations.filter((loc) => loc.id !== fromLocationId);
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-5">
-      {/* Error message */}
+    <form ref={formRef} action={formAction} className="space-y-5" onChange={clearSuccess}>
+      {/* Error message — only show when there's a real error (not after success) */}
       {state?.message && !state.success && (
         <div className="rounded-md bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-600 dark:text-red-400">
           {state.message}
         </div>
       )}
 
-      {/* Success summary */}
-      {state?.success && lastTransfer && (
+      {/* Success summary — auto-clears on next interaction */}
+      {showSuccess && lastTransfer && (
         <div className="rounded-md bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm text-green-700 dark:text-green-400">
           Transferred {lastTransfer.quantity} units of {lastTransfer.productName} from{' '}
           {lastTransfer.fromLocationName} to {lastTransfer.toLocationName}.
@@ -82,9 +91,13 @@ export function TransferForm({ products, locations }: TransferFormProps) {
       <div className="space-y-2">
         <Label htmlFor="tf-productId">Product *</Label>
         <Select
+          key={`product-${formKey}`}
           name="productId"
           required
-          onValueChange={(v) => setFormValues((prev) => ({ ...prev, productId: v }))}
+          onValueChange={(v) => {
+            formValuesRef.current.productId = v;
+            clearSuccess();
+          }}
         >
           <SelectTrigger id="tf-productId" className="text-base h-11">
             <SelectValue placeholder="Select product" />
@@ -97,7 +110,7 @@ export function TransferForm({ products, locations }: TransferFormProps) {
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.productId && (
+        {state?.errors?.productId && !state.success && (
           <p className="text-sm text-destructive">{state.errors.productId[0]}</p>
         )}
       </div>
@@ -108,11 +121,13 @@ export function TransferForm({ products, locations }: TransferFormProps) {
         <div className="space-y-2">
           <Label htmlFor="tf-fromLocationId">From Location *</Label>
           <Select
+            key={`from-${formKey}`}
             name="fromLocationId"
             required
             onValueChange={(v) => {
               setFromLocationId(v);
-              setFormValues((prev) => ({ ...prev, fromLocationId: v }));
+              formValuesRef.current.fromLocationId = v;
+              clearSuccess();
             }}
           >
             <SelectTrigger id="tf-fromLocationId" className="text-base h-11">
@@ -126,7 +141,7 @@ export function TransferForm({ products, locations }: TransferFormProps) {
               ))}
             </SelectContent>
           </Select>
-          {state?.errors?.fromLocationId && (
+          {state?.errors?.fromLocationId && !state.success && (
             <p className="text-sm text-destructive">{state.errors.fromLocationId[0]}</p>
           )}
         </div>
@@ -135,9 +150,13 @@ export function TransferForm({ products, locations }: TransferFormProps) {
         <div className="space-y-2">
           <Label htmlFor="tf-toLocationId">To Location *</Label>
           <Select
+            key={`to-${formKey}`}
             name="toLocationId"
             required
-            onValueChange={(v) => setFormValues((prev) => ({ ...prev, toLocationId: v }))}
+            onValueChange={(v) => {
+              formValuesRef.current.toLocationId = v;
+              clearSuccess();
+            }}
           >
             <SelectTrigger id="tf-toLocationId" className="text-base h-11">
               <SelectValue placeholder="Select destination" />
@@ -156,7 +175,7 @@ export function TransferForm({ products, locations }: TransferFormProps) {
               )}
             </SelectContent>
           </Select>
-          {state?.errors?.toLocationId && (
+          {state?.errors?.toLocationId && !state.success && (
             <p className="text-sm text-destructive">{state.errors.toLocationId[0]}</p>
           )}
         </div>
@@ -166,6 +185,7 @@ export function TransferForm({ products, locations }: TransferFormProps) {
       <div className="space-y-2">
         <Label htmlFor="tf-quantity">Quantity *</Label>
         <Input
+          key={`qty-${formKey}`}
           id="tf-quantity"
           name="quantity"
           type="number"
@@ -174,9 +194,12 @@ export function TransferForm({ products, locations }: TransferFormProps) {
           required
           min={1}
           className="text-base h-11"
-          onChange={(e) => setFormValues((prev) => ({ ...prev, quantity: e.target.value }))}
+          onChange={(e) => {
+            formValuesRef.current.quantity = e.target.value;
+            clearSuccess();
+          }}
         />
-        {state?.errors?.quantity && (
+        {state?.errors?.quantity && !state.success && (
           <p className="text-sm text-destructive">{state.errors.quantity[0]}</p>
         )}
       </div>
@@ -185,6 +208,7 @@ export function TransferForm({ products, locations }: TransferFormProps) {
       <div className="space-y-2">
         <Label htmlFor="tf-notes">Notes (optional)</Label>
         <Textarea
+          key={`notes-${formKey}`}
           id="tf-notes"
           name="notes"
           rows={2}

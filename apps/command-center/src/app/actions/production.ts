@@ -46,6 +46,7 @@ async function createBatchCompletionTransaction(
 ) {
   const warehouse = await getOrCreateMainWarehouse(tx);
 
+  // Legacy inventory transaction (Phase 2 system)
   await tx.inventoryTransaction.create({
     data: {
       productId: batch.productId,
@@ -57,6 +58,23 @@ async function createBatchCompletionTransaction(
       createdById: userId,
     },
   });
+
+  // Phase 3: Create BatchAllocation at Main Warehouse if batch has no allocations yet.
+  // This bridges the gap so getStockLevels() (which reads BatchAllocation + InventoryMovement)
+  // can see the released inventory.
+  const existingAllocations = await tx.batchAllocation.count({
+    where: { batchId: batch.id },
+  });
+
+  if (existingAllocations === 0) {
+    await tx.batchAllocation.create({
+      data: {
+        batchId: batch.id,
+        locationId: warehouse.id,
+        quantity: batch.totalUnits,
+      },
+    });
+  }
 }
 
 export async function createBatch(

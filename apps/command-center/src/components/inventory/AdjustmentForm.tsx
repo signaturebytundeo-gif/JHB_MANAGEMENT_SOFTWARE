@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState, useCallback } from 'react';
 import { createAdjustment } from '@/app/actions/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,19 +30,30 @@ interface AdjustmentFormProps {
 export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
   const [state, formAction, pending] = useActionState(createAdjustment, undefined);
   const formRef = useRef<HTMLFormElement>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [showMessage, setShowMessage] = useState(false);
 
   useEffect(() => {
-    if (state?.success && !state.message?.includes('approval')) {
-      // Auto-approved: reset form
+    if (state?.success) {
+      // Reset form fully (including Select components via key change)
       formRef.current?.reset();
+      setFormKey((k) => k + 1);
+      setShowMessage(true);
+    } else if (state?.message || state?.errors) {
+      // Show error messages
+      setShowMessage(true);
     }
-    // Pending approval: keep form data visible so user knows what was submitted
   }, [state]);
 
+  // Clear messages when user starts interacting again
+  const clearMessage = useCallback(() => {
+    if (showMessage) setShowMessage(false);
+  }, [showMessage]);
+
   return (
-    <form ref={formRef} action={formAction} className="space-y-5">
-      {/* Status messages */}
-      {state?.message && !state.errors && (
+    <form ref={formRef} action={formAction} className="space-y-5" onChange={clearMessage}>
+      {/* Status messages — only visible until next interaction */}
+      {showMessage && state?.message && !state.errors && (
         <div
           className={`rounded-md px-4 py-3 text-sm border ${
             state.success && state.message.includes('approval')
@@ -59,7 +70,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
       {/* Batch */}
       <div className="space-y-2">
         <Label htmlFor="adj-batchId">Batch *</Label>
-        <Select name="batchId" required>
+        <Select key={`batch-${formKey}`} name="batchId" required onValueChange={clearMessage}>
           <SelectTrigger id="adj-batchId" className="text-base h-11">
             <SelectValue placeholder="Select batch" />
           </SelectTrigger>
@@ -71,7 +82,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.batchId && (
+        {showMessage && state?.errors?.batchId && (
           <p className="text-sm text-destructive">{state.errors.batchId[0]}</p>
         )}
       </div>
@@ -79,7 +90,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
       {/* Location */}
       <div className="space-y-2">
         <Label htmlFor="adj-locationId">Location *</Label>
-        <Select name="locationId" required>
+        <Select key={`loc-${formKey}`} name="locationId" required onValueChange={clearMessage}>
           <SelectTrigger id="adj-locationId" className="text-base h-11">
             <SelectValue placeholder="Select location" />
           </SelectTrigger>
@@ -91,7 +102,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.locationId && (
+        {showMessage && state?.errors?.locationId && (
           <p className="text-sm text-destructive">{state.errors.locationId[0]}</p>
         )}
       </div>
@@ -102,6 +113,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
           Quantity Change * <span className="text-muted-foreground font-normal">(positive = add, negative = remove)</span>
         </Label>
         <Input
+          key={`qty-${formKey}`}
           id="adj-quantityChange"
           name="quantityChange"
           type="number"
@@ -111,7 +123,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
           className="text-base h-11"
           disabled={pending}
         />
-        {state?.errors?.quantityChange && (
+        {showMessage && state?.errors?.quantityChange && (
           <p className="text-sm text-destructive">{state.errors.quantityChange[0]}</p>
         )}
       </div>
@@ -119,7 +131,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
       {/* Reason */}
       <div className="space-y-2">
         <Label htmlFor="adj-reason">Reason *</Label>
-        <Select name="reason" required>
+        <Select key={`reason-${formKey}`} name="reason" required onValueChange={clearMessage}>
           <SelectTrigger id="adj-reason" className="text-base h-11">
             <SelectValue placeholder="Select reason" />
           </SelectTrigger>
@@ -131,7 +143,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.reason && (
+        {showMessage && state?.errors?.reason && (
           <p className="text-sm text-destructive">{state.errors.reason[0]}</p>
         )}
       </div>
@@ -140,6 +152,7 @@ export function AdjustmentForm({ batches, locations }: AdjustmentFormProps) {
       <div className="space-y-2">
         <Label htmlFor="adj-notes">Notes (optional)</Label>
         <Textarea
+          key={`notes-${formKey}`}
           id="adj-notes"
           name="notes"
           rows={2}

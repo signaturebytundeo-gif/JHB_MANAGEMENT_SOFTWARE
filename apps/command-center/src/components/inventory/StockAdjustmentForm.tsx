@@ -1,7 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useActionState, useEffect, useRef, useState, useCallback } from 'react';
 import { createStockAdjustment } from '@/app/actions/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,40 +23,37 @@ const REASON_OPTIONS = [
   { value: 'Other', label: 'Other' },
 ];
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button
-      type="submit"
-      disabled={pending}
-      className="w-full bg-caribbean-green hover:bg-caribbean-green/90 text-white"
-    >
-      {pending ? 'Recording...' : 'Record Adjustment'}
-    </Button>
-  );
-}
-
 interface StockAdjustmentFormProps {
   products: { id: string; name: string; sku: string; size: string }[];
   locations: { id: string; name: string }[];
 }
 
 export function StockAdjustmentForm({ products, locations }: StockAdjustmentFormProps) {
-  const [state, formAction] = useActionState(createStockAdjustment, undefined);
+  const [state, formAction, pending] = useActionState(createStockAdjustment, undefined);
   const formRef = useRef<HTMLFormElement>(null);
+  const [formKey, setFormKey] = useState(0);
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     if (state?.success) {
       toast.success(state.message || 'Adjustment recorded');
       formRef.current?.reset();
+      setFormKey((k) => k + 1);
+      setShowError(false);
+    } else if (state?.message || state?.errors) {
+      setShowError(true);
     }
   }, [state]);
 
+  const clearError = useCallback(() => {
+    if (showError) setShowError(false);
+  }, [showError]);
+
   return (
-    <form ref={formRef} action={formAction} className="space-y-4">
+    <form ref={formRef} action={formAction} className="space-y-4" onChange={clearError}>
       <h3 className="font-semibold">Stock Adjustment</h3>
 
-      {state?.message && !state?.success && (
+      {showError && state?.message && !state?.success && (
         <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-md text-sm">
           {state.message}
         </div>
@@ -65,7 +61,7 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
 
       <div className="space-y-2">
         <Label htmlFor="adj-productId">Product</Label>
-        <Select name="productId" required>
+        <Select key={`p-${formKey}`} name="productId" required onValueChange={clearError}>
           <SelectTrigger id="adj-productId" className="h-11">
             <SelectValue placeholder="Select product" />
           </SelectTrigger>
@@ -77,14 +73,14 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.productId && (
+        {showError && state?.errors?.productId && (
           <p className="text-sm text-red-500">{state.errors.productId[0]}</p>
         )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="adj-locationId">Location</Label>
-        <Select name="locationId" required>
+        <Select key={`l-${formKey}`} name="locationId" required onValueChange={clearError}>
           <SelectTrigger id="adj-locationId" className="h-11">
             <SelectValue placeholder="Select location" />
           </SelectTrigger>
@@ -96,7 +92,7 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.locationId && (
+        {showError && state?.errors?.locationId && (
           <p className="text-sm text-red-500">{state.errors.locationId[0]}</p>
         )}
       </div>
@@ -104,6 +100,7 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
       <div className="space-y-2">
         <Label htmlFor="adj-quantityChange">Quantity Change</Label>
         <Input
+          key={`q-${formKey}`}
           id="adj-quantityChange"
           name="quantityChange"
           type="number"
@@ -114,14 +111,14 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
         <p className="text-xs text-muted-foreground">
           Use negative numbers to subtract, positive to add
         </p>
-        {state?.errors?.quantityChange && (
+        {showError && state?.errors?.quantityChange && (
           <p className="text-sm text-red-500">{state.errors.quantityChange[0]}</p>
         )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="adj-reason">Reason</Label>
-        <Select name="reason" required>
+        <Select key={`r-${formKey}`} name="reason" required onValueChange={clearError}>
           <SelectTrigger id="adj-reason" className="h-11">
             <SelectValue placeholder="Select reason" />
           </SelectTrigger>
@@ -133,7 +130,7 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
             ))}
           </SelectContent>
         </Select>
-        {state?.errors?.reason && (
+        {showError && state?.errors?.reason && (
           <p className="text-sm text-red-500">{state.errors.reason[0]}</p>
         )}
       </div>
@@ -141,6 +138,7 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
       <div className="space-y-2">
         <Label htmlFor="adj-notes">Notes (Optional)</Label>
         <textarea
+          key={`n-${formKey}`}
           id="adj-notes"
           name="notes"
           rows={2}
@@ -149,7 +147,13 @@ export function StockAdjustmentForm({ products, locations }: StockAdjustmentForm
         />
       </div>
 
-      <SubmitButton />
+      <Button
+        type="submit"
+        disabled={pending}
+        className="w-full bg-caribbean-green hover:bg-caribbean-green/90 text-white"
+      >
+        {pending ? 'Recording...' : 'Record Adjustment'}
+      </Button>
     </form>
   );
 }

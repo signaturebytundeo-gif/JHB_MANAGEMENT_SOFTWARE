@@ -132,16 +132,25 @@ export default async function InvestorDashboardPage() {
                   <p className="text-sm text-muted-foreground">CEO/Founder</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-caribbean-green">70%</p>
+                  <p className="text-2xl font-bold text-caribbean-green">55%</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pb-4 border-b">
                 <div>
                   <p className="font-semibold">Olatunde Ogunjulugbe</p>
                   <p className="text-sm text-muted-foreground">President</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-caribbean-green">30%</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">Olutomiwa Ogunjulube</p>
+                  <p className="text-sm text-muted-foreground">Partner</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-caribbean-green">15%</p>
                 </div>
               </div>
             </div>
