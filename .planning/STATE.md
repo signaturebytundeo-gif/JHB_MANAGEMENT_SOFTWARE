@@ -6,23 +6,23 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 06 — Financial Management. Next up for planning and execution.
+**Current focus:** Phase 06 — Financial Management. Plan 01 complete, Plans 02-03 remaining.
 
 ## Current Position
 
-Phase: 05 (Sales Channels CRM) — COMPLETE
-Plan: All plans complete, verified, gaps closed
-Status: Complete — CRM tabs wired (subscriptions, distributors, leads), customer profiles, pricing engine, all live
-Last activity: 2026-03-12 — Phase 05 verified and gap closure committed
+Phase: 06 (Financial Management) — IN PROGRESS
+Plan: 01 complete (expense tracking + approval workflow)
+Status: FIN-01 and FIN-02 complete — expense logging with receipt upload, four-tier approval routing, approve/reject UI live
+Last activity: 2026-03-12 — Phase 06 Plan 01 executed and committed
 
-Progress: [██████████] 78%
+Progress: [██████████] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: 5 minutes
-- Total execution time: 0.97 hours
+- Total execution time: 1.07 hours
 
 **By Phase:**
 
@@ -42,6 +42,7 @@ Progress: [██████████] 78%
 *Updated after each plan completion*
 | Phase 05-sales-channels-crm P02 | 4 | 2 tasks | 7 files |
 | Phase 05-sales-channels-crm P03 | 5 | 2 tasks | 8 files |
+| Phase 06-financial-management P01 | 6 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,9 @@ Recent decisions affecting current work:
 - [Phase 05-sales-channels-crm]: CRMTabs ReactNode slot pattern (matching OrdersTabs) — Plans 03/04 replace coming-soon placeholders in subscriptions/distributors/leads slots
 - [Phase 05-sales-channels-crm]: crm-distributors Zod validator auto-created — missing required validator for distributor actions
 - [Phase 05-sales-channels-crm]: Commission rate stored as percentage (0-100), divided by 100 at calculation boundary for human-readable input
+- [Phase 06-financial-management]: prisma db push used instead of migrate dev — migration history drift from prior direct deploys to Neon
+- [Phase 06-financial-management]: [Phase 06-01]: approvalStatus as String on Expense (not enum) — consistent with Order.approvalStatus pattern from Phase 4
+- [Phase 06-financial-management]: [Phase 06-01]: currentUserId passed from server page to client components as prop — avoids useSession client-side call, server-side enforcement retained
 
 ### Pending Todos
 
@@ -142,5 +146,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Phase 05 complete, ready for Phase 06 planning
-Resume file: .planning/ROADMAP.md
+Stopped at: Completed 06-financial-management-01-PLAN.md — expense tracking system live
+Resume file: .planning/phases/06-financial-management/06-02-PLAN.md
