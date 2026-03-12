@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 04 — Order Management complete. All 4 plans executed. Invoicing system with Net 30, late fees, AR aging, and branded print invoices deployed.
+**Current focus:** Phase 05 — Sales Channels CRM. Plan 01 complete. CRM schema layer with 4 new models, 3 enums, Zod validators, and pricing utility deployed.
 
 ## Current Position
 
-Phase: 04 (Order Management)
-Plan: 4 of 4 complete
-Status: Complete — Invoice system deployed; createInvoice/logPayment/flagOverdueInvoices/getARAgingReport + InvoiceList/InvoiceDetail/PaymentModal/CreateInvoiceModal/ARAgingReport components live
-Last activity: 2026-03-11 — Phase 04-04 execution complete, invoicing system fully implemented
+Phase: 05 (Sales Channels CRM)
+Plan: 1 of N in progress
+Status: In Progress — CRM data foundation deployed; DistributorAgreement/SubscriptionMember/Lead/PromotionalPricing models + calculateLineItemPrice utility live
+Last activity: 2026-03-12 — Phase 05-01 execution complete, CRM schema and pricing utility implemented
 
-Progress: [█████████░] 70%
+Progress: [█████████░] 72%
 
 ## Performance Metrics
 
@@ -33,9 +33,10 @@ Progress: [█████████░] 70%
 | 03-inventory-management | 4 | 15m | 3.75m |
 | 11-dashboard-kpis-vercel-deployment | 2 | 6m | 3m |
 | 04-order-management | 4 | 15m | 3.75m |
+| 05-sales-channels-crm | 1 | 8m | 8m |
 
 **Recent Trend:**
-- Last 5 plans: 11-02 (3m), 04-02 (3.5m), 04-03 (3m), 04-04 (5m)
+- Last 5 plans: 04-02 (3.5m), 04-03 (3m), 04-04 (5m), 05-01 (8m)
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
@@ -116,6 +117,9 @@ Recent decisions affecting current work:
 - [Phase 04-04 invoices]: Finance page flags overdue invoices on each load — eliminates cron job dependency, ensures real-time overdue detection
 - [Phase 04-04 invoices]: FinanceDashboardClient + InvoiceDetailClient thin wrapper pattern — server page fetches all data, client component handles modal state only
 - [Phase 04-04 invoices]: lateFeeAmount stored on invoice at flagging time and recomputed on read — stored value used for AR aging summary totals
+- [Phase 05-01 CRM]: Promotional pricing supersedes volume and frequency discounts — only max(volume, frequency) applies when no promo active, no stacking
+- [Phase 05-01 CRM]: Named Prisma relations on SubscriptionMember (CustomerSubscriptions, PlanMembers) and Lead (LeadAssignee, LeadCreator) to disambiguate multi-relation models
+- [Phase 05-01 CRM]: calculateLineItemPrice accepts PrismaClient as parameter — enables use inside db.$transaction calls
 
 ### Pending Todos
 
@@ -127,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11
-Stopped at: Completed 04-order-management plan 04-04 (Invoice System & AR Aging)
-Resume file: .planning/phases/04-order-management/04-04-SUMMARY.md
+Last session: 2026-03-12
+Stopped at: Completed 05-sales-channels-crm plan 05-01 (CRM Data Foundation)
+Resume file: .planning/phases/05-sales-channels-crm/05-01-SUMMARY.md
