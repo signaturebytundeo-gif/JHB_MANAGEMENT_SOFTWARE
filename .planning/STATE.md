@@ -6,7 +6,7 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 05 — Sales Channels CRM. Plans 01 and 04 complete. CRM data foundation + lead pipeline UI + promotional pricing CRUD + PriceCalculator widget deployed.
+**Current focus:** Phase 05 — Sales Channels CRM. Plans 01, 02, and 04 complete. CRM data foundation + customer CRM hub (CRUD, detail pages, LTV) + lead pipeline UI + promotional pricing deployed.
 
 ## Current Position
 
@@ -40,6 +40,8 @@ Progress: [█████████░] 74%
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
+| Phase 05-sales-channels-crm P02 | 4 | 2 tasks | 7 files |
+| Phase 05-sales-channels-crm P03 | 5 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -124,6 +126,8 @@ Recent decisions affecting current work:
 - [Phase 05-04 CRM]: updateLeadStage uses startTransition + direct action call (not form submission) — enables non-blocking inline stage change per row
 - [Phase 05-04 CRM]: discountType hidden input drives XOR discount field visibility — matches createPromotionalPricingSchema refine constraint from Plan 01
 - [Phase 05-04 CRM]: PriceCalculator uses useEffect with cancelled flag — prevents stale state on rapid prop changes
+- [Phase 05-sales-channels-crm]: CustomerRow type uses Decimal-compatible union for creditLimit to accept Prisma Decimal without modifying shared getCustomers() action
+- [Phase 05-sales-channels-crm]: CRMTabs ReactNode slot pattern (matching OrdersTabs) — Plans 03/04 replace coming-soon placeholders in subscriptions/distributors/leads slots
 
 ### Pending Todos
 
@@ -136,5 +140,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 05-sales-channels-crm plan 05-04 (Lead Pipeline + Promotional Pricing)
-Resume file: .planning/phases/05-sales-channels-crm/05-04-SUMMARY.md
+Stopped at: Completed 05-sales-channels-crm plan 05-02 (Customer CRM Hub)
+Resume file: .planning/phases/05-sales-channels-crm/05-02-SUMMARY.md
