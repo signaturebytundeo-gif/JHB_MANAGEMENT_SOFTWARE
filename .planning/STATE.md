@@ -6,7 +6,7 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 06 — Financial Management COMPLETE. All 3 plans executed.
+**Current focus:** Phase 07 — Dashboards & Reporting. Next up for planning and execution.
 
 ## Current Position
 
