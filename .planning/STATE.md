@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 08 — Document Management. Next up for planning and execution.
+**Current focus:** Phase 08 — Document Management. Plan 01 complete.
 
 ## Current Position
 
-Phase: 07 (Dashboards & Reporting) — COMPLETE
-Plan: All 3 plans complete, 25/25 verified
-Status: Executive dashboard KPIs, investor portal with charts, reports hub with 7 reports + export + alerts — all live
-Last activity: 2026-03-12 — Phase 07 verified and complete
+Phase: 08 (Document Management) — IN PROGRESS
+Plan: 1/3 complete
+Status: Document+DocumentVersion schema live, 6 server actions, Zod validators, permissions updated
+Last activity: 2026-03-12 — Phase 08 Plan 01 complete
 
-Progress: [██████████] 93%
+Progress: [██████████] 94%
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [██████████] 93%
 | Phase 07-dashboards-reporting P01 | 8 | 2 tasks | 4 files |
 | Phase 07-dashboards-reporting P02 | 7 | 2 tasks | 8 files |
 | Phase 07-dashboards-reporting P03 | 12 | 2 tasks | 11 files |
+| Phase 08-document-management P01 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,11 @@ Recent decisions affecting current work:
 - [Phase 07-dashboards-reporting]: Subscription MRR normalizes annual plans by dividing price by 12 (research pitfall 5)
 - [Phase 07-dashboards-reporting]: Farmers Market report filters SalesChannel.type IN ('EVENT', 'MARKETPLACE') — not by channel name (research pitfall 6)
 - [Phase 07-dashboards-reporting]: Inventory valuation uses 40% wholesale tier price as COGS proxy — consistent with Phase 3 convention
+- [Phase 08-01]: Named Prisma relations DocumentUploader/VersionUploader on User — avoids ambiguous relation error with multiple User→Document paths
+- [Phase 08-01]: Named backrelations CustomerDocuments/OrderDocuments/BatchDocuments — consistent with existing CustomerOperatorOrders pattern
+- [Phase 08-01]: Polymorphic nullable FKs (customerId/orderId/batchId) with at-most-one constraint enforced in application layer
+- [Phase 08-01]: BLOB_READ_WRITE_TOKEN guard returns error (not silent skip) for document uploads — files are required unlike optional receipts
+- [Phase 08-01]: prisma generate required after db push — Prisma client does not auto-regenerate, must be run explicitly
 
 ### Pending Todos
 
@@ -171,6 +177,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 07-dashboards-reporting-03-PLAN.md — reports hub with 7 pre-built reports, CSV/PDF/Excel export, alert status panel
-Resume file: Next plan (07-03 or as directed)
-Resume file: Next phase (Phase 07 or as directed)
+Stopped at: Completed 08-01-PLAN.md — Document+DocumentVersion schema, 6 server actions, Zod validators, permissions
+Resume file: Next plan (08-02)
