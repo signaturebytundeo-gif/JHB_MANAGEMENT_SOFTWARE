@@ -1,7 +1,14 @@
 import { Suspense } from 'react';
 import { getCustomers, getCustomerMetrics } from '@/app/actions/customers';
+import { getSubscriptionMembers } from '@/app/actions/crm-subscriptions';
+import { getDistributorAgreements } from '@/app/actions/crm-distributors';
+import { getLeads } from '@/app/actions/crm-leads';
+import { db } from '@/lib/db';
 import { CustomersClient } from './client';
 import { CRMTabs } from '@/components/crm/CRMTabs';
+import { SubscriptionMemberList } from '@/components/crm/SubscriptionMemberList';
+import { DistributorList } from '@/components/crm/DistributorList';
+import LeadPipeline from '@/components/crm/LeadPipeline';
 
 async function CustomerProfilesContent() {
   const [customers, metrics] = await Promise.all([
@@ -10,6 +17,63 @@ async function CustomerProfilesContent() {
   ]);
 
   return <CustomersClient initialCustomers={customers} metrics={metrics} />;
+}
+
+async function SubscriptionsContent() {
+  const [members, customers, plans] = await Promise.all([
+    getSubscriptionMembers(),
+    db.customer.findMany({
+      select: { id: true, firstName: true, lastName: true },
+    }),
+    db.subscriptionPlan.findMany({
+      select: { id: true, name: true, billingCycle: true, price: true },
+    }),
+  ]);
+
+  const serializedPlans = plans.map((p) => ({
+    ...p,
+    price: Number(p.price),
+  }));
+
+  return (
+    <SubscriptionMemberList
+      members={members}
+      customers={customers}
+      plans={serializedPlans}
+    />
+  );
+}
+
+async function DistributorsContent() {
+  const [agreements, customers] = await Promise.all([
+    getDistributorAgreements(),
+    db.customer.findMany({
+      select: { id: true, firstName: true, lastName: true, company: true },
+    }),
+  ]);
+
+  return <DistributorList agreements={agreements} customers={customers} />;
+}
+
+async function LeadsContent() {
+  const [leads, users] = await Promise.all([
+    getLeads(),
+    db.user.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+    }),
+  ]);
+
+  return <LeadPipeline leads={leads} users={users} />;
+}
+
+function SectionLoading() {
+  return (
+    <div className="rounded-lg border bg-card p-6 animate-pulse">
+      <div className="h-6 bg-muted rounded w-40 mb-4" />
+      <div className="h-64 bg-muted rounded" />
+    </div>
+  );
 }
 
 function CustomersLoading() {
@@ -33,16 +97,6 @@ function CustomersLoading() {
   );
 }
 
-function ComingSoonPlaceholder({ section }: { section: string }) {
-  return (
-    <div className="rounded-lg border bg-card p-12 text-center">
-      <p className="text-muted-foreground text-sm">
-        {section} — Coming soon
-      </p>
-    </div>
-  );
-}
-
 export default function CustomersPage() {
   return (
     <div className="space-y-6">
@@ -59,9 +113,21 @@ export default function CustomersPage() {
             <CustomerProfilesContent />
           </Suspense>
         }
-        subscriptions={<ComingSoonPlaceholder section="Subscriptions" />}
-        distributors={<ComingSoonPlaceholder section="Distributors" />}
-        leads={<ComingSoonPlaceholder section="Leads" />}
+        subscriptions={
+          <Suspense fallback={<SectionLoading />}>
+            <SubscriptionsContent />
+          </Suspense>
+        }
+        distributors={
+          <Suspense fallback={<SectionLoading />}>
+            <DistributorsContent />
+          </Suspense>
+        }
+        leads={
+          <Suspense fallback={<SectionLoading />}>
+            <LeadsContent />
+          </Suspense>
+        }
       />
     </div>
   );
