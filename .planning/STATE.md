@@ -49,7 +49,7 @@ Progress: [██████████] 94%
 | Phase 07-dashboards-reporting P02 | 7 | 2 tasks | 8 files |
 | Phase 07-dashboards-reporting P03 | 12 | 2 tasks | 11 files |
 | Phase 08-document-management P01 | 3 | 2 tasks | 5 files |
-| Phase 08-document-management P02 | — | 2 tasks | 5 files |
+| Phase 08-document-management P02 | 7 | 2 tasks | 7 files |
 | Phase 08-document-management P03 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
@@ -170,6 +170,7 @@ Recent decisions affecting current work:
 - [Phase 08-03]: Static description map keyed by template name — avoids nullable description column on Document model for 3 placeholder templates
 - [Phase 08-03]: findFirst-before-create for template seed deduplication — Document model has no unique composite on (name, isTemplate)
 - [Phase 08-03]: TemplateLibrary renders conditional download link vs pending-upload notice based on currentBlobUrl emptiness
+- [Phase 08-document-management]: TemplateLibrary added to documents page — surfaces isTemplate=true documents using getTemplates from Plan 01
 
 ### Pending Todos
 
