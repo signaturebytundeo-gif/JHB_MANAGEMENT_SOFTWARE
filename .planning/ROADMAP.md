@@ -177,12 +177,12 @@ Plans:
   6. All reports exportable to CSV, PDF, Excel
   7. System sends configurable alerts for low inventory, overdue invoices, QC failures, expense approvals
 
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: TBD during phase planning
-- [ ] 07-02: TBD during phase planning
-- [ ] 07-03: TBD during phase planning
+- [ ] 07-01-PLAN.md — Executive dashboard KPIs (getDashboardKPIs action, progress bars, AR overdue highlighting, quick action buttons)
+- [ ] 07-02-PLAN.md — Investor portal (revenue trend chart, channel pie chart, capacity gauge, financial health, dark mode toggle, PDF export)
+- [ ] 07-03-PLAN.md — Reports hub (7 pre-built reports, CSV/PDF/Excel export, alert status panel)
 
 ### Phase 8: Document Management
 **Goal**: Users can upload documents linked to records, track versions, and access template library.
