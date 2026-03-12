@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -12,8 +13,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { getCustomers } from '@/app/actions/customers';
-import { Search, Users, UserPlus, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
+import { CustomerForm } from '@/components/crm/CustomerForm';
+import { Search, Users, UserPlus, TrendingUp, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import type { CustomerType } from '@prisma/client';
 
 type CustomerRow = {
   id: string;
@@ -24,7 +27,19 @@ type CustomerRow = {
   orderCount: number;
   totalSpent: number | { toString(): string };
   createdAt: Date;
+  updatedAt?: Date;
   orders: { orderDate: Date }[];
+  // CRM fields
+  customerType?: CustomerType | null;
+  company?: string | null;
+  paymentTerms?: string | null;
+  creditLimit?: number | { toString(): string } | null;
+  billingAddress?: string | null;
+  shippingAddress?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  notes?: string | null;
 };
 
 type Metrics = {
@@ -45,11 +60,29 @@ interface CustomersClientProps {
   metrics: Metrics;
 }
 
+const CUSTOMER_TYPE_LABELS: Record<string, string> = {
+  RETAIL: 'Retail',
+  WHOLESALE: 'Wholesale',
+  DISTRIBUTOR: 'Distributor',
+  RESTAURANT: 'Restaurant',
+  SUBSCRIPTION: 'Subscription',
+  EVENT: 'Event',
+};
+
+const CUSTOMER_TYPE_COLORS: Record<string, string> = {
+  RETAIL: 'bg-blue-100 text-blue-800',
+  WHOLESALE: 'bg-purple-100 text-purple-800',
+  DISTRIBUTOR: 'bg-orange-100 text-orange-800',
+  RESTAURANT: 'bg-red-100 text-red-800',
+  SUBSCRIPTION: 'bg-green-100 text-green-800',
+  EVENT: 'bg-yellow-100 text-yellow-800',
+};
+
 export function CustomersClient({ initialCustomers, metrics }: CustomersClientProps) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -105,18 +138,25 @@ export function CustomersClient({ initialCustomers, metrics }: CustomersClientPr
               className="pl-9"
             />
           </div>
-          <span className="text-sm text-muted-foreground ml-auto">
+          <span className="text-sm text-muted-foreground">
             {customers.length} customer{customers.length !== 1 ? 's' : ''}
             {isPending && ' (loading...)'}
           </span>
+          <button
+            onClick={() => setShowNewCustomerModal(true)}
+            className="ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-caribbean-green text-white text-sm font-medium hover:bg-caribbean-green/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Customer
+          </button>
         </div>
 
         <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-8" />
                 <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Orders</TableHead>
@@ -133,23 +173,25 @@ export function CustomersClient({ initialCustomers, metrics }: CustomersClientPr
                 </TableRow>
               ) : (
                 customers.map((customer) => {
-                  const isExpanded = expandedId === customer.id;
                   const lastOrder = customer.orders[0]?.orderDate;
                   return (
-                    <TableRow
-                      key={customer.id}
-                      className="cursor-pointer"
-                      onClick={() => setExpandedId(isExpanded ? null : customer.id)}
-                    >
-                      <TableCell className="w-8">
-                        {isExpanded ? (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </TableCell>
+                    <TableRow key={customer.id}>
                       <TableCell className="font-medium">
-                        {customer.firstName} {customer.lastName}
+                        <Link
+                          href={`/dashboard/customers/${customer.id}`}
+                          className="hover:text-caribbean-green transition-colors"
+                        >
+                          {customer.firstName} {customer.lastName}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        {customer.customerType ? (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${CUSTOMER_TYPE_COLORS[customer.customerType] ?? 'bg-gray-100 text-gray-800'}`}>
+                            {CUSTOMER_TYPE_LABELS[customer.customerType] ?? customer.customerType}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm">{customer.email}</TableCell>
                       <TableCell className="text-sm">{customer.phone || '—'}</TableCell>
@@ -201,6 +243,26 @@ export function CustomersClient({ initialCustomers, metrics }: CustomersClientPr
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* New Customer Modal */}
+      {showNewCustomerModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">New Customer</h2>
+                <button
+                  onClick={() => setShowNewCustomerModal(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-xl leading-none"
+                >
+                  &times;
+                </button>
+              </div>
+              <CustomerForm onClose={() => setShowNewCustomerModal(false)} />
+            </div>
           </div>
         </div>
       )}

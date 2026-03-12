@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import { getCustomers, getCustomerMetrics } from '@/app/actions/customers';
 import { CustomersClient } from './client';
+import { CRMTabs } from '@/components/crm/CRMTabs';
 
-async function CustomersContent() {
+async function CustomerProfilesContent() {
   const [customers, metrics] = await Promise.all([
     getCustomers(),
     getCustomerMetrics(),
@@ -32,19 +33,36 @@ function CustomersLoading() {
   );
 }
 
+function ComingSoonPlaceholder({ section }: { section: string }) {
+  return (
+    <div className="rounded-lg border bg-card p-12 text-center">
+      <p className="text-muted-foreground text-sm">
+        {section} — Coming soon
+      </p>
+    </div>
+  );
+}
+
 export default function CustomersPage() {
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Customer Management</h1>
         <p className="text-muted-foreground mt-2">
-          Manage website customers, view order history, and track spending.
+          Manage customers, subscriptions, distributors, and leads.
         </p>
       </div>
 
-      <Suspense fallback={<CustomersLoading />}>
-        <CustomersContent />
-      </Suspense>
+      <CRMTabs
+        profiles={
+          <Suspense fallback={<CustomersLoading />}>
+            <CustomerProfilesContent />
+          </Suspense>
+        }
+        subscriptions={<ComingSoonPlaceholder section="Subscriptions" />}
+        distributors={<ComingSoonPlaceholder section="Distributors" />}
+        leads={<ComingSoonPlaceholder section="Leads" />}
+      />
     </div>
   );
 }
