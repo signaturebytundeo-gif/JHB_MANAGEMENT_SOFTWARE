@@ -25,6 +25,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     'reports',
     'settings',
     'investor',
+    'documents',
   ],
   MANAGER: [
     'dashboard',
@@ -34,6 +35,7 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     'shipping',
     'customers',
     'reports',
+    'documents',
   ],
   SALES_REP: ['dashboard', 'orders', 'customers'],
   INVESTOR: ['investor'],

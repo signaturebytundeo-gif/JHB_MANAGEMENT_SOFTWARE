@@ -216,6 +216,8 @@ model User {
   expensesCreated       Expense[]           @relation("ExpenseCreator")
   expensesApproved      Expense[]           @relation("ExpenseApprover")
   expensesSecondApproved Expense[]          @relation("ExpenseSecondApprover")
+  documentsUploaded     Document[]          @relation("DocumentUploader")
+  versionsUploaded      DocumentVersion[]   @relation("VersionUploader")
 
   @@index([email])
   @@index([role])
@@ -455,6 +457,7 @@ model Batch {
   allocations        BatchAllocation[]
   materials          BatchMaterial[]
   inventoryMovements InventoryMovement[]
+  documents          Document[]         @relation("BatchDocuments")
 
   @@index([batchCode])
   @@index([productId])
@@ -760,6 +763,7 @@ model Customer {
   invoices              Invoice[]
   distributorAgreements DistributorAgreement[]
   subscriptionMembers   SubscriptionMember[]   @relation("CustomerSubscriptions")
+  documents             Document[]             @relation("CustomerDocuments")
 
   @@index([email])
   @@index([lastName])
@@ -868,6 +872,7 @@ model Order {
   lineItems          OrderLineItem[]
   invoice            Invoice?
   inventoryMovements InventoryMovement[] @relation("OrderMovements")
+  documents          Document[]          @relation("OrderDocuments")
 
   @@index([status])
   @@index([customerId])
@@ -957,6 +962,16 @@ enum ExpenseCategory {
   UTILITIES
   RENT
   INSURANCE
+  OTHER
+}
+
+enum DocumentCategory {
+  AGREEMENT
+  INVOICE
+  CERTIFICATION
+  SOP
+  MARKETING
+  TEMPLATE
   OTHER
 }
 
@@ -1092,4 +1107,59 @@ model PromotionalPricing {
   @@index([startDate])
   @@index([endDate])
   @@index([isActive])
+}
+
+// ============================================================================
+// DOCUMENT MANAGEMENT MODELS (Phase 8)
+// ============================================================================
+
+model Document {
+  id             String           @id @default(cuid())
+  name           String
+  category       DocumentCategory
+  currentBlobUrl String
+  isTemplate     Boolean          @default(false)
+
+  // Polymorphic nullable FKs — at most one is non-null
+  customerId     String?
+  orderId        String?
+  batchId        String?
+
+  uploadedById   String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relations
+  customer   Customer?         @relation("CustomerDocuments", fields: [customerId], references: [id])
+  order      Order?            @relation("OrderDocuments", fields: [orderId], references: [id])
+  batch      Batch?            @relation("BatchDocuments", fields: [batchId], references: [id])
+  uploadedBy User              @relation("DocumentUploader", fields: [uploadedById], references: [id])
+  versions   DocumentVersion[]
+
+  @@index([category])
+  @@index([customerId])
+  @@index([orderId])
+  @@index([batchId])
+  @@index([uploadedById])
+  @@index([isTemplate])
+  @@index([createdAt])
+}
+
+model DocumentVersion {
+  id            String   @id @default(cuid())
+  documentId    String
+  versionNumber Int
+  blobUrl       String
+  fileName      String
+  fileSize      Int
+  uploadedById  String
+  createdAt     DateTime @default(now())
+
+  // Relations
+  document   Document @relation(fields: [documentId], references: [id])
+  uploadedBy User     @relation("VersionUploader", fields: [uploadedById], references: [id])
+
+  @@index([documentId])
+  @@index([uploadedById])
+  @@index([versionNumber])
 }
