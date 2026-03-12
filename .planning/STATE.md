@@ -6,16 +6,16 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 05 — Sales Channels CRM. Plan 01 complete. CRM schema layer with 4 new models, 3 enums, Zod validators, and pricing utility deployed.
+**Current focus:** Phase 05 — Sales Channels CRM. Plans 01 and 04 complete. CRM data foundation + lead pipeline UI + promotional pricing CRUD + PriceCalculator widget deployed.
 
 ## Current Position
 
 Phase: 05 (Sales Channels CRM)
-Plan: 1 of N in progress
-Status: In Progress — CRM data foundation deployed; DistributorAgreement/SubscriptionMember/Lead/PromotionalPricing models + calculateLineItemPrice utility live
-Last activity: 2026-03-12 — Phase 05-01 execution complete, CRM schema and pricing utility implemented
+Plan: 4 of N complete
+Status: In Progress — Lead pipeline (6 stages, overdue tracking, stage quick-change), promotional pricing CRUD (date ranges, percent/fixed, deactivate), and PriceCalculator widget ready
+Last activity: 2026-03-12 — Phase 05-04 execution complete, 6 files created (1,591 lines), 0 TypeScript errors
 
-Progress: [█████████░] 72%
+Progress: [█████████░] 74%
 
 ## Performance Metrics
 
@@ -33,10 +33,10 @@ Progress: [█████████░] 72%
 | 03-inventory-management | 4 | 15m | 3.75m |
 | 11-dashboard-kpis-vercel-deployment | 2 | 6m | 3m |
 | 04-order-management | 4 | 15m | 3.75m |
-| 05-sales-channels-crm | 1 | 8m | 8m |
+| 05-sales-channels-crm | 2 | 11m | 5.5m |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (3.5m), 04-03 (3m), 04-04 (5m), 05-01 (8m)
+- Last 5 plans: 04-03 (3m), 04-04 (5m), 05-01 (8m), 05-04 (3m)
 - Trend: Steady pace, excellent efficiency
 
 *Updated after each plan completion*
@@ -120,6 +120,10 @@ Recent decisions affecting current work:
 - [Phase 05-01 CRM]: Promotional pricing supersedes volume and frequency discounts — only max(volume, frequency) applies when no promo active, no stacking
 - [Phase 05-01 CRM]: Named Prisma relations on SubscriptionMember (CustomerSubscriptions, PlanMembers) and Lead (LeadAssignee, LeadCreator) to disambiguate multi-relation models
 - [Phase 05-01 CRM]: calculateLineItemPrice accepts PrismaClient as parameter — enables use inside db.$transaction calls
+- [Phase 05-04 CRM]: getLeads computes overdue boolean server-side (followUpAt < now AND stage != CLOSED) — avoids client-side date arithmetic
+- [Phase 05-04 CRM]: updateLeadStage uses startTransition + direct action call (not form submission) — enables non-blocking inline stage change per row
+- [Phase 05-04 CRM]: discountType hidden input drives XOR discount field visibility — matches createPromotionalPricingSchema refine constraint from Plan 01
+- [Phase 05-04 CRM]: PriceCalculator uses useEffect with cancelled flag — prevents stale state on rapid prop changes
 
 ### Pending Todos
 
@@ -132,5 +136,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-12
-Stopped at: Completed 05-sales-channels-crm plan 05-01 (CRM Data Foundation)
-Resume file: .planning/phases/05-sales-channels-crm/05-01-SUMMARY.md
+Stopped at: Completed 05-sales-channels-crm plan 05-04 (Lead Pipeline + Promotional Pricing)
+Resume file: .planning/phases/05-sales-channels-crm/05-04-SUMMARY.md
