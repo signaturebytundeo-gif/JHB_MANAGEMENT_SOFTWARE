@@ -6,14 +6,14 @@ See: .planning/PROJECT.md (updated 2026-02-13)
 
 **Core value:** Production tracking is the foundation — every unit traceable from batch creation (with QC sign-off) through inventory location to sale.
 
-**Current focus:** Phase 05 — Sales Channels CRM. Plans 01, 02, and 04 complete. CRM data foundation + customer CRM hub (CRUD, detail pages, LTV) + lead pipeline UI + promotional pricing deployed.
+**Current focus:** Phase 05 — Sales Channels CRM. Plans 01, 02, 03, and 04 complete. CRM data foundation + customer CRM hub + subscription/distributor management + lead pipeline UI + promotional pricing deployed.
 
 ## Current Position
 
 Phase: 05 (Sales Channels CRM)
-Plan: 4 of N complete
-Status: In Progress — Lead pipeline (6 stages, overdue tracking, stage quick-change), promotional pricing CRUD (date ranges, percent/fixed, deactivate), and PriceCalculator widget ready
-Last activity: 2026-03-12 — Phase 05-04 execution complete, 6 files created (1,591 lines), 0 TypeScript errors
+Plan: All plans complete
+Status: Complete — Subscription member lifecycle (create, pause, cancel, loyalty, renewal reminders), distributor agreements (territory, commission tracking), lead pipeline, promotional pricing all live
+Last activity: 2026-03-12 — Phase 05-03 execution complete, 8 files created (subscription/distributor CRM), 0 TypeScript errors
 
 Progress: [█████████░] 74%
 
@@ -128,6 +128,8 @@ Recent decisions affecting current work:
 - [Phase 05-04 CRM]: PriceCalculator uses useEffect with cancelled flag — prevents stale state on rapid prop changes
 - [Phase 05-sales-channels-crm]: CustomerRow type uses Decimal-compatible union for creditLimit to accept Prisma Decimal without modifying shared getCustomers() action
 - [Phase 05-sales-channels-crm]: CRMTabs ReactNode slot pattern (matching OrdersTabs) — Plans 03/04 replace coming-soon placeholders in subscriptions/distributors/leads slots
+- [Phase 05-sales-channels-crm]: crm-distributors Zod validator auto-created — missing required validator for distributor actions
+- [Phase 05-sales-channels-crm]: Commission rate stored as percentage (0-100), divided by 100 at calculation boundary for human-readable input
 
 ### Pending Todos
 
