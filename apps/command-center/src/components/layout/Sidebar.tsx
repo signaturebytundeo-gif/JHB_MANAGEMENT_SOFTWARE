@@ -51,6 +51,8 @@ const navItems: NavItem[] = [
   { label: 'Customers', href: '/dashboard/customers', icon: Users, permission: 'customers' },
   { label: 'Finance', href: '/dashboard/finance', icon: DollarSign, permission: 'finance' },
   { label: 'Expenses', href: '/dashboard/finance/expenses', icon: Receipt, permission: 'finance' },
+  { label: 'Revenue', href: '/dashboard/finance/revenue', icon: TrendingUp, permission: 'finance' },
+  { label: 'COGS', href: '/dashboard/finance/cogs', icon: BarChart, permission: 'finance' },
   { label: 'Reports', href: '/dashboard/reports', icon: BarChart, permission: 'reports' },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings, permission: 'settings' },
   { label: 'Investor Portal', href: '/dashboard/investor', icon: TrendingUp, permission: 'investor' },
