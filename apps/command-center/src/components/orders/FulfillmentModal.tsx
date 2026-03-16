@@ -38,17 +38,12 @@ export function FulfillmentModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!carrier || !trackingNumber.trim()) {
-      toast.error('Carrier and tracking number are required.');
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
       const result = await fulfillOrder(orderId, {
-        trackingNumber: trackingNumber.trim(),
-        carrier,
+        trackingNumber: trackingNumber.trim() || undefined,
+        carrier: carrier || undefined,
         estimatedDelivery: estimatedDelivery.trim() || undefined,
       });
 
@@ -81,7 +76,7 @@ export function FulfillmentModal({
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <p className="text-sm text-muted-foreground">
-            Shipping order for <strong>{customerName}</strong>. The customer will receive a shipping confirmation email with tracking information.
+            Shipping order for <strong>{customerName}</strong>. Add tracking info below (optional) — the customer will receive a shipping confirmation email.
           </p>
 
           <div className="space-y-2">
@@ -107,7 +102,6 @@ export function FulfillmentModal({
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
               placeholder="e.g. 1Z999AA10123456784"
-              required
               className="h-11"
             />
           </div>
@@ -125,10 +119,10 @@ export function FulfillmentModal({
 
           <Button
             type="submit"
-            disabled={isSubmitting || !carrier || !trackingNumber.trim()}
+            disabled={isSubmitting}
             className="w-full bg-caribbean-green hover:bg-caribbean-green/90 text-white"
           >
-            {isSubmitting ? 'Shipping...' : 'Ship & Notify Customer'}
+            {isSubmitting ? 'Shipping...' : (trackingNumber.trim() ? 'Ship & Notify Customer' : 'Mark as Shipped')}
           </Button>
         </form>
       </div>

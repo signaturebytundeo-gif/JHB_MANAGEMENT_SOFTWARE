@@ -166,7 +166,7 @@ export async function getOrderMetrics() {
 
 export async function fulfillOrder(
   orderId: string,
-  data: { trackingNumber: string; carrier: string; estimatedDelivery?: string }
+  data: { trackingNumber?: string; carrier?: string; estimatedDelivery?: string }
 ) {
   try {
     await verifySession();
@@ -191,57 +191,60 @@ export async function fulfillOrder(
       where: { id: orderId },
       data: {
         status: 'SHIPPED',
-        trackingNumber: data.trackingNumber,
-        carrier: data.carrier,
+        ...(data.trackingNumber && { trackingNumber: data.trackingNumber }),
+        ...(data.carrier && { carrier: data.carrier }),
         shippedAt: new Date(),
       },
     });
 
-    // Send shipping confirmation email
-    let emailSuccess = false;
-    let emailError: string | undefined;
+    // Send shipping confirmation email and Slack notification only when tracking info is present
+    let emailNote = 'Order marked as shipped.';
 
-    try {
-      const emailResult = await sendShippingConfirmationEmail({
-        customerFirstName: order.customer.firstName,
+    if (data.trackingNumber && data.carrier) {
+      let emailSuccess = false;
+      let emailError: string | undefined;
+
+      try {
+        const emailResult = await sendShippingConfirmationEmail({
+          customerFirstName: order.customer.firstName,
+          customerEmail: order.customer.email,
+          orderId: order.orderId,
+          carrier: data.carrier,
+          trackingNumber: data.trackingNumber,
+          estimatedDelivery: data.estimatedDelivery,
+        });
+
+        emailSuccess = emailResult.success;
+        emailError = emailResult.error;
+
+        if (emailSuccess) {
+          await db.websiteOrder.update({
+            where: { id: orderId },
+            data: { shippingEmailSentAt: new Date() },
+          });
+        }
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : 'Unknown error';
+      }
+
+      await notifyShippingEmailSent({
+        customerName: `${order.customer.firstName} ${order.customer.lastName}`,
         customerEmail: order.customer.email,
         orderId: order.orderId,
         carrier: data.carrier,
         trackingNumber: data.trackingNumber,
-        estimatedDelivery: data.estimatedDelivery,
-      });
+        emailSuccess,
+        errorMessage: emailError,
+      }).catch(() => {}); // swallow Slack errors
 
-      emailSuccess = emailResult.success;
-      emailError = emailResult.error;
-
-      if (emailSuccess) {
-        await db.websiteOrder.update({
-          where: { id: orderId },
-          data: { shippingEmailSentAt: new Date() },
-        });
-      }
-    } catch (err) {
-      emailError = err instanceof Error ? err.message : 'Unknown error';
+      emailNote = emailSuccess
+        ? 'Shipping email sent to customer.'
+        : 'Order shipped but email failed — Slack alert sent.';
     }
-
-    // Always send Slack notification
-    await notifyShippingEmailSent({
-      customerName: `${order.customer.firstName} ${order.customer.lastName}`,
-      customerEmail: order.customer.email,
-      orderId: order.orderId,
-      carrier: data.carrier,
-      trackingNumber: data.trackingNumber,
-      emailSuccess,
-      errorMessage: emailError,
-    }).catch(() => {}); // swallow Slack errors
 
     revalidatePath('/dashboard/orders');
     revalidatePath('/dashboard/orders/' + orderId);
     revalidatePath('/dashboard/customers');
-
-    const emailNote = emailSuccess
-      ? 'Shipping email sent to customer.'
-      : 'Order shipped but email failed — Slack alert sent.';
 
     return { success: true, message: `Order marked as shipped. ${emailNote}` };
   } catch (error) {
