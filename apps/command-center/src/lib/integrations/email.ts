@@ -103,7 +103,7 @@ export async function sendInviteEmail(
   `;
 
   await getResendClient().emails.send({
-    from: 'JHB Command Center <onboarding@resend.dev>',
+    from: 'JHB Command Center <noreply@jamaicahousebrand.com>',
     to,
     subject: "You've been invited to JHB Command Center",
     html: emailHtml,
@@ -199,7 +199,7 @@ export async function sendMagicLinkEmail(
   `;
 
   await getResendClient().emails.send({
-    from: 'JHB Command Center <onboarding@resend.dev>',
+    from: 'JHB Command Center <noreply@jamaicahousebrand.com>',
     to,
     subject: 'Your sign-in link for JHB Command Center',
     html: emailHtml,
