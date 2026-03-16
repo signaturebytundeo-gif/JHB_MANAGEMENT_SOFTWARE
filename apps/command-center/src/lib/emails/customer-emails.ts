@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { render } from '@react-email/render';
 import { OrderConfirmationEmail } from '../email-templates/OrderConfirmation';
 import { ShippingConfirmationEmail } from '../email-templates/ShippingConfirmation';
+import { DeliveryConfirmationEmail } from '../email-templates/DeliveryConfirmation';
 
 // ============================================================================
 // Customer-Facing Transactional Emails — Order Confirmation & Shipping
@@ -130,6 +131,58 @@ export async function sendShippingConfirmationEmail(
     return { success: true };
   } catch (error: any) {
     console.error('[CustomerEmail] Shipping confirmation failed:', error);
+    return { success: false, error: error?.message || 'Unknown error' };
+  }
+}
+
+// ============================================================================
+// Delivery Confirmation Email
+// ============================================================================
+
+interface DeliveryConfirmationData {
+  customerFirstName: string;
+  customerEmail: string;
+  orderId: string;
+  carrier?: string;
+  trackingNumber?: string;
+}
+
+export async function sendDeliveryConfirmationEmail(
+  data: DeliveryConfirmationData
+): Promise<{ success: boolean; error?: string }> {
+  // Dev fallback
+  if (!process.env.RESEND_API_KEY) {
+    console.log('──────────────────────────────────────────────────');
+    console.log('DELIVERY CONFIRMATION EMAIL (Development Mode)');
+    console.log('──────────────────────────────────────────────────');
+    console.log(`To: ${data.customerEmail}`);
+    console.log(`Customer: ${data.customerFirstName}`);
+    console.log(`Order: ${data.orderId}`);
+    if (data.carrier) console.log(`Carrier: ${data.carrier}`);
+    if (data.trackingNumber) console.log(`Tracking: ${data.trackingNumber}`);
+    console.log('──────────────────────────────────────────────────');
+    return { success: true };
+  }
+
+  const emailHtml = await render(
+    React.createElement(DeliveryConfirmationEmail, {
+      customerFirstName: data.customerFirstName,
+      orderId: data.orderId,
+      carrier: data.carrier,
+      trackingNumber: data.trackingNumber,
+    })
+  );
+
+  try {
+    await getResendClient().emails.send({
+      from: FROM_ADDRESS,
+      to: data.customerEmail,
+      subject: 'Your Jamaica House Brand Order Has Been Delivered!',
+      html: emailHtml,
+    });
+    return { success: true };
+  } catch (error: any) {
+    console.error('[CustomerEmail] Delivery confirmation failed:', error);
     return { success: false, error: error?.message || 'Unknown error' };
   }
 }
