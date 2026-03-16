@@ -10,10 +10,10 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Current Position
 
-Phase: 13-fulfillment-tracking
+Phase: 14-notification-triggers
 Plan: 01 (complete)
 Status: Active
-Last activity: 2026-03-16 — Completed 13-01 make tracking optional in fulfillment flow
+Last activity: 2026-03-16 — Completed 14-01 delivery confirmation artifacts (template, send function, schema field, Slack notification)
 
 Progress: [█░░░░░░░░░] 10%
 
@@ -24,6 +24,8 @@ Progress: [█░░░░░░░░░] 10%
 - **13-01:** Tracking number and carrier are optional in FulfillmentModal — operator can ship without them; email + Slack notifications only fire when both are present
 - **13-01:** Button label is context-aware: "Mark as Shipped" with no tracking, "Ship & Notify Customer" when tracking entered
 - **13-01:** DB update uses conditional spread (`...(field && { field })`) to avoid overwriting existing tracking values with undefined
+- **14-01:** carrier and trackingNumber are optional on DeliveryConfirmationEmail — CTA button only renders when both present
+- **14-01:** getTrackingUrl helper copied into DeliveryConfirmation.tsx (not imported) to keep each template file self-contained
 
 ### Pending Todos
 
@@ -36,5 +38,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-16
-Stopped at: Completed 13-01-PLAN.md
-Resume file: 13-02-PLAN.md (if exists) or next phase plan
+Stopped at: Completed 14-01-PLAN.md
+Resume file: 14-02-PLAN.md
