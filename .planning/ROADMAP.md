@@ -29,6 +29,16 @@
 Plans:
 - [ ] 13-01-PLAN.md — Make tracking number optional in FulfillmentModal + verify end-to-end
 
+### Phase 14: Notification Triggers
+
+**Goal:** Customers automatically receive the right branded email at each order lifecycle milestone
+**Depends on:** Phase 12 (templates), Phase 13 (tracking number on record)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Create delivery email template, send function, schema field, and Slack notification
+- [ ] 14-02-PLAN.md — Wire delivery email into updateOrderStatus + verify all three triggers end-to-end
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -42,3 +52,4 @@ Plans:
 | 7. Dashboards & Reporting | v1.0 | 3/3 | Complete | 2026-03-12 |
 | 8. Document Management | v1.0 | 3/3 | Complete | 2026-03-12 |
 | 13. Fulfillment Tracking | v1.2 | 0/1 | Planning | — |
+| 14. Notification Triggers | v1.2 | 0/2 | Planning | — |
