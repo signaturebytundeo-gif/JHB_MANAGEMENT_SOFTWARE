@@ -73,6 +73,10 @@ export async function getDashboardKPIs(): Promise<DashboardKPIs> {
     // DASH-05: Open operator orders
     operatorOrderCount,
     operatorOrderValueAgg,
+    // DASH-01 / DASH-02: WebsiteOrder revenue — today
+    websiteOrderTodayRevenueAgg,
+    // DASH-01 / DASH-02: WebsiteOrder revenue — MTD
+    websiteOrderMTDRevenueAgg,
     // DASH-06: Accounts receivable
     arInvoices,
   ] = await Promise.all([
@@ -149,6 +153,24 @@ export async function getDashboardKPIs(): Promise<DashboardKPIs> {
       where: { status: { in: ['DRAFT', 'CONFIRMED', 'PROCESSING'] } },
       _sum: { totalAmount: true },
     }),
+    // WebsiteOrder revenue — today (all statuses except CANCELLED count as revenue)
+    db.websiteOrder.aggregate({
+      where: {
+        createdAt: { gte: todayStart, lte: todayEnd },
+        status: { not: 'CANCELLED' },
+      },
+      _sum: { orderTotal: true },
+      _count: { _all: true },
+    }),
+    // WebsiteOrder revenue — MTD
+    db.websiteOrder.aggregate({
+      where: {
+        createdAt: { gte: monthStart, lte: monthEnd },
+        status: { not: 'CANCELLED' },
+      },
+      _sum: { orderTotal: true },
+      _count: { _all: true },
+    }),
     // AR invoices (SENT, VIEWED, PARTIAL, OVERDUE)
     db.invoice.findMany({
       where: { status: { in: ['SENT', 'VIEWED', 'PARTIAL', 'OVERDUE'] } },
@@ -165,14 +187,16 @@ export async function getDashboardKPIs(): Promise<DashboardKPIs> {
   // ── DASH-01: Today's Revenue ──────────────────────────────────────────────
   const todaySaleRevenue = Number(saleTodayAgg._sum.totalAmount ?? 0);
   const todayOrderRevenue = Number(orderTodayAgg._sum.totalAmount ?? 0);
-  const todayRevenue = todaySaleRevenue + todayOrderRevenue;
-  const todayOrderCount = saleTodayAgg._count.id + orderTodayAgg._count.id;
+  const todayWebsiteRevenue = Number(websiteOrderTodayRevenueAgg._sum?.orderTotal ?? 0);
+  const todayRevenue = todaySaleRevenue + todayOrderRevenue + todayWebsiteRevenue;
+  const todayOrderCount = saleTodayAgg._count.id + orderTodayAgg._count.id + (websiteOrderTodayRevenueAgg._count._all ?? 0);
 
   // ── DASH-02: MTD Revenue ──────────────────────────────────────────────────
   const mtdSaleRevenue = Number(saleMTDAgg._sum.totalAmount ?? 0);
   const mtdOrderRevenue = Number(orderMTDAgg._sum.totalAmount ?? 0);
-  const mtdRevenue = mtdSaleRevenue + mtdOrderRevenue;
-  const mtdOrderCount = saleMTDAgg._count.id + orderMTDAgg._count.id;
+  const mtdWebsiteRevenue = Number(websiteOrderMTDRevenueAgg._sum?.orderTotal ?? 0);
+  const mtdRevenue = mtdSaleRevenue + mtdOrderRevenue + mtdWebsiteRevenue;
+  const mtdOrderCount = saleMTDAgg._count.id + orderMTDAgg._count.id + (websiteOrderMTDRevenueAgg._count._all ?? 0);
   const mtdRevenuePercent = targetRevenue > 0 ? (mtdRevenue / targetRevenue) * 100 : 0;
 
   // ── DASH-03: Units Produced ───────────────────────────────────────────────
