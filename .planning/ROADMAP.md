@@ -20,6 +20,15 @@
 
 </details>
 
+### Phase 13: Fulfillment Tracking
+
+**Goal:** Operators can record a UPS tracking number when shipping an order and it persists on the order record
+**Depends on:** Phase 12 (template exists so shipped email can be wired in next phase)
+**Plans:** 1 plan
+
+Plans:
+- [ ] 13-01-PLAN.md — Make tracking number optional in FulfillmentModal + verify end-to-end
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -32,3 +41,4 @@
 | 6. Financial Management | v1.0 | 3/3 | Complete | 2026-03-12 |
 | 7. Dashboards & Reporting | v1.0 | 3/3 | Complete | 2026-03-12 |
 | 8. Document Management | v1.0 | 3/3 | Complete | 2026-03-12 |
+| 13. Fulfillment Tracking | v1.2 | 0/1 | Planning | — |
