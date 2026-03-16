@@ -1,4 +1,13 @@
 -- CreateEnum
+CREATE TYPE "CustomerType" AS ENUM ('RETAIL', 'WHOLESALE', 'DISTRIBUTOR', 'RESTAURANT', 'SUBSCRIPTION', 'EVENT');
+
+-- CreateEnum
+CREATE TYPE "SubscriptionStatus" AS ENUM ('ACTIVE', 'PAUSED', 'CANCELLED', 'EXPIRED');
+
+-- CreateEnum
+CREATE TYPE "LeadStage" AS ENUM ('LEAD', 'CONTACTED', 'MEETING', 'PROPOSAL', 'NEGOTIATION', 'CLOSED');
+
+-- CreateEnum
 CREATE TYPE "Role" AS ENUM ('ADMIN', 'MANAGER', 'SALES_REP', 'INVESTOR');
 
 -- CreateEnum
@@ -20,6 +29,12 @@ CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'CREDIT_CARD', 'SQUARE', 'STRIPE', 
 CREATE TYPE "AdjustmentReason" AS ENUM ('DAMAGE', 'THEFT', 'COUNTING_ERROR', 'TRANSFER', 'OTHER');
 
 -- CreateEnum
+CREATE TYPE "MovementType" AS ENUM ('PRODUCTION', 'TRANSFER', 'ADJUSTMENT', 'ALLOCATION', 'DEDUCTION');
+
+-- CreateEnum
+CREATE TYPE "InventoryAdjustmentReason" AS ENUM ('DAMAGE', 'SHRINKAGE', 'SAMPLING', 'EXPIRED', 'COUNT_CORRECTION');
+
+-- CreateEnum
 CREATE TYPE "TransactionType" AS ENUM ('BATCH_COMPLETION', 'TRANSFER_IN', 'TRANSFER_OUT', 'SALE_DEDUCTION', 'ADJUSTMENT');
 
 -- CreateEnum
@@ -27,6 +42,30 @@ CREATE TYPE "ShipmentStatus" AS ENUM ('DRAFT', 'LABEL_CREATED', 'SHIPPED', 'DELI
 
 -- CreateEnum
 CREATE TYPE "OrderStatus" AS ENUM ('NEW', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "OperatorOrderStatus" AS ENUM ('DRAFT', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "InvoiceStatus" AS ENUM ('DRAFT', 'SENT', 'VIEWED', 'PARTIAL', 'PAID', 'OVERDUE', 'VOID');
+
+-- CreateEnum
+CREATE TYPE "OperatorOrderType" AS ENUM ('STANDARD', 'CATERING', 'FARMERS_MARKET');
+
+-- CreateEnum
+CREATE TYPE "OrderSource" AS ENUM ('WEBSITE', 'AMAZON', 'ETSY');
+
+-- CreateEnum
+CREATE TYPE "SyncPlatform" AS ENUM ('SQUARE', 'AMAZON', 'ETSY');
+
+-- CreateEnum
+CREATE TYPE "SyncStatus" AS ENUM ('RUNNING', 'SUCCESS', 'PARTIAL', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "ExpenseCategory" AS ENUM ('INGREDIENTS', 'PACKAGING', 'LABOR', 'EQUIPMENT', 'MARKETING', 'SHIPPING', 'UTILITIES', 'RENT', 'INSURANCE', 'OTHER');
+
+-- CreateEnum
+CREATE TYPE "DocumentCategory" AS ENUM ('AGREEMENT', 'INVOICE', 'CERTIFICATION', 'SOP', 'MARKETING', 'TEMPLATE', 'OTHER');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -79,6 +118,8 @@ CREATE TABLE "Product" (
     "size" TEXT NOT NULL,
     "unitsPerCase" INTEGER,
     "description" TEXT,
+    "reorderPoint" INTEGER NOT NULL DEFAULT 0,
+    "leadTimeDays" INTEGER NOT NULL DEFAULT 14,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -209,6 +250,8 @@ CREATE TABLE "Batch" (
     "coPackerPartnerId" TEXT,
     "coPackerLotNumber" TEXT,
     "coPackerReceivingDate" TIMESTAMP(3),
+    "laborCostTotal" DECIMAL(65,30) DEFAULT 0,
+    "overheadCostTotal" DECIMAL(65,30) DEFAULT 0,
     "createdById" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "deletedAt" TIMESTAMP(3),
@@ -256,6 +299,7 @@ CREATE TABLE "RawMaterial" (
     "receivedDate" TIMESTAMP(3) NOT NULL,
     "quantity" DECIMAL(65,30) NOT NULL,
     "unit" TEXT NOT NULL,
+    "costPerUnit" DECIMAL(65,30),
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -273,6 +317,45 @@ CREATE TABLE "BatchMaterial" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "BatchMaterial_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "InventoryMovement" (
+    "id" TEXT NOT NULL,
+    "movementType" "MovementType" NOT NULL,
+    "batchId" TEXT NOT NULL,
+    "fromLocationId" TEXT,
+    "toLocationId" TEXT,
+    "quantity" INTEGER NOT NULL,
+    "reason" "InventoryAdjustmentReason",
+    "notes" TEXT,
+    "requiresApproval" BOOLEAN NOT NULL DEFAULT false,
+    "approvedById" TEXT,
+    "approvedAt" TIMESTAMP(3),
+    "createdById" TEXT NOT NULL,
+    "orderId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "InventoryMovement_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PackagingMaterial" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "supplier" TEXT NOT NULL,
+    "currentQuantity" INTEGER NOT NULL DEFAULT 0,
+    "unit" TEXT NOT NULL,
+    "reorderPoint" INTEGER NOT NULL DEFAULT 0,
+    "leadTimeDays" INTEGER NOT NULL DEFAULT 14,
+    "costPerUnit" DECIMAL(65,30),
+    "lastOrderDate" TIMESTAMP(3),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PackagingMaterial_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -368,6 +451,16 @@ CREATE TABLE "Customer" (
     "phone" TEXT,
     "orderCount" INTEGER NOT NULL DEFAULT 0,
     "totalSpent" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "customerType" "CustomerType" NOT NULL DEFAULT 'RETAIL',
+    "company" TEXT,
+    "paymentTerms" TEXT,
+    "creditLimit" DECIMAL(65,30),
+    "billingAddress" TEXT,
+    "shippingAddress" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "zip" TEXT,
+    "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -378,16 +471,259 @@ CREATE TABLE "Customer" (
 CREATE TABLE "WebsiteOrder" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
+    "stripeEventId" TEXT,
     "customerId" TEXT NOT NULL,
     "items" TEXT NOT NULL,
     "shippingCost" DECIMAL(65,30) NOT NULL,
     "orderTotal" DECIMAL(65,30) NOT NULL,
     "status" "OrderStatus" NOT NULL DEFAULT 'NEW',
+    "source" "OrderSource" NOT NULL DEFAULT 'WEBSITE',
     "orderDate" TIMESTAMP(3) NOT NULL,
+    "trackingNumber" TEXT,
+    "carrier" TEXT,
+    "shippedAt" TIMESTAMP(3),
+    "confirmationEmailSentAt" TIMESTAMP(3),
+    "shippingEmailSentAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "WebsiteOrder_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MarketplaceSync" (
+    "id" TEXT NOT NULL,
+    "platform" "SyncPlatform" NOT NULL,
+    "status" "SyncStatus" NOT NULL DEFAULT 'RUNNING',
+    "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "completedAt" TIMESTAMP(3),
+    "recordsFound" INTEGER NOT NULL DEFAULT 0,
+    "recordsCreated" INTEGER NOT NULL DEFAULT 0,
+    "recordsSkipped" INTEGER NOT NULL DEFAULT 0,
+    "errorMessage" TEXT,
+    "errorDetails" TEXT,
+    "triggeredById" TEXT,
+
+    CONSTRAINT "MarketplaceSync_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Order" (
+    "id" TEXT NOT NULL,
+    "orderNumber" TEXT NOT NULL,
+    "status" "OperatorOrderStatus" NOT NULL DEFAULT 'DRAFT',
+    "orderType" "OperatorOrderType" NOT NULL DEFAULT 'STANDARD',
+    "customerId" TEXT,
+    "channelId" TEXT NOT NULL,
+    "locationId" TEXT NOT NULL,
+    "paymentMethod" "PaymentMethod" NOT NULL,
+    "orderDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "notes" TEXT,
+    "depositAmount" DECIMAL(65,30),
+    "depositPaidAt" TIMESTAMP(3),
+    "balanceDueDate" TIMESTAMP(3),
+    "eventDate" TIMESTAMP(3),
+    "eventLocation" TEXT,
+    "weatherNotes" TEXT,
+    "footTrafficNotes" TEXT,
+    "totalAmount" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "approvalStatus" TEXT,
+    "approvedById" TEXT,
+    "secondApprovedById" TEXT,
+    "approvedAt" TIMESTAMP(3),
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrderLineItem" (
+    "id" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "unitPrice" DECIMAL(65,30) NOT NULL,
+    "totalPrice" DECIMAL(65,30) NOT NULL,
+    "discountPercent" DECIMAL(65,30),
+    "discountReason" TEXT,
+
+    CONSTRAINT "OrderLineItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Invoice" (
+    "id" TEXT NOT NULL,
+    "invoiceNumber" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
+    "customerId" TEXT,
+    "status" "InvoiceStatus" NOT NULL DEFAULT 'DRAFT',
+    "subtotal" DECIMAL(65,30) NOT NULL,
+    "taxAmount" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "totalAmount" DECIMAL(65,30) NOT NULL,
+    "paidAmount" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "issuedAt" TIMESTAMP(3),
+    "dueDate" TIMESTAMP(3),
+    "paidAt" TIMESTAMP(3),
+    "viewedAt" TIMESTAMP(3),
+    "overdueAt" TIMESTAMP(3),
+    "lateFeeAmount" DECIMAL(65,30) NOT NULL DEFAULT 0,
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Invoice_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "InvoicePayment" (
+    "id" TEXT NOT NULL,
+    "invoiceId" TEXT NOT NULL,
+    "amount" DECIMAL(65,30) NOT NULL,
+    "paymentMethod" "PaymentMethod" NOT NULL,
+    "paidAt" TIMESTAMP(3) NOT NULL,
+    "notes" TEXT,
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "InvoicePayment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Expense" (
+    "id" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "amount" DECIMAL(65,30) NOT NULL,
+    "category" "ExpenseCategory" NOT NULL,
+    "expenseDate" TIMESTAMP(3) NOT NULL,
+    "receiptUrl" TEXT,
+    "vendorName" TEXT,
+    "notes" TEXT,
+    "approvalStatus" TEXT,
+    "approvedById" TEXT,
+    "secondApprovedById" TEXT,
+    "approvedAt" TIMESTAMP(3),
+    "bankAuthorizationRef" TEXT,
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Expense_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Budget" (
+    "id" TEXT NOT NULL,
+    "period" TEXT NOT NULL,
+    "category" "ExpenseCategory" NOT NULL,
+    "budgetedAmount" DECIMAL(65,30) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Budget_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DistributorAgreement" (
+    "id" TEXT NOT NULL,
+    "customerId" TEXT NOT NULL,
+    "territory" TEXT NOT NULL,
+    "commissionRate" DECIMAL(65,30) NOT NULL,
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "endDate" TIMESTAMP(3),
+    "status" TEXT NOT NULL DEFAULT 'active',
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "DistributorAgreement_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SubscriptionMember" (
+    "id" TEXT NOT NULL,
+    "customerId" TEXT NOT NULL,
+    "planId" TEXT NOT NULL,
+    "status" "SubscriptionStatus" NOT NULL DEFAULT 'ACTIVE',
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "renewalDate" TIMESTAMP(3),
+    "cancelledAt" TIMESTAMP(3),
+    "loyaltyMonths" INTEGER NOT NULL DEFAULT 0,
+    "loyaltyRewardAt" TIMESTAMP(3),
+    "renewalReminderSentAt" TIMESTAMP(3),
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SubscriptionMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Lead" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "company" TEXT,
+    "email" TEXT,
+    "phone" TEXT,
+    "source" TEXT,
+    "stage" "LeadStage" NOT NULL DEFAULT 'LEAD',
+    "notes" TEXT,
+    "followUpAt" TIMESTAMP(3),
+    "closedAt" TIMESTAMP(3),
+    "assignedToId" TEXT,
+    "createdById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Lead_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PromotionalPricing" (
+    "id" TEXT NOT NULL,
+    "productId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "discountPercent" DECIMAL(65,30),
+    "fixedPrice" DECIMAL(65,30),
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "endDate" TIMESTAMP(3) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PromotionalPricing_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Document" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "category" "DocumentCategory" NOT NULL,
+    "currentBlobUrl" TEXT NOT NULL,
+    "isTemplate" BOOLEAN NOT NULL DEFAULT false,
+    "customerId" TEXT,
+    "orderId" TEXT,
+    "batchId" TEXT,
+    "uploadedById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Document_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "DocumentVersion" (
+    "id" TEXT NOT NULL,
+    "documentId" TEXT NOT NULL,
+    "versionNumber" INTEGER NOT NULL,
+    "blobUrl" TEXT NOT NULL,
+    "fileName" TEXT NOT NULL,
+    "fileSize" INTEGER NOT NULL,
+    "uploadedById" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "DocumentVersion_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -538,6 +874,33 @@ CREATE INDEX "RawMaterial_isActive_idx" ON "RawMaterial"("isActive");
 CREATE UNIQUE INDEX "BatchMaterial_batchId_rawMaterialId_key" ON "BatchMaterial"("batchId", "rawMaterialId");
 
 -- CreateIndex
+CREATE INDEX "InventoryMovement_batchId_idx" ON "InventoryMovement"("batchId");
+
+-- CreateIndex
+CREATE INDEX "InventoryMovement_fromLocationId_idx" ON "InventoryMovement"("fromLocationId");
+
+-- CreateIndex
+CREATE INDEX "InventoryMovement_toLocationId_idx" ON "InventoryMovement"("toLocationId");
+
+-- CreateIndex
+CREATE INDEX "InventoryMovement_movementType_idx" ON "InventoryMovement"("movementType");
+
+-- CreateIndex
+CREATE INDEX "InventoryMovement_createdAt_idx" ON "InventoryMovement"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "InventoryMovement_createdById_idx" ON "InventoryMovement"("createdById");
+
+-- CreateIndex
+CREATE INDEX "PackagingMaterial_name_idx" ON "PackagingMaterial"("name");
+
+-- CreateIndex
+CREATE INDEX "PackagingMaterial_type_idx" ON "PackagingMaterial"("type");
+
+-- CreateIndex
+CREATE INDEX "PackagingMaterial_isActive_idx" ON "PackagingMaterial"("isActive");
+
+-- CreateIndex
 CREATE INDEX "StockAdjustment_productId_idx" ON "StockAdjustment"("productId");
 
 -- CreateIndex
@@ -601,7 +964,13 @@ CREATE INDEX "Customer_email_idx" ON "Customer"("email");
 CREATE INDEX "Customer_lastName_idx" ON "Customer"("lastName");
 
 -- CreateIndex
+CREATE INDEX "Customer_customerType_idx" ON "Customer"("customerType");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "WebsiteOrder_orderId_key" ON "WebsiteOrder"("orderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WebsiteOrder_stripeEventId_key" ON "WebsiteOrder"("stripeEventId");
 
 -- CreateIndex
 CREATE INDEX "WebsiteOrder_status_idx" ON "WebsiteOrder"("status");
@@ -611,6 +980,150 @@ CREATE INDEX "WebsiteOrder_orderDate_idx" ON "WebsiteOrder"("orderDate");
 
 -- CreateIndex
 CREATE INDEX "WebsiteOrder_customerId_idx" ON "WebsiteOrder"("customerId");
+
+-- CreateIndex
+CREATE INDEX "WebsiteOrder_source_idx" ON "WebsiteOrder"("source");
+
+-- CreateIndex
+CREATE INDEX "MarketplaceSync_platform_idx" ON "MarketplaceSync"("platform");
+
+-- CreateIndex
+CREATE INDEX "MarketplaceSync_status_idx" ON "MarketplaceSync"("status");
+
+-- CreateIndex
+CREATE INDEX "MarketplaceSync_startedAt_idx" ON "MarketplaceSync"("startedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Order_orderNumber_key" ON "Order"("orderNumber");
+
+-- CreateIndex
+CREATE INDEX "Order_status_idx" ON "Order"("status");
+
+-- CreateIndex
+CREATE INDEX "Order_customerId_idx" ON "Order"("customerId");
+
+-- CreateIndex
+CREATE INDEX "Order_channelId_idx" ON "Order"("channelId");
+
+-- CreateIndex
+CREATE INDEX "Order_orderDate_idx" ON "Order"("orderDate");
+
+-- CreateIndex
+CREATE INDEX "Order_orderType_idx" ON "Order"("orderType");
+
+-- CreateIndex
+CREATE INDEX "OrderLineItem_orderId_idx" ON "OrderLineItem"("orderId");
+
+-- CreateIndex
+CREATE INDEX "OrderLineItem_productId_idx" ON "OrderLineItem"("productId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invoice_invoiceNumber_key" ON "Invoice"("invoiceNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invoice_orderId_key" ON "Invoice"("orderId");
+
+-- CreateIndex
+CREATE INDEX "Invoice_status_idx" ON "Invoice"("status");
+
+-- CreateIndex
+CREATE INDEX "Invoice_customerId_idx" ON "Invoice"("customerId");
+
+-- CreateIndex
+CREATE INDEX "Invoice_dueDate_idx" ON "Invoice"("dueDate");
+
+-- CreateIndex
+CREATE INDEX "Invoice_issuedAt_idx" ON "Invoice"("issuedAt");
+
+-- CreateIndex
+CREATE INDEX "InvoicePayment_invoiceId_idx" ON "InvoicePayment"("invoiceId");
+
+-- CreateIndex
+CREATE INDEX "InvoicePayment_paidAt_idx" ON "InvoicePayment"("paidAt");
+
+-- CreateIndex
+CREATE INDEX "Expense_expenseDate_idx" ON "Expense"("expenseDate");
+
+-- CreateIndex
+CREATE INDEX "Expense_category_idx" ON "Expense"("category");
+
+-- CreateIndex
+CREATE INDEX "Expense_approvalStatus_idx" ON "Expense"("approvalStatus");
+
+-- CreateIndex
+CREATE INDEX "Expense_createdById_idx" ON "Expense"("createdById");
+
+-- CreateIndex
+CREATE INDEX "Budget_period_idx" ON "Budget"("period");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Budget_period_category_key" ON "Budget"("period", "category");
+
+-- CreateIndex
+CREATE INDEX "DistributorAgreement_customerId_idx" ON "DistributorAgreement"("customerId");
+
+-- CreateIndex
+CREATE INDEX "DistributorAgreement_status_idx" ON "DistributorAgreement"("status");
+
+-- CreateIndex
+CREATE INDEX "SubscriptionMember_customerId_idx" ON "SubscriptionMember"("customerId");
+
+-- CreateIndex
+CREATE INDEX "SubscriptionMember_status_idx" ON "SubscriptionMember"("status");
+
+-- CreateIndex
+CREATE INDEX "SubscriptionMember_renewalDate_idx" ON "SubscriptionMember"("renewalDate");
+
+-- CreateIndex
+CREATE INDEX "Lead_stage_idx" ON "Lead"("stage");
+
+-- CreateIndex
+CREATE INDEX "Lead_followUpAt_idx" ON "Lead"("followUpAt");
+
+-- CreateIndex
+CREATE INDEX "Lead_assignedToId_idx" ON "Lead"("assignedToId");
+
+-- CreateIndex
+CREATE INDEX "PromotionalPricing_productId_idx" ON "PromotionalPricing"("productId");
+
+-- CreateIndex
+CREATE INDEX "PromotionalPricing_startDate_idx" ON "PromotionalPricing"("startDate");
+
+-- CreateIndex
+CREATE INDEX "PromotionalPricing_endDate_idx" ON "PromotionalPricing"("endDate");
+
+-- CreateIndex
+CREATE INDEX "PromotionalPricing_isActive_idx" ON "PromotionalPricing"("isActive");
+
+-- CreateIndex
+CREATE INDEX "Document_category_idx" ON "Document"("category");
+
+-- CreateIndex
+CREATE INDEX "Document_customerId_idx" ON "Document"("customerId");
+
+-- CreateIndex
+CREATE INDEX "Document_orderId_idx" ON "Document"("orderId");
+
+-- CreateIndex
+CREATE INDEX "Document_batchId_idx" ON "Document"("batchId");
+
+-- CreateIndex
+CREATE INDEX "Document_uploadedById_idx" ON "Document"("uploadedById");
+
+-- CreateIndex
+CREATE INDEX "Document_isTemplate_idx" ON "Document"("isTemplate");
+
+-- CreateIndex
+CREATE INDEX "Document_createdAt_idx" ON "Document"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "DocumentVersion_documentId_idx" ON "DocumentVersion"("documentId");
+
+-- CreateIndex
+CREATE INDEX "DocumentVersion_uploadedById_idx" ON "DocumentVersion"("uploadedById");
+
+-- CreateIndex
+CREATE INDEX "DocumentVersion_versionNumber_idx" ON "DocumentVersion"("versionNumber");
 
 -- AddForeignKey
 ALTER TABLE "InviteToken" ADD CONSTRAINT "InviteToken_invitedById_fkey" FOREIGN KEY ("invitedById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -644,6 +1157,24 @@ ALTER TABLE "BatchMaterial" ADD CONSTRAINT "BatchMaterial_batchId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "BatchMaterial" ADD CONSTRAINT "BatchMaterial_rawMaterialId_fkey" FOREIGN KEY ("rawMaterialId") REFERENCES "RawMaterial"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InventoryMovement" ADD CONSTRAINT "InventoryMovement_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "Batch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InventoryMovement" ADD CONSTRAINT "InventoryMovement_fromLocationId_fkey" FOREIGN KEY ("fromLocationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InventoryMovement" ADD CONSTRAINT "InventoryMovement_toLocationId_fkey" FOREIGN KEY ("toLocationId") REFERENCES "Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InventoryMovement" ADD CONSTRAINT "InventoryMovement_approvedById_fkey" FOREIGN KEY ("approvedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InventoryMovement" ADD CONSTRAINT "InventoryMovement_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InventoryMovement" ADD CONSTRAINT "InventoryMovement_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StockAdjustment" ADD CONSTRAINT "StockAdjustment_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -680,3 +1211,87 @@ ALTER TABLE "Shipment" ADD CONSTRAINT "Shipment_shipFromLocationId_fkey" FOREIGN
 
 -- AddForeignKey
 ALTER TABLE "WebsiteOrder" ADD CONSTRAINT "WebsiteOrder_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MarketplaceSync" ADD CONSTRAINT "MarketplaceSync_triggeredById_fkey" FOREIGN KEY ("triggeredById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_channelId_fkey" FOREIGN KEY ("channelId") REFERENCES "SalesChannel"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_approvedById_fkey" FOREIGN KEY ("approvedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_secondApprovedById_fkey" FOREIGN KEY ("secondApprovedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderLineItem" ADD CONSTRAINT "OrderLineItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderLineItem" ADD CONSTRAINT "OrderLineItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InvoicePayment" ADD CONSTRAINT "InvoicePayment_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "InvoicePayment" ADD CONSTRAINT "InvoicePayment_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Expense" ADD CONSTRAINT "Expense_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Expense" ADD CONSTRAINT "Expense_approvedById_fkey" FOREIGN KEY ("approvedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Expense" ADD CONSTRAINT "Expense_secondApprovedById_fkey" FOREIGN KEY ("secondApprovedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DistributorAgreement" ADD CONSTRAINT "DistributorAgreement_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SubscriptionMember" ADD CONSTRAINT "SubscriptionMember_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SubscriptionMember" ADD CONSTRAINT "SubscriptionMember_planId_fkey" FOREIGN KEY ("planId") REFERENCES "SubscriptionPlan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Lead" ADD CONSTRAINT "Lead_assignedToId_fkey" FOREIGN KEY ("assignedToId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Lead" ADD CONSTRAINT "Lead_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PromotionalPricing" ADD CONSTRAINT "PromotionalPricing_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_batchId_fkey" FOREIGN KEY ("batchId") REFERENCES "Batch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_uploadedById_fkey" FOREIGN KEY ("uploadedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DocumentVersion" ADD CONSTRAINT "DocumentVersion_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "Document"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "DocumentVersion" ADD CONSTRAINT "DocumentVersion_uploadedById_fkey" FOREIGN KEY ("uploadedById") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
