@@ -68,6 +68,42 @@ export async function notifyShippingEmailSent(data: ShippingEmailData): Promise<
   }
 }
 
+interface DeliveryEmailData {
+  customerName: string;
+  customerEmail: string;
+  orderId: string;
+  emailSuccess: boolean;
+  errorMessage?: string;
+}
+
+export async function notifyDeliveryEmailSent(data: DeliveryEmailData): Promise<void> {
+  try {
+    const statusEmoji = data.emailSuccess ? ':white_check_mark:' : ':x:';
+    const headerText = data.emailSuccess
+      ? 'Order Delivered - Email Sent'
+      : 'Order Delivered - EMAIL FAILED';
+
+    await postToSlack([
+      {
+        type: 'header',
+        text: { type: 'plain_text', text: headerText },
+      },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*Customer:*\n${data.customerName}` },
+          { type: 'mrkdwn', text: `*Email:*\n${data.customerEmail}` },
+          { type: 'mrkdwn', text: `*Order ID:*\n${data.orderId}` },
+          { type: 'mrkdwn', text: `*Email Status:*\n${statusEmoji} ${data.emailSuccess ? 'Delivered' : data.errorMessage || 'Failed'}` },
+          { type: 'mrkdwn', text: `*Timestamp:*\n${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })}` },
+        ],
+      },
+    ]);
+  } catch (error) {
+    console.error('[Slack] Failed to send delivery notification:', error);
+  }
+}
+
 export async function notifyOrderEmailFailed(data: OrderEmailFailedData): Promise<void> {
   try {
     await postToSlack([

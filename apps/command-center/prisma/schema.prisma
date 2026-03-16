@@ -786,6 +786,7 @@ model WebsiteOrder {
   shippedAt               DateTime?
   confirmationEmailSentAt DateTime?
   shippingEmailSentAt     DateTime?
+  deliveryEmailSentAt     DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
