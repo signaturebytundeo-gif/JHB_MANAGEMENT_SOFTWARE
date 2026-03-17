@@ -17,6 +17,13 @@ export default function CartDrawer() {
   }, [])
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  // Exclude free samples from shipping calculation — matches checkout route logic
+  const paidItemsTotal = items.reduce(
+    (sum, item) => sum + (item.isFreeSample ? 0 : item.price * item.quantity),
+    0
+  )
+  const hasFreeSampleOnly = items.length > 0 && paidItemsTotal === 0
+  const freeShippingThreshold = 5000 // $50.00 in cents
 
   async function handleCheckout() {
     setIsCheckingOut(true)
@@ -129,6 +136,40 @@ export default function CartDrawer() {
                           <span className="text-white font-bold">
                             {formatPrice(subtotal)}
                           </span>
+                        </div>
+                        {/* Shipping indicator */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-400">Shipping</span>
+                            {hasFreeSampleOnly ? (
+                              <span className="text-gray-400">$5.99</span>
+                            ) : paidItemsTotal >= freeShippingThreshold ? (
+                              <span className="text-brand-gold font-semibold flex items-center gap-1">
+                                <svg
+                                  className="w-3.5 h-3.5"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                  strokeWidth={2.5}
+                                  aria-hidden="true"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M4.5 12.75l6 6 9-13.5"
+                                  />
+                                </svg>
+                                FREE
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">$12.99</span>
+                            )}
+                          </div>
+                          {paidItemsTotal > 0 && paidItemsTotal < freeShippingThreshold && (
+                            <p className="text-xs text-brand-gold text-right">
+                              Add {formatPrice(freeShippingThreshold - paidItemsTotal)} more for free shipping!
+                            </p>
+                          )}
                         </div>
                         <button
                           type="button"
