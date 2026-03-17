@@ -7,9 +7,10 @@ import QuantitySelector from './QuantitySelector'
 
 interface AddToCartSectionProps {
   product: Product
+  isBundle?: boolean
 }
 
-export default function AddToCartSection({ product }: AddToCartSectionProps) {
+export default function AddToCartSection({ product, isBundle = false }: AddToCartSectionProps) {
   const [quantity, setQuantity] = useState(1)
 
   const handleAddToCart = () => {
@@ -20,6 +21,7 @@ export default function AddToCartSection({ product }: AddToCartSectionProps) {
         price: product.price,
         image: product.image,
         size: product.size,
+        ...(isBundle ? { isBundle: true } : {}),
       },
       quantity
     )

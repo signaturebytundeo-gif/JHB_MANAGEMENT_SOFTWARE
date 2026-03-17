@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
 import { products } from '@/data/products'
+import { bundles } from '@/data/bundles'
 import ProductCard from '@/components/ui/ProductCard'
+import BundleCard from '@/components/ui/BundleCard'
 
 export const metadata: Metadata = {
   title: 'Shop Authentic Jamaican Sauces',
@@ -25,11 +27,34 @@ export default function ShopPage() {
           </p>
         </div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        {/* Bundle & Save Section */}
+        <div className="mb-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Bundle &amp; Save
+          </h2>
+          <p className="text-gray-400 mb-8">
+            Get more for less — curated bundles with serious savings.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bundles.map((bundle) => (
+              <BundleCard key={bundle.id} bundle={bundle} />
+            ))}
+          </div>
+        </div>
+
+        {/* Individual Products Section */}
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Individual Products
+          </h2>
+          <p className="text-gray-400 mb-8">
+            Mix and match your favorites — order exactly what you need.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

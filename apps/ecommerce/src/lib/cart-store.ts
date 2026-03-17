@@ -9,6 +9,7 @@ export interface CartItem {
   image: string
   size: string
   isFreeSample?: boolean
+  isBundle?: boolean
 }
 
 interface CartStore {
