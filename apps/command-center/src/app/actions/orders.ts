@@ -4,8 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 import type { OrderStatus, OrderSource } from '@prisma/client';
-import { sendShippingConfirmationEmail } from '@/lib/emails/customer-emails';
-import { notifyShippingEmailSent } from '@/lib/integrations/slack';
+import { sendShippingConfirmationEmail, sendDeliveryConfirmationEmail } from '@/lib/emails/customer-emails';
+import { notifyShippingEmailSent, notifyDeliveryEmailSent } from '@/lib/integrations/slack';
 
 export async function getWebsiteOrderById(id: string) {
   try {
@@ -100,6 +100,53 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
       where: { id: orderId },
       data: { status },
     });
+
+    // Send delivery confirmation email when status changes to DELIVERED
+    if (status === 'DELIVERED') {
+      const order = await db.websiteOrder.findUnique({
+        where: { id: orderId },
+        include: {
+          customer: { select: { firstName: true, lastName: true, email: true } },
+        },
+      });
+
+      // Idempotency guard: only send if delivery email hasn't been sent yet.
+      // This prevents duplicate emails if operator clicks "Mark as Delivered" twice.
+      if (order && order.customer.email && !order.deliveryEmailSentAt) {
+        let emailSuccess = false;
+        let emailError: string | undefined;
+
+        try {
+          const emailResult = await sendDeliveryConfirmationEmail({
+            customerFirstName: order.customer.firstName,
+            customerEmail: order.customer.email,
+            orderId: order.orderId,
+            carrier: order.carrier ?? undefined,
+            trackingNumber: order.trackingNumber ?? undefined,
+          });
+
+          emailSuccess = emailResult.success;
+          emailError = emailResult.error;
+
+          if (emailSuccess) {
+            await db.websiteOrder.update({
+              where: { id: orderId },
+              data: { deliveryEmailSentAt: new Date() },
+            });
+          }
+        } catch (err) {
+          emailError = err instanceof Error ? err.message : 'Unknown error';
+        }
+
+        await notifyDeliveryEmailSent({
+          customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+          customerEmail: order.customer.email,
+          orderId: order.orderId,
+          emailSuccess,
+          errorMessage: emailError,
+        }).catch(() => {}); // swallow Slack errors
+      }
+    }
 
     revalidatePath('/dashboard/orders');
     revalidatePath('/dashboard/orders/' + orderId);
