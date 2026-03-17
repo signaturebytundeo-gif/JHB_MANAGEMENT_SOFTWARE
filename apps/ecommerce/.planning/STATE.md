@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every page exists to sell sauce — frictionless discovery, product education, and checkout with zero friction.
-**Current focus:** Phase 6 - Production Launch
+**Current focus:** Phase 16 - Product Bundles
 
 ## Current Position
 
-Phase: 6 of 6 (Production Launch)
-Plan: 0 of 0 in current phase
-Status: Ready to plan
-Last activity: 2026-02-18 — Phase 5 verified and complete (18/18 must-haves passed)
+Phase: 16 (Product Bundles)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-03-17 — Phase 16 Plan 01 complete (bundles data + shop display)
 
-Progress: [█████████░] 83%
+Progress: [██████████] 90%
 
 ## Performance Metrics
 
@@ -45,6 +45,7 @@ Progress: [█████████░] 83%
 | Phase 05-seo-performance P02 | 2 | 2 tasks | 3 files |
 | Phase 05 P01 | 1 | 2 tasks | 8 files |
 | Phase 05-seo-performance P03 | 2 | 2 tasks | 5 files |
+| Phase 16-product-bundles P01 | 4 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,11 @@ Recent decisions affecting current work:
 - [Phase 05-03]: GoogleAnalytics rendered after body closing tag per @next/third-parties docs
 - [Phase 05-03]: TrackPurchase uses useRef to prevent duplicate Purchase events on page refresh
 - [Phase 05-03]: All analytics components gracefully return null when env vars are missing
+- [Phase 16-01]: Bundle type kept separate from Product — different semantics (includedProductIds, savings) justify distinct types
+- [Phase 16-01]: starter-bundle removed from products.ts — bundles.ts is single source of truth to avoid duplication
+- [Phase 16-01]: BundleQuickAddButton created as separate component to always pass isBundle:true without adding bundle-specific props to shared QuickAddButton
+- [Phase 16-01]: isBundle added to CartItem interface for Plan 02/03 discount exclusion logic
+- [Phase 16-01]: getIndividualProducts() helper added to products.ts for Plan 02 build-your-own feature
 
 ### Pending Todos
 
@@ -139,6 +145,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-18T12:00:00Z
-Stopped at: Phase 5 verified and complete — SEO, JSON-LD, analytics all built
+Last session: 2026-03-17T00:29:59Z
+Stopped at: Completed 16-product-bundles/16-01-PLAN.md — bundle data + shop display + bundle detail pages
 Resume file: None
