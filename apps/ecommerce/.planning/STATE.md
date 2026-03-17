@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 16 (Product Bundles)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-03-17 — Phase 16 Plan 02 complete (build-your-own bundle discount)
+Plan: 3 of 3 complete
+Status: Complete
+Last activity: 2026-03-17 — Phase 16 Plan 03 complete (Stripe checkout bundle integration)
 
 Progress: [██████████] 90%
 
@@ -47,6 +47,7 @@ Progress: [██████████] 90%
 | Phase 05-seo-performance P03 | 2 | 2 tasks | 5 files |
 | Phase 16-product-bundles P01 | 4 | 2 tasks | 10 files |
 | Phase 16-product-bundles P02 | 2 | 2 tasks | 3 files |
+| Phase 16-product-bundles P03 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -128,6 +129,8 @@ Recent decisions affecting current work:
 - [Phase 16-01]: getIndividualProducts() helper added to products.ts for Plan 02 build-your-own feature
 - [Phase 16-02]: Bundle discount computed on every CartDrawer render from current items — not stored in cart state, always in sync
 - [Phase 16-02]: Shipping free threshold uses pre-discount paidItemsTotal — discount does not penalize customer from free shipping eligibility
+- [Phase 16-03]: Server recalculates bundleDiscount from items array — client-sent value is voided to prevent manipulation
+- [Phase 16-03]: Stripe coupon (amount_off, duration: once) used for build-your-own discount — Stripe distributes proportionally across listLineItems for accurate command-center per-item amounts
 
 ### Pending Todos
 
@@ -148,6 +151,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T15:35:17Z
-Stopped at: Completed 16-product-bundles/16-02-PLAN.md — build-your-own bundle discount + CartDrawer display
+Last session: 2026-03-17T15:38:24Z
+Stopped at: Completed 16-product-bundles/16-03-PLAN.md — Stripe checkout bundle integration
 Resume file: None
