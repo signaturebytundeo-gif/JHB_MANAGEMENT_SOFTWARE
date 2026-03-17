@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
 import { useCartStore } from '@/lib/cart-store'
 import { formatPrice } from '@/lib/utils'
+import { calculateBundleDiscount, BUNDLE_MIN_ITEMS, BUNDLE_DISCOUNT_PERCENT } from '@/lib/bundle-discount'
 import CartItem from './CartItem'
 
 export default function CartDrawer() {
@@ -25,13 +26,18 @@ export default function CartDrawer() {
   const hasFreeSampleOnly = items.length > 0 && paidItemsTotal === 0
   const freeShippingThreshold = 5000 // $50.00 in cents
 
+  // Build-your-own bundle discount
+  const bundleDiscount = calculateBundleDiscount(items)
+  const { discountAmount, eligibleItemCount, discountPercent } = bundleDiscount
+  const discountedTotal = subtotal - discountAmount
+
   async function handleCheckout() {
     setIsCheckingOut(true)
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, bundleDiscount: discountAmount }),
       })
       const data = await response.json()
       if (data.url) {
@@ -137,6 +143,36 @@ export default function CartDrawer() {
                             {formatPrice(subtotal)}
                           </span>
                         </div>
+
+                        {/* Build Your Own Bundle discount */}
+                        {discountAmount > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-green-400">
+                              Build Your Own Bundle (-{discountPercent}%)
+                            </span>
+                            <span className="text-green-400 font-semibold">
+                              -{formatPrice(discountAmount)}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Discounted total (shown when discount is active) */}
+                        {discountAmount > 0 && (
+                          <div className="flex justify-between text-lg border-t border-brand-gold/10 pt-3">
+                            <span className="text-white font-bold">Total</span>
+                            <span className="text-white font-bold">
+                              {formatPrice(discountedTotal)}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Bundle discount nudge (close but not yet qualifying) */}
+                        {discountAmount === 0 && eligibleItemCount > 0 && eligibleItemCount < BUNDLE_MIN_ITEMS && (
+                          <p className="text-xs text-brand-gold text-right">
+                            Add {BUNDLE_MIN_ITEMS - eligibleItemCount} more item{BUNDLE_MIN_ITEMS - eligibleItemCount !== 1 ? 's' : ''} for a {BUNDLE_DISCOUNT_PERCENT}% bundle discount!
+                          </p>
+                        )}
+
                         {/* Shipping indicator */}
                         <div className="space-y-1">
                           <div className="flex justify-between text-sm">

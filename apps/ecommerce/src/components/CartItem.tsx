@@ -38,9 +38,16 @@ export default function CartItem({ item }: CartItemProps) {
 
       {/* Product Details */}
       <div className="flex-1 min-w-0">
-        <h3 className="text-white font-semibold text-sm truncate">
-          {item.name}
-        </h3>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <h3 className="text-white font-semibold text-sm truncate">
+            {item.name}
+          </h3>
+          {item.isBundle && (
+            <span className="text-xs bg-brand-gold/20 text-brand-gold px-1.5 py-0.5 rounded flex-shrink-0">
+              Bundle
+            </span>
+          )}
+        </div>
         <p className="text-gray-400 text-xs mt-1">{item.size}</p>
         <p className="text-brand-gold text-sm mt-1">
           {formatPrice(item.price)}
