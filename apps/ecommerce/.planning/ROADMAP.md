@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: SEO & Performance** - Technical optimization, analytics, and schema markup ✓ 2026-02-18
 - [ ] **Phase 6: Production Launch** - Domain configuration, production deployment, and go-live testing
 - [ ] **Phase 15: Free Shipping Threshold** - Persistent free shipping bar and automatic free shipping at checkout for $50+ orders
+- [ ] **Phase 16: Product Bundles** - Pre-defined bundles and build-your-own bundle with automatic discount
 
 ## Phase Details
 
@@ -142,6 +143,23 @@ Plans:
 Plans:
 - [ ] 15-01-PLAN.md — Free shipping progress bar component, root layout integration, and CartDrawer shipping indicator
 
+### Phase 16: Product Bundles
+**Goal**: Customers can browse and purchase pre-defined bundles and build their own bundle on the ecommerce site, with correct pricing flowing into Stripe and command-center
+**Depends on**: Phase 15
+**Requirements**: BNDL-01, BNDL-02, BNDL-03, BNDL-04
+**Success Criteria** (what must be TRUE):
+  1. Starter Bundle, Heat Pack, and Gift Set are visible on the shop page with bundle pricing (lower than individual sum)
+  2. A pre-defined bundle can be added to cart as a single item with the correct discounted total
+  3. Customer can select 3 or more individual items and receive an automatic percentage discount (build-your-own bundle)
+  4. Bundle orders create correct line items in Stripe checkout with bundle name and price
+  5. Bundle orders appear in the command-center with accurate line item records
+**Plans**: 3 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Bundle data model, 3 pre-defined bundles, bundle cards on shop page, bundle detail pages
+- [ ] 16-02-PLAN.md — Build-your-own bundle discount logic and CartDrawer discount display
+- [ ] 16-03-PLAN.md — Stripe checkout API updates for bundle line items and build-your-own discount
+
 ## Progress
 
 **Execution Order:**
@@ -156,3 +174,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 5. SEO & Performance | 3/3 | ✓ Complete | 2026-02-18 |
 | 6. Production Launch | 0/0 | Not started | - |
 | 15. Free Shipping Threshold | 0/1 | Not started | - |
+| 16. Product Bundles | 0/3 | Not started | - |
