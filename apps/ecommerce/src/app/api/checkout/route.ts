@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { calculateBundleDiscount, BUNDLE_DISCOUNT_PERCENT } from '@/lib/bundle-discount'
+import { CartItem } from '@/lib/cart-store'
 
 interface CheckoutItem {
   id: string
@@ -9,11 +11,13 @@ interface CheckoutItem {
   image: string
   size: string
   isFreeSample?: boolean
+  isBundle?: boolean
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { items }: { items: CheckoutItem[] } = await request.json()
+    const { items, bundleDiscount = 0 }: { items: CheckoutItem[]; bundleDiscount?: number } =
+      await request.json()
 
     // Validate items array is non-empty
     if (!items || items.length === 0) {
@@ -24,6 +28,13 @@ export async function POST(request: NextRequest) {
     }
 
     const hasFreeSample = items.some((item) => item.isFreeSample)
+
+    // Server-side discount validation — re-calculate from items to prevent client-side tampering.
+    // CheckoutItem is structurally compatible with CartItem, so we can cast directly.
+    const { discountAmount: serverDiscount } = calculateBundleDiscount(items as CartItem[])
+
+    // Suppress the bundleDiscount param if server calculation disagrees
+    void bundleDiscount
 
     // Build line items
     const line_items = items.map((item) => ({
@@ -71,6 +82,20 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Build-your-own bundle discount — apply as a Stripe coupon so Stripe distributes
+    // the discount proportionally across line items in listLineItems (for command-center).
+    // session.amount_total will reflect the post-discount total automatically.
+    let discounts: { coupon: string }[] | undefined
+    if (serverDiscount > 0) {
+      const coupon = await stripe.coupons.create({
+        amount_off: serverDiscount,
+        currency: 'usd',
+        name: `Build Your Own Bundle (${BUNDLE_DISCOUNT_PERCENT}% off)`,
+        duration: 'once',
+      })
+      discounts = [{ coupon: coupon.id }]
+    }
+
     // Serialize cart items into metadata for webhook order processing
     const itemsSummary = items.map((item) => ({
       name: item.isFreeSample ? 'Free 2oz Jerk Sauce Sample' : `${item.name} (${item.size})`,
@@ -86,9 +111,12 @@ export async function POST(request: NextRequest) {
       phone_number_collection: { enabled: true },
       success_url: `${request.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get('origin')}/shop`,
+      ...(discounts ? { discounts } : {}),
       metadata: {
         source: 'jamaica-house-brand-web',
         hasFreeSample: hasFreeSample ? 'true' : 'false',
+        hasBundles: items.some((i) => i.isBundle) ? 'true' : 'false',
+        bundleDiscount: serverDiscount > 0 ? serverDiscount.toString() : '0',
         items_json: JSON.stringify(itemsSummary),
       },
     })
