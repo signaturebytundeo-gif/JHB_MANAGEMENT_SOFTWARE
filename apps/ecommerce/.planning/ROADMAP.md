@@ -20,6 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6: Production Launch** - Domain configuration, production deployment, and go-live testing
 - [ ] **Phase 15: Free Shipping Threshold** - Persistent free shipping bar and automatic free shipping at checkout for $50+ orders
 - [ ] **Phase 16: Product Bundles** - Pre-defined bundles and build-your-own bundle with automatic discount
+- [ ] **Phase 17: Discount Codes** - Stripe promotion codes (WELCOME10, FREESHIP50) at hosted checkout
 
 ## Phase Details
 
@@ -160,6 +161,21 @@ Plans:
 - [ ] 16-02-PLAN.md — Build-your-own bundle discount logic and CartDrawer discount display
 - [ ] 16-03-PLAN.md — Stripe checkout API updates for bundle line items and build-your-own discount
 
+### Phase 17: Discount Codes
+**Goal**: Customers can enter discount codes at Stripe checkout, and hardcoded promo codes (WELCOME10, FREESHIP50) are recognized and applied
+**Depends on**: Phase 15
+**Requirements**: DISC-01, DISC-02
+**Success Criteria** (what must be TRUE):
+  1. A discount code field is available at Stripe checkout
+  2. Entering WELCOME10 applies a 10% discount to the order total
+  3. Entering FREESHIP50 applies free shipping to the order
+  4. An invalid or expired code is rejected with a clear error message at checkout
+  5. Discount codes work with both individual product and bundle purchases
+**Plans**: 1 plan
+
+Plans:
+- [ ] 17-01-PLAN.md — Stripe promo code seed script and checkout session promotion code support
+
 ## Progress
 
 **Execution Order:**
@@ -175,3 +191,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 6. Production Launch | 0/0 | Not started | - |
 | 15. Free Shipping Threshold | 0/1 | Not started | - |
 | 16. Product Bundles | 0/3 | Not started | - |
+| 17. Discount Codes | 0/1 | Not started | - |
