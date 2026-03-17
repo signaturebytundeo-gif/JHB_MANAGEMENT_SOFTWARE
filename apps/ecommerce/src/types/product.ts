@@ -14,3 +14,18 @@ export interface Product {
   stripeProductId?: string // Optional - will be set in Phase 3 (Stripe integration)
   stripePriceId?: string
 }
+
+export interface Bundle {
+  id: string
+  name: string
+  description: string
+  slug: string
+  price: number // bundle price in cents (lower than sum of included items)
+  image: string
+  images: string[]
+  includedProductIds: string[] // references to Product.id values
+  savings: number // amount saved in cents vs buying individually
+  callouts: string[]
+  inStock: boolean
+  rating: number
+}

@@ -65,22 +65,6 @@ export const products: Product[] = [
       '/images/products/pikliz-12oz.jpg',
     ],
   },
-  {
-    id: 'starter-bundle',
-    name: 'The Starter Bundle',
-    description: 'Get the full Jamaica House experience — our 2oz Jerk Sauce, 5oz Jerk Sauce, and 12oz Escovitch Pikliz together at a special bundle price. Save over $5 compared to buying separately.',
-    price: 2499, // $24.99 in cents
-    size: '2oz + 5oz + 12oz',
-    image: '/images/products/product-lineup.jpg',
-    slug: 'starter-bundle',
-    category: 'bundle',
-    inStock: true,
-    rating: 5.0,
-    callouts: ['Best Value', 'Save $5+', 'Complete Collection'],
-    images: [
-      '/images/products/product-lineup.jpg',
-    ],
-  },
 ]
 
 export function getProductBySlug(slug: string): Product | undefined {
@@ -89,4 +73,8 @@ export function getProductBySlug(slug: string): Product | undefined {
 
 export function getProductById(id: string): Product | undefined {
   return products.find((p) => p.id === id)
+}
+
+export function getIndividualProducts(): Product[] {
+  return products.filter((p) => p.category !== 'bundle')
 }
