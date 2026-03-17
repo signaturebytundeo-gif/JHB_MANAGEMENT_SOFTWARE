@@ -18,6 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Content & Storytelling** - Our Story page and recipes section ✓ 2026-02-17
 - [x] **Phase 5: SEO & Performance** - Technical optimization, analytics, and schema markup ✓ 2026-02-18
 - [ ] **Phase 6: Production Launch** - Domain configuration, production deployment, and go-live testing
+- [ ] **Phase 15: Free Shipping Threshold** - Persistent free shipping bar and automatic free shipping at checkout for $50+ orders
 
 ## Phase Details
 
@@ -127,6 +128,20 @@ Plans:
 Plans:
 - [ ] 06-01: TBD
 
+### Phase 15: Free Shipping Threshold
+**Goal**: Customers see a persistent free shipping bar and qualifying orders automatically receive free shipping at Stripe checkout
+**Depends on**: Phase 14 (existing Stripe checkout flow)
+**Requirements**: SHIP-01, SHIP-02
+**Success Criteria** (what must be TRUE):
+  1. A "Free shipping on orders $50+" bar is visible on every page of the ecommerce site
+  2. The bar dynamically reflects how much more the customer needs to spend to qualify (or confirms they qualify)
+  3. An order totaling $50+ reaches Stripe checkout with $0 shipping applied automatically
+  4. An order under $50 is not granted free shipping at checkout
+**Plans**: 1 plan
+
+Plans:
+- [ ] 15-01-PLAN.md — Free shipping progress bar component, root layout integration, and CartDrawer shipping indicator
+
 ## Progress
 
 **Execution Order:**
@@ -140,3 +155,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 4. Content & Storytelling | 3/3 | ✓ Complete | 2026-02-17 |
 | 5. SEO & Performance | 3/3 | ✓ Complete | 2026-02-18 |
 | 6. Production Launch | 0/0 | Not started | - |
+| 15. Free Shipping Threshold | 0/1 | Not started | - |
