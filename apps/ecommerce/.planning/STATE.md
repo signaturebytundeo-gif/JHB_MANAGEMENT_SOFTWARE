@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 16 (Product Bundles)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-03-17 — Phase 16 Plan 01 complete (bundles data + shop display)
+Last activity: 2026-03-17 — Phase 16 Plan 02 complete (build-your-own bundle discount)
 
 Progress: [██████████] 90%
 
@@ -46,6 +46,7 @@ Progress: [██████████] 90%
 | Phase 05 P01 | 1 | 2 tasks | 8 files |
 | Phase 05-seo-performance P03 | 2 | 2 tasks | 5 files |
 | Phase 16-product-bundles P01 | 4 | 2 tasks | 10 files |
+| Phase 16-product-bundles P02 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,8 @@ Recent decisions affecting current work:
 - [Phase 16-01]: BundleQuickAddButton created as separate component to always pass isBundle:true without adding bundle-specific props to shared QuickAddButton
 - [Phase 16-01]: isBundle added to CartItem interface for Plan 02/03 discount exclusion logic
 - [Phase 16-01]: getIndividualProducts() helper added to products.ts for Plan 02 build-your-own feature
+- [Phase 16-02]: Bundle discount computed on every CartDrawer render from current items — not stored in cart state, always in sync
+- [Phase 16-02]: Shipping free threshold uses pre-discount paidItemsTotal — discount does not penalize customer from free shipping eligibility
 
 ### Pending Todos
 
@@ -145,6 +148,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T00:29:59Z
-Stopped at: Completed 16-product-bundles/16-01-PLAN.md — bundle data + shop display + bundle detail pages
+Last session: 2026-03-17T15:35:17Z
+Stopped at: Completed 16-product-bundles/16-02-PLAN.md — build-your-own bundle discount + CartDrawer display
 Resume file: None
