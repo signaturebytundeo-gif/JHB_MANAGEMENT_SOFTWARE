@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every page exists to sell sauce — frictionless discovery, product education, and checkout with zero friction.
-**Current focus:** Phase 16 - Product Bundles
+**Current focus:** Phase 17 - Discount Codes
 
 ## Current Position
 
-Phase: 16 (Product Bundles)
-Plan: 3 of 3 complete
+Phase: 17 (Discount Codes)
+Plan: 1 of 1 complete
 Status: Complete
-Last activity: 2026-03-17 — Phase 16 Plan 03 complete (Stripe checkout bundle integration)
+Last activity: 2026-03-18 — Phase 17 Plan 01 complete (Stripe promo codes WELCOME10 + FREESHIP50)
 
-Progress: [██████████] 90%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [██████████] 90%
 | Phase 16-product-bundles P01 | 4 | 2 tasks | 10 files |
 | Phase 16-product-bundles P02 | 2 | 2 tasks | 3 files |
 | Phase 16-product-bundles P03 | 2 | 1 tasks | 1 files |
+| Phase 17-discount-codes P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -131,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 16-02]: Shipping free threshold uses pre-discount paidItemsTotal — discount does not penalize customer from free shipping eligibility
 - [Phase 16-03]: Server recalculates bundleDiscount from items array — client-sent value is voided to prevent manipulation
 - [Phase 16-03]: Stripe coupon (amount_off, duration: once) used for build-your-own discount — Stripe distributes proportionally across listLineItems for accurate command-center per-item amounts
+- [Phase 17-01]: Stripe v20 promotionCodes.create requires promotion: { type: 'coupon', coupon: id } — top-level coupon param removed in v20
+- [Phase 17-01]: FREESHIP50 uses amount_off: 1299 with $50 minimum — Stripe promo codes apply to order total, not line items, so fixed amount offsets shipping cost
+- [Phase 17-01]: discounts array and allow_promotion_codes are mutually exclusive on Stripe checkout sessions — customers with build-your-own bundle discount cannot also use promo codes
 
 ### Pending Todos
 
@@ -151,6 +155,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T15:38:24Z
-Stopped at: Completed 16-product-bundles/16-03-PLAN.md — Stripe checkout bundle integration
+Last session: 2026-03-18T16:18:18Z
+Stopped at: Completed 17-discount-codes/17-01-PLAN.md — Stripe promo codes WELCOME10 + FREESHIP50
 Resume file: None
