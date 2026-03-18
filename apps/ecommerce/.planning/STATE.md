@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 18 (Email Capture Welcome Flow)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In Progress
-Last activity: 2026-03-18 — Phase 18 Plan 01 complete (subscribe API + welcome email via Resend)
+Last activity: 2026-03-18 — Phase 18 Plan 02 complete (footer email form + exit-intent popup)
 
 Progress: [██████████] 97%
 
@@ -50,6 +50,7 @@ Progress: [██████████] 97%
 | Phase 16-product-bundles P03 | 2 | 1 tasks | 1 files |
 | Phase 17-discount-codes P01 | 2 | 2 tasks | 2 files |
 | Phase 18-email-capture P01 | 4 | 2 tasks | 4 files |
+| Phase 18-email-capture P02 | 5 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -141,6 +142,9 @@ Recent decisions affecting current work:
 - [Phase 18-01]: Mailchimp sync wrapped in try/catch and non-blocking — failure must not prevent subscriber from receiving welcome email
 - [Phase 18-01]: Email removed from dedup Set on sendWelcomeEmail failure to allow retry on transient Resend errors
 - [Phase 18-01]: Tags 'jhb-subscriber' and 'email-capture' distinguish newsletter subscribers from purchase-triggered Mailchimp syncs
+- [Phase 18-02]: isDismissedRecently reads localStorage directly — avoids hydration race condition when mouseleave fires before Zustand store rehydrates
+- [Phase 18-02]: Footer converted to 'use client' for store access — acceptable trade-off since it is below-the-fold
+- [Phase 18-02]: Auto-close popup 2 seconds after success to give user confirmation read time before dialog unmounts
 
 ### Pending Todos
 
@@ -161,6 +165,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T19:24:40Z
-Stopped at: Completed 18-email-capture-welcome-flow/18-01-PLAN.md — subscribe API + welcome email via Resend
+Last session: 2026-03-18T19:38:00Z
+Stopped at: Completed 18-email-capture-welcome-flow/18-02-PLAN.md — footer email form + exit-intent popup
 Resume file: None
