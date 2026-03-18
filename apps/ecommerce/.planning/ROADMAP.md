@@ -21,6 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 15: Free Shipping Threshold** - Persistent free shipping bar and automatic free shipping at checkout for $50+ orders
 - [ ] **Phase 16: Product Bundles** - Pre-defined bundles and build-your-own bundle with automatic discount
 - [ ] **Phase 17: Discount Codes** - Stripe promotion codes (WELCOME10, FREESHIP50) at hosted checkout
+- [ ] **Phase 18: Email Capture + Welcome Flow** - Footer and exit-intent email capture with branded welcome email
 
 ## Phase Details
 
@@ -176,6 +177,22 @@ Plans:
 Plans:
 - [ ] 17-01-PLAN.md — Stripe promo code seed script and checkout session promotion code support
 
+### Phase 18: Email Capture + Welcome Flow
+**Goal**: Customers can subscribe via footer and exit-intent popup, and new subscribers automatically receive a branded welcome email with a unique discount code
+**Depends on**: Phase 17 (discount code system must exist to generate welcome codes)
+**Requirements**: EMAIL-03, EMAIL-04, EMAIL-05, DISC-03
+**Success Criteria** (what must be TRUE):
+  1. Customer can enter email in the site footer and receive confirmation of subscription
+  2. An exit-intent popup appears when the customer moves to leave the page, offering a discount for subscribing
+  3. New subscriber receives a branded JHB welcome email (dark + gold aesthetic) via Resend within 60 seconds
+  4. The welcome email contains a unique, working discount code (e.g., WELCOME10) the customer can use at checkout
+  5. Subscribing via footer or popup both trigger the welcome email flow
+**Plans**: 2 plans
+
+Plans:
+- [ ] 18-01-PLAN.md — Subscribe API endpoint, Resend integration, and branded welcome email template with WELCOME10 code
+- [ ] 18-02-PLAN.md — Footer email form, exit-intent popup, and shared subscription state store
+
 ## Progress
 
 **Execution Order:**
@@ -192,3 +209,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 15. Free Shipping Threshold | 0/1 | Not started | - |
 | 16. Product Bundles | 0/3 | Not started | - |
 | 17. Discount Codes | 0/1 | Not started | - |
+| 18. Email Capture + Welcome Flow | 0/2 | Not started | - |
