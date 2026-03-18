@@ -7,6 +7,7 @@ import FreeShippingBar from "@/components/layout/FreeShippingBar";
 import CartDrawer from "@/components/CartDrawer";
 import FreeSamplePopup from "@/components/FreeSamplePopup";
 import UpsellModal from "@/components/UpsellModal";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
 import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import MetaPixel from "@/components/analytics/MetaPixel";
 import "./globals.css";
@@ -59,6 +60,7 @@ export default function RootLayout({
         <CartDrawer />
         <FreeSamplePopup />
         <UpsellModal />
+        <ExitIntentPopup />
         <Suspense fallback={null}>
           <MetaPixel />
         </Suspense>
