@@ -99,6 +99,16 @@ export async function getRevenueByChannel(date: string): Promise<RevenueByChanne
     // Build channel id -> name map
     const channelMap = new Map<string, string>(channels.map((c) => [c.id, c.name]));
 
+    // Query WebsiteOrder revenue by source (website, Amazon, Etsy)
+    const websiteOrderRevenue = await db.websiteOrder.groupBy({
+      by: ['source'],
+      where: {
+        orderDate: { gte: start, lte: end },
+        status: { in: ['NEW', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+      },
+      _sum: { orderTotal: true },
+    });
+
     // Merge Sale + Order revenue into per-channel map
     const revenueMap = new Map<string, number>();
 
@@ -112,11 +122,30 @@ export async function getRevenueByChannel(date: string): Promise<RevenueByChanne
       revenueMap.set(row.channelId, existing + Number(row._sum.totalAmount ?? 0));
     }
 
+    // Merge WebsiteOrder revenue using source as channel name
+    const sourceNames: Record<string, string> = { WEBSITE: 'Website (DTC)', AMAZON: 'Amazon', ETSY: 'Etsy' };
+    for (const row of websiteOrderRevenue) {
+      const channelName = sourceNames[row.source] ?? row.source;
+      const existing = revenueMap.get(channelName) ?? 0;
+      revenueMap.set(channelName, existing + Number(row._sum.orderTotal ?? 0));
+    }
+
     // Convert map to array with channel names
-    return Array.from(revenueMap.entries()).map(([channelId, revenue]) => ({
-      channel: channelMap.get(channelId) ?? channelId,
-      revenue,
-    }));
+    // For Sale/Order rows the key is a channelId; for WebsiteOrder rows the key is already the display name
+    const channelIdEntries = Array.from(revenueMap.entries()).filter(
+      ([key]) => !Object.values(sourceNames).includes(key)
+    );
+    const websiteEntries = Array.from(revenueMap.entries()).filter(([key]) =>
+      Object.values(sourceNames).includes(key)
+    );
+
+    return [
+      ...channelIdEntries.map(([channelId, revenue]) => ({
+        channel: channelMap.get(channelId) ?? channelId,
+        revenue,
+      })),
+      ...websiteEntries.map(([channel, revenue]) => ({ channel, revenue })),
+    ];
   } catch (error) {
     console.error('Error fetching revenue by channel:', error);
     return [];
@@ -156,12 +185,22 @@ export async function getMonthlyRevenueTrend(year: number): Promise<MonthlyReven
         _sum: { totalAmount: true },
       });
 
+      // Sum WebsiteOrder.orderTotal for this month
+      const websiteOrderAgg = await db.websiteOrder.aggregate({
+        where: {
+          orderDate: { gte: start, lte: end },
+          status: { in: ['NEW', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+        },
+        _sum: { orderTotal: true },
+      });
+      const websiteOrderRevenue = Number(websiteOrderAgg._sum.orderTotal ?? 0);
+
       const saleRevenue = Number(saleAgg._sum.totalAmount ?? 0);
       const orderRevenue = Number(orderAgg._sum.totalAmount ?? 0);
 
       results.push({
         month: format(monthDate, 'MMM'),
-        revenue: saleRevenue + orderRevenue,
+        revenue: saleRevenue + orderRevenue + websiteOrderRevenue,
         projection,
       });
     }
@@ -421,6 +460,16 @@ export async function getPnLReport(period: {
       _sum: { totalAmount: true },
     });
 
+    // Revenue: WebsiteOrder by source (website, Amazon, Etsy)
+    const websiteOrderBySource = await db.websiteOrder.groupBy({
+      by: ['source'],
+      where: {
+        orderDate: { gte: start, lte: end },
+        status: { in: ['NEW', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+      },
+      _sum: { orderTotal: true },
+    });
+
     const channels = await db.salesChannel.findMany({ select: { id: true, name: true } });
     const channelMap = new Map(channels.map((c) => [c.id, c.name]));
 
@@ -432,9 +481,22 @@ export async function getPnLReport(period: {
       revenueMap.set(row.channelId, (revenueMap.get(row.channelId) ?? 0) + Number(row._sum.totalAmount ?? 0));
     }
 
-    const revenueByChannel: PnLRevenueItem[] = Array.from(revenueMap.entries()).map(
-      ([channelId, revenue]) => ({ channel: channelMap.get(channelId) ?? channelId, revenue })
-    );
+    // Merge WebsiteOrder revenue using source display name as key
+    const pnlSourceNames: Record<string, string> = { WEBSITE: 'Website (DTC)', AMAZON: 'Amazon', ETSY: 'Etsy' };
+    for (const row of websiteOrderBySource) {
+      const channelName = pnlSourceNames[row.source] ?? row.source;
+      revenueMap.set(channelName, (revenueMap.get(channelName) ?? 0) + Number(row._sum.orderTotal ?? 0));
+    }
+
+    const websiteDisplayNames = Object.values(pnlSourceNames);
+    const revenueByChannel: PnLRevenueItem[] = [
+      ...Array.from(revenueMap.entries())
+        .filter(([key]) => !websiteDisplayNames.includes(key))
+        .map(([channelId, revenue]) => ({ channel: channelMap.get(channelId) ?? channelId, revenue })),
+      ...Array.from(revenueMap.entries())
+        .filter(([key]) => websiteDisplayNames.includes(key))
+        .map(([channel, revenue]) => ({ channel, revenue })),
+    ];
     const revenue = revenueByChannel.reduce((sum, c) => sum + c.revenue, 0);
 
     // COGS: batches produced in period
@@ -539,12 +601,25 @@ export async function getCashFlowStatement(period: {
     });
     const cashSaleTotal = Number(cashSaleAgg._sum.totalAmount ?? 0);
 
+    // Inflow 3: Website & marketplace orders (WebsiteOrder)
+    const websiteOrderAgg = await db.websiteOrder.aggregate({
+      where: {
+        orderDate: { gte: start, lte: end },
+        status: { in: ['NEW', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+      },
+      _sum: { orderTotal: true },
+    });
+    const websiteOrderTotal = Number(websiteOrderAgg._sum.orderTotal ?? 0);
+
     const operatingInflows: CashFlowInflow[] = [];
     if (invoicePaymentTotal > 0) {
       operatingInflows.push({ source: 'Invoice Payments', amount: invoicePaymentTotal });
     }
     if (cashSaleTotal > 0) {
       operatingInflows.push({ source: 'Cash & Card Sales', amount: cashSaleTotal });
+    }
+    if (websiteOrderTotal > 0) {
+      operatingInflows.push({ source: 'Website & Marketplace Orders', amount: websiteOrderTotal });
     }
     const totalInflows = operatingInflows.reduce((sum, i) => sum + i.amount, 0);
 
@@ -614,8 +689,18 @@ export async function getCashFlowProjection(): Promise<CashFlowProjectionWeek[]>
       },
       _sum: { totalAmount: true },
     });
+    // Average WebsiteOrder revenue (last 30 days)
+    const websiteOrderAgg = await db.websiteOrder.aggregate({
+      where: {
+        orderDate: { gte: thirtyDaysAgo, lte: today },
+        status: { in: ['NEW', 'PROCESSING', 'SHIPPED', 'DELIVERED'] },
+      },
+      _sum: { orderTotal: true },
+    });
     const totalRevenue30 =
-      Number(saleAgg._sum.totalAmount ?? 0) + Number(orderAgg._sum.totalAmount ?? 0);
+      Number(saleAgg._sum.totalAmount ?? 0) +
+      Number(orderAgg._sum.totalAmount ?? 0) +
+      Number(websiteOrderAgg._sum.orderTotal ?? 0);
     const avgDailyRevenue = totalRevenue30 / 30;
 
     // Average daily expenses (last 30 days)
