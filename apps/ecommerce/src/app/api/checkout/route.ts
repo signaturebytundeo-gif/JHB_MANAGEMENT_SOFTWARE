@@ -111,7 +111,12 @@ export async function POST(request: NextRequest) {
       phone_number_collection: { enabled: true },
       success_url: `${request.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get('origin')}/shop`,
-      ...(discounts ? { discounts } : {}),
+      // Promotion codes and discounts are mutually exclusive in Stripe.
+      // When a build-your-own bundle discount applies, use the discounts array.
+      // Otherwise, enable Stripe's built-in promo code field (allow_promotion_codes).
+      ...(discounts
+        ? { discounts }
+        : { allow_promotion_codes: true }),
       metadata: {
         source: 'jamaica-house-brand-web',
         hasFreeSample: hasFreeSample ? 'true' : 'false',
