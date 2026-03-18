@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Every page exists to sell sauce — frictionless discovery, product education, and checkout with zero friction.
-**Current focus:** Phase 17 - Discount Codes
+**Current focus:** Phase 18 - Email Capture Welcome Flow
 
 ## Current Position
 
-Phase: 17 (Discount Codes)
-Plan: 1 of 1 complete
-Status: Complete
-Last activity: 2026-03-18 — Phase 17 Plan 01 complete (Stripe promo codes WELCOME10 + FREESHIP50)
+Phase: 18 (Email Capture Welcome Flow)
+Plan: 1 of 3 complete
+Status: In Progress
+Last activity: 2026-03-18 — Phase 18 Plan 01 complete (subscribe API + welcome email via Resend)
 
-Progress: [██████████] 95%
+Progress: [██████████] 97%
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: [██████████] 95%
 | Phase 16-product-bundles P02 | 2 | 2 tasks | 3 files |
 | Phase 16-product-bundles P03 | 2 | 1 tasks | 1 files |
 | Phase 17-discount-codes P01 | 2 | 2 tasks | 2 files |
+| Phase 18-email-capture P01 | 4 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,11 @@ Recent decisions affecting current work:
 - [Phase 17-01]: Stripe v20 promotionCodes.create requires promotion: { type: 'coupon', coupon: id } — top-level coupon param removed in v20
 - [Phase 17-01]: FREESHIP50 uses amount_off: 1299 with $50 minimum — Stripe promo codes apply to order total, not line items, so fixed amount offsets shipping cost
 - [Phase 17-01]: discounts array and allow_promotion_codes are mutually exclusive on Stripe checkout sessions — customers with build-your-own bundle discount cannot also use promo codes
+- [Phase 18-01]: Module-level Set for server-side dedup — lightweight guard within server lifecycle, client localStorage prevents re-submission
+- [Phase 18-01]: Dev fallback in sendWelcomeEmail console-logs when RESEND_API_KEY absent — subscribe flow works locally without Resend credentials
+- [Phase 18-01]: Mailchimp sync wrapped in try/catch and non-blocking — failure must not prevent subscriber from receiving welcome email
+- [Phase 18-01]: Email removed from dedup Set on sendWelcomeEmail failure to allow retry on transient Resend errors
+- [Phase 18-01]: Tags 'jhb-subscriber' and 'email-capture' distinguish newsletter subscribers from purchase-triggered Mailchimp syncs
 
 ### Pending Todos
 
@@ -155,6 +161,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-18T16:18:18Z
-Stopped at: Completed 17-discount-codes/17-01-PLAN.md — Stripe promo codes WELCOME10 + FREESHIP50
+Last session: 2026-03-18T19:24:40Z
+Stopped at: Completed 18-email-capture-welcome-flow/18-01-PLAN.md — subscribe API + welcome email via Resend
 Resume file: None
