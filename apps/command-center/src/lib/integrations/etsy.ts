@@ -20,7 +20,7 @@ export interface EtsyOrderData {
 
 const ETSY_API_BASE = 'https://openapi.etsy.com';
 const TOKEN_URL = 'https://api.etsy.com/v3/public/oauth/token';
-const MAX_PAGES = 10;
+const MAX_PAGES = 50;
 const PAGE_DELAY_MS = 200;
 
 // In-memory cache for refreshed access token (survives across calls within
@@ -79,16 +79,21 @@ async function refreshAccessToken(): Promise<string> {
 
 /**
  * Make an authenticated Etsy API request with automatic token refresh on 401.
+ * Etsy v3 requires the shared secret (not keystring) in the x-api-key header.
  */
-async function etsyFetch(url: string, apiKey: string): Promise<Response> {
-  const token = cachedAccessToken ?? getEtsyConfig().accessToken;
+async function etsyFetch(url: string): Promise<Response> {
+  const config = getEtsyConfig();
+  const token = cachedAccessToken ?? config.accessToken;
+  // Etsy requires the shared secret in x-api-key for authenticated requests
+  const xApiKey = config.sharedSecret || config.apiKey;
 
   const res = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${token}`,
-      'x-api-key': apiKey,
+      'x-api-key': xApiKey,
       'Content-Type': 'application/json',
     },
+    signal: AbortSignal.timeout(30_000),
   });
 
   // If unauthorized, try refreshing the token once and retry
@@ -97,9 +102,10 @@ async function etsyFetch(url: string, apiKey: string): Promise<Response> {
     return fetch(url, {
       headers: {
         'Authorization': `Bearer ${newToken}`,
-        'x-api-key': apiKey,
+        'x-api-key': xApiKey,
         'Content-Type': 'application/json',
       },
+      signal: AbortSignal.timeout(30_000),
     });
   }
 
@@ -115,9 +121,10 @@ export async function getRecentEtsyOrders(
   }
 
   const config = getEtsyConfig();
+  // If no sinceDate, fetch ALL orders (Etsy opened ~2005, use 2010 as safe floor)
   const minCreated = sinceDate
     ? Math.floor(sinceDate.getTime() / 1000)
-    : Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
+    : Math.floor(new Date('2010-01-01').getTime() / 1000);
 
   const orders: EtsyOrderData[] = [];
   let offset = 0;
@@ -134,7 +141,7 @@ export async function getRecentEtsyOrders(
     url.searchParams.set('sort_on', 'created');
     url.searchParams.set('sort_order', 'desc');
 
-    const response = await etsyFetch(url.toString(), config.apiKey);
+    const response = await etsyFetch(url.toString());
 
     if (!response.ok) {
       const errorText = await response.text();

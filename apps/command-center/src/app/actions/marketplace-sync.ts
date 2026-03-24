@@ -111,8 +111,8 @@ async function getLastSuccessfulSyncDate(platform: SyncPlatform): Promise<Date> 
     return lastSync.startedAt;
   }
 
-  // Default: 30 days ago
-  return new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // First sync: pull ALL historical orders
+  return new Date('2010-01-01');
 }
 
 async function createSyncRecord(platform: SyncPlatform, userId: string) {

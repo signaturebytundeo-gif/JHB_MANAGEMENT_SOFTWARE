@@ -39,7 +39,7 @@ export async function getRecentSquarePayments(
 
   const beginTime = sinceDate
     ? sinceDate.toISOString()
-    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    : new Date('2020-01-01').toISOString();
 
   const payments: SquarePaymentData[] = [];
   let cursor: string | undefined;
@@ -62,6 +62,7 @@ export async function getRecentSquarePayments(
         'Square-Version': '2024-01-18',
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
@@ -89,6 +90,7 @@ export async function getRecentSquarePayments(
                 'Content-Type': 'application/json',
                 'Square-Version': '2024-01-18',
               },
+              signal: AbortSignal.timeout(15_000),
             }
           );
           if (orderRes.ok) {

@@ -37,6 +37,7 @@ export function getAmazonConfig() {
 export function getEtsyConfig() {
   return {
     apiKey: process.env.ETSY_API_KEY ?? '',
+    sharedSecret: process.env.ETSY_SHARED_SECRET ?? '',
     shopId: process.env.ETSY_SHOP_ID ?? '',
     accessToken: process.env.ETSY_ACCESS_TOKEN ?? '',
   };

@@ -44,6 +44,7 @@ async function getAccessToken(): Promise<string> {
       client_id: config.clientId,
       client_secret: config.clientSecret,
     }),
+    signal: AbortSignal.timeout(15_000),
   });
 
   if (!response.ok) {
@@ -77,6 +78,7 @@ async function spApiGet(path: string, params?: Record<string, string>): Promise<
       'x-amz-access-token': token,
       'Content-Type': 'application/json',
     },
+    signal: AbortSignal.timeout(30_000),
   });
 
   if (!response.ok) {
@@ -98,7 +100,7 @@ export async function getRecentAmazonOrders(
   const config = getAmazonConfig();
   const createdAfter = sinceDate
     ? sinceDate.toISOString()
-    : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    : new Date('2020-01-01').toISOString();
 
   const orders: AmazonOrderData[] = [];
   let nextToken: string | undefined;
