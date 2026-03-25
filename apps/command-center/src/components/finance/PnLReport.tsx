@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { PnLReport as PnLReportType } from '@/app/actions/financial-reports';
 import { getPnLReport } from '@/app/actions/financial-reports';
+import { ExportButtons } from '@/components/reports/ExportButtons';
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -72,6 +73,29 @@ export function PnLReport({ initialData }: Props) {
   const netIncomeColor = data.netIncome >= 0 ? 'text-green-600' : 'text-red-600';
   const grossProfitColor = data.grossProfit >= 0 ? 'text-green-600' : 'text-red-600';
 
+  // P&L export data
+  const pnlRows = [
+    { label: 'Period', value: data.period },
+    { label: 'Revenue', value: data.revenue },
+    { label: 'COGS', value: data.cogs },
+    { label: 'Gross Profit', value: data.grossProfit },
+    { label: 'Gross Margin %', value: `${data.grossMarginPct?.toFixed(1) ?? '0.0'}%` },
+    { label: 'Operating Expenses', value: data.operatingExpenses },
+    { label: 'Net Income', value: data.netIncome },
+    { label: 'Net Margin %', value: `${data.netMarginPct?.toFixed(1) ?? '0.0'}%` },
+  ];
+
+  const pnlExportColumns = [
+    { key: 'label', header: 'Metric' },
+    { key: 'value', header: 'Value' },
+  ];
+
+  const pnlDateParams: Record<string, string> = {
+    year: String(year),
+    ...(periodType === 'monthly' ? { month: String(month) } : {}),
+    ...(periodType === 'quarterly' ? { quarter: String(quarter) } : {}),
+  };
+
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -130,6 +154,13 @@ export function PnLReport({ initialData }: Props) {
         )}
 
         {loading && <span className="text-sm text-muted-foreground">Loading...</span>}
+
+        <ExportButtons
+          reportType="monthly-pnl"
+          data={pnlRows}
+          columns={pnlExportColumns}
+          dateParams={pnlDateParams}
+        />
       </div>
 
       {/* P&L Statement */}
