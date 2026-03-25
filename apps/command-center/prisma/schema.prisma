@@ -1016,6 +1016,7 @@ enum ExpenseCategory {
   UTILITIES
   RENT
   INSURANCE
+  OVERHEAD
   OTHER
 }
 
