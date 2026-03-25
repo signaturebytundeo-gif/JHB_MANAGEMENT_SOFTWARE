@@ -35,7 +35,7 @@ export const useCartStore = create<CartStore>()(
           const existingItem = state.items.find((i) => i.id === item.id)
 
           if (existingItem) {
-            // Free samples should not stack
+            // Free samples should not stack via addItem (use +/- controls instead)
             if (item.isFreeSample) return state
 
             // Item already exists, increment quantity
@@ -47,6 +47,22 @@ export const useCartStore = create<CartStore>()(
               ),
             }
           } else {
+            // If adding the regular 2oz jerk sauce while a free sample exists,
+            // merge into the free sample item by incrementing its quantity.
+            // The checkout route handles pricing: 1st unit free, rest at $5.24.
+            if (item.id === 'jerk-sauce-2oz') {
+              const freeSample = state.items.find((i) => i.id === 'free-sample-2oz')
+              if (freeSample) {
+                return {
+                  items: state.items.map((i) =>
+                    i.id === 'free-sample-2oz'
+                      ? { ...i, quantity: i.quantity + quantity }
+                      : i
+                  ),
+                }
+              }
+            }
+
             // Add new item
             return {
               items: [...state.items, { ...item, quantity }],

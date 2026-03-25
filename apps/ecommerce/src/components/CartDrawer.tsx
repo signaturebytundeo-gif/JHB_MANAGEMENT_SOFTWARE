@@ -7,20 +7,41 @@ import { useCartStore } from '@/lib/cart-store'
 import { formatPrice } from '@/lib/utils'
 import { calculateBundleDiscount, BUNDLE_MIN_ITEMS, BUNDLE_DISCOUNT_PERCENT } from '@/lib/bundle-discount'
 import CartItem from './CartItem'
+import PromoCodeInput from './PromoCodeInput'
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart } = useCartStore()
   const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string
+    discount_type: string
+    discount_value: number
+  } | null>(null)
 
   // Rehydrate from localStorage after SSR
   useEffect(() => {
     useCartStore.persist.rehydrate()
   }, [])
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  // Exclude free samples from shipping calculation — matches checkout route logic
+  // 25% discount on 2oz retail price ($6.99) = $5.24 for additional free sample units
+  const ADDITIONAL_2OZ_PRICE = 524
+  // Subtotal: free sample 1st unit = $0, additional = $5.24 each; other items at face value
+  const subtotal = items.reduce((sum, item) => {
+    if (item.isFreeSample) {
+      const additionalQty = Math.max(0, item.quantity - 1)
+      return sum + additionalQty * ADDITIONAL_2OZ_PRICE
+    }
+    return sum + item.price * item.quantity
+  }, 0)
+  // Paid items total for shipping threshold — includes additional free sample units
   const paidItemsTotal = items.reduce(
-    (sum, item) => sum + (item.isFreeSample ? 0 : item.price * item.quantity),
+    (sum, item) => {
+      if (item.isFreeSample) {
+        const additionalQty = Math.max(0, item.quantity - 1)
+        return sum + additionalQty * ADDITIONAL_2OZ_PRICE
+      }
+      return sum + item.price * item.quantity
+    },
     0
   )
   const hasFreeSampleOnly = items.length > 0 && paidItemsTotal === 0
@@ -29,7 +50,22 @@ export default function CartDrawer() {
   // Build-your-own bundle discount
   const bundleDiscount = calculateBundleDiscount(items)
   const { discountAmount, eligibleItemCount, discountPercent } = bundleDiscount
-  const discountedTotal = subtotal - discountAmount
+
+  // Promo code discount (applied to paid subtotal, after 2oz pricing)
+  let promoDiscountAmount = 0
+  if (appliedPromo && paidItemsTotal > 0) {
+    if (appliedPromo.discount_type === 'percentage') {
+      promoDiscountAmount = Math.round((paidItemsTotal * appliedPromo.discount_value) / 100)
+    } else {
+      promoDiscountAmount = Math.round(appliedPromo.discount_value * 100)
+    }
+    if (promoDiscountAmount > paidItemsTotal) {
+      promoDiscountAmount = paidItemsTotal
+    }
+  }
+
+  const totalDiscount = discountAmount + promoDiscountAmount
+  const discountedTotal = subtotal - totalDiscount
 
   async function handleCheckout() {
     setIsCheckingOut(true)
@@ -37,7 +73,11 @@ export default function CartDrawer() {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, bundleDiscount: discountAmount }),
+        body: JSON.stringify({
+          items,
+          bundleDiscount: discountAmount,
+          promoCode: appliedPromo?.code || undefined,
+        }),
       })
       const data = await response.json()
       if (data.url) {
@@ -137,6 +177,13 @@ export default function CartDrawer() {
                     {/* Footer */}
                     {items.length > 0 && (
                       <div className="border-t border-brand-gold/20 px-6 py-6 space-y-4">
+                        {/* Promo Code Input */}
+                        <PromoCodeInput
+                          appliedPromo={appliedPromo}
+                          onApply={setAppliedPromo}
+                          onRemove={() => setAppliedPromo(null)}
+                        />
+
                         <div className="flex justify-between text-lg">
                           <span className="text-gray-400">Subtotal</span>
                           <span className="text-white font-bold">
@@ -156,8 +203,20 @@ export default function CartDrawer() {
                           </div>
                         )}
 
-                        {/* Discounted total (shown when discount is active) */}
-                        {discountAmount > 0 && (
+                        {/* Promo code discount */}
+                        {promoDiscountAmount > 0 && appliedPromo && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-green-400">
+                              Promo: {appliedPromo.code} (-{appliedPromo.discount_type === 'percentage' ? `${appliedPromo.discount_value}%` : formatPrice(promoDiscountAmount)})
+                            </span>
+                            <span className="text-green-400 font-semibold">
+                              -{formatPrice(promoDiscountAmount)}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Discounted total (shown when any discount is active) */}
+                        {totalDiscount > 0 && (
                           <div className="flex justify-between text-lg border-t border-brand-gold/10 pt-3">
                             <span className="text-white font-bold">Total</span>
                             <span className="text-white font-bold">

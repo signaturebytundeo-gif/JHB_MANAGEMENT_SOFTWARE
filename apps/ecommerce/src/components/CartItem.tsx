@@ -4,6 +4,9 @@ import Image from 'next/image'
 import { CartItem as CartItemType, useCartStore } from '@/lib/cart-store'
 import { formatPrice } from '@/lib/utils'
 
+// 25% discount on 2oz retail price ($6.99) = $5.24 for additional units
+const ADDITIONAL_2OZ_PRICE = 524
+
 interface CartItemProps {
   item: CartItemType
 }
@@ -22,6 +25,13 @@ export default function CartItem({ item }: CartItemProps) {
   const handleRemove = () => {
     removeItem(item.id)
   }
+
+  // For free sample items: 1st unit is free, additional units are $5.24 each
+  const isFreeSample = item.isFreeSample === true
+  const additionalQty = isFreeSample ? Math.max(0, item.quantity - 1) : 0
+  const lineTotal = isFreeSample
+    ? additionalQty * ADDITIONAL_2OZ_PRICE
+    : item.price * item.quantity
 
   return (
     <div className="flex gap-4 py-4 border-b border-brand-gold/10">
@@ -47,11 +57,29 @@ export default function CartItem({ item }: CartItemProps) {
               Bundle
             </span>
           )}
+          {isFreeSample && (
+            <span className="text-xs bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded flex-shrink-0">
+              FREE
+            </span>
+          )}
         </div>
         <p className="text-gray-400 text-xs mt-1">{item.size}</p>
-        <p className="text-brand-gold text-sm mt-1">
-          {formatPrice(item.price)}
-        </p>
+
+        {/* Pricing for free sample with tiered display */}
+        {isFreeSample ? (
+          <div className="mt-1 space-y-0.5">
+            <p className="text-green-400 text-sm">1× FREE</p>
+            {additionalQty > 0 && (
+              <p className="text-brand-gold text-xs">
+                +{additionalQty}× {formatPrice(ADDITIONAL_2OZ_PRICE)} each (25% off)
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="text-brand-gold text-sm mt-1">
+            {formatPrice(item.price)}
+          </p>
+        )}
 
         {/* Quantity Controls */}
         <div className="flex items-center gap-2 mt-2">
@@ -90,7 +118,7 @@ export default function CartItem({ item }: CartItemProps) {
 
       {/* Line Total */}
       <div className="text-white font-semibold text-sm">
-        {formatPrice(item.price * item.quantity)}
+        {formatPrice(lineTotal)}
       </div>
     </div>
   )

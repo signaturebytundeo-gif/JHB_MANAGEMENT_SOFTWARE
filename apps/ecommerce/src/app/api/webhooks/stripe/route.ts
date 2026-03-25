@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { getSupabase } from '@/lib/supabase'
 import Stripe from 'stripe'
 import { handleOrderComplete, type OrderItem } from '@/lib/order-handler'
 
@@ -56,6 +57,28 @@ export async function POST(request: NextRequest) {
       const shippingLineAmount = session.total_details?.amount_shipping ?? 0
       // Fallback: if no Stripe shipping, check for $5.99 shipping line in metadata
       const shippingCost = shippingLineAmount || (session.metadata?.hasFreeSample === 'true' ? 599 : 0)
+
+      // Increment promo code usage count if one was used
+      const usedPromoCode = session.metadata?.promoCode
+      if (usedPromoCode) {
+        try {
+          const { data: promo } = await getSupabase()
+            .from('promo_codes')
+            .select('usage_count')
+            .eq('code', usedPromoCode)
+            .single()
+
+          if (promo) {
+            await getSupabase()
+              .from('promo_codes')
+              .update({ usage_count: promo.usage_count + 1 })
+              .eq('code', usedPromoCode)
+          }
+        } catch (promoErr) {
+          // Non-fatal — log but don't fail the webhook
+          console.error('Failed to increment promo usage:', promoErr)
+        }
+      }
 
       // Trigger order processing (shipping calc + Mailchimp + Command Center)
       const customerName = session.customer_details?.name || ''
