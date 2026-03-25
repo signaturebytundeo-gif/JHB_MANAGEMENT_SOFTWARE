@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
         orderTotal,
         status: 'NEW',
         orderDate: data.orderDate,
+        promoCode: data.promoCode || null,
+        promoDiscount: data.promoDiscount || null,
       },
     });
 

@@ -12,6 +12,8 @@ export const incomingOrderSchema = z.object({
   shippingCost: z.coerce.number().min(0, 'Shipping cost must be non-negative'),
   orderTotal: z.coerce.number().optional(),
   orderDate: z.coerce.date(),
+  promoCode: z.string().optional(),
+  promoDiscount: z.coerce.number().optional(),
 });
 
 export type IncomingOrderInput = z.infer<typeof incomingOrderSchema>;

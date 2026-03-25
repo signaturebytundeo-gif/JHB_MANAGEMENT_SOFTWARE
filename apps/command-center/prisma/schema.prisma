@@ -812,6 +812,8 @@ model WebsiteOrder {
   status         OrderStatus @default(NEW)
   source         OrderSource @default(WEBSITE)
   orderDate      DateTime
+  promoCode      String?     // Sales rep promo code used (e.g. "AJBAR26")
+  promoDiscount  Decimal?    // Discount amount applied (in dollars)
   trackingNumber          String?
   carrier                 String?
   shippedAt               DateTime?
