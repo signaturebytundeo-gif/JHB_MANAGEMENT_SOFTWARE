@@ -73,8 +73,17 @@ export async function GET(request: NextRequest) {
 
       case 'monthly-pnl': {
         const year = yearParam ? parseInt(yearParam) : new Date().getFullYear();
-        const month = monthParam ? parseInt(monthParam) : new Date().getMonth() + 1;
-        const pnl = await getPnLReport({ year, month });
+        const quarterParam = searchParams.get('quarter');
+        const quarter = quarterParam ? parseInt(quarterParam) : undefined;
+        const month = monthParam ? parseInt(monthParam) : undefined;
+
+        // Resolve period: month takes priority, then quarter, then annual
+        const pnl = month
+          ? await getPnLReport({ year, month })
+          : quarter
+            ? await getPnLReport({ year, quarter })
+            : await getPnLReport({ year });
+
         data = [
           { label: 'Period', value: pnl.period },
           { label: 'Revenue', value: pnl.revenue },
@@ -85,7 +94,7 @@ export async function GET(request: NextRequest) {
           { label: 'Net Income', value: pnl.netIncome },
           { label: 'Net Margin %', value: pnl.netMarginPct },
         ];
-        sheetName = 'Monthly P&L';
+        sheetName = 'P&L Report';
         columns = [
           { header: 'Metric', key: 'label', width: 25 },
           { header: 'Value', key: 'value', width: 20, numFmt: '$#,##0.00' },
