@@ -279,6 +279,7 @@ model Product {
   stockAdjustments      StockAdjustment[]
   inventoryTransactions InventoryTransaction[]
   orderLineItems        OrderLineItem[]
+  invoiceLineItems      InvoiceLineItem[]
   promotionalPricings   PromotionalPricing[]
 
   @@index([sku])
@@ -936,7 +937,7 @@ model OrderLineItem {
 model Invoice {
   id            String        @id @default(cuid())
   invoiceNumber String        @unique
-  orderId       String        @unique
+  orderId       String?       @unique
   customerId    String?
   status        InvoiceStatus @default(DRAFT)
   subtotal      Decimal
@@ -950,18 +951,37 @@ model Invoice {
   overdueAt     DateTime?
   lateFeeAmount Decimal       @default(0)
   notes         String?
+  paymentLink   String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   // Relations
-  order    Order            @relation(fields: [orderId], references: [id])
-  customer Customer?        @relation(fields: [customerId], references: [id])
-  payments InvoicePayment[]
+  order     Order?            @relation(fields: [orderId], references: [id])
+  customer  Customer?         @relation(fields: [customerId], references: [id])
+  payments  InvoicePayment[]
+  lineItems InvoiceLineItem[]
 
   @@index([status])
   @@index([customerId])
   @@index([dueDate])
   @@index([issuedAt])
+}
+
+model InvoiceLineItem {
+  id           String  @id @default(cuid())
+  invoiceId    String
+  description  String
+  productId    String?
+  quantity     Int
+  unitPrice    Decimal
+  totalPrice   Decimal
+  deliveryNote String?
+
+  // Relations
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@index([invoiceId])
 }
 
 model InvoicePayment {

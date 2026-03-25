@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import Link from 'next/link';
-import { ArrowLeft, DollarSign } from 'lucide-react';
+import { ArrowLeft, DollarSign, Send, Bell } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/table';
 import { InvoiceDetail } from './InvoiceDetail';
 import { PaymentModal } from './PaymentModal';
+import { sendInvoiceEmail, sendInvoiceReminder } from '@/app/actions/standalone-invoices';
 import type { InvoiceDetail as InvoiceDetailType } from '@/app/actions/invoices';
 
 interface InvoiceDetailClientProps {
@@ -23,11 +25,36 @@ interface InvoiceDetailClientProps {
 
 export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isSending, startSendTransition] = useTransition();
 
   const isOverdue = invoice.status === 'OVERDUE';
   const balance = invoice.totalAmount - invoice.paidAmount;
   const balanceWithLateFee = balance + (isOverdue ? invoice.lateFeeAmount : 0);
   const canLogPayment = !['PAID', 'VOID'].includes(invoice.status);
+  const canSend = invoice.customer?.email && !['PAID', 'VOID'].includes(invoice.status);
+  const canRemind = ['SENT', 'OVERDUE', 'VIEWED', 'PARTIAL'].includes(invoice.status) && invoice.customer?.email;
+
+  const handleSendInvoice = () => {
+    startSendTransition(async () => {
+      const result = await sendInvoiceEmail(invoice.id);
+      if (result.success) {
+        toast.success('Invoice email sent successfully');
+      } else {
+        toast.error(result.error || 'Failed to send invoice');
+      }
+    });
+  };
+
+  const handleSendReminder = () => {
+    startSendTransition(async () => {
+      const result = await sendInvoiceReminder(invoice.id);
+      if (result.success) {
+        toast.success('Reminder email sent successfully');
+      } else {
+        toast.error(result.error || 'Failed to send reminder');
+      }
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -40,6 +67,36 @@ export function InvoiceDetailClient({ invoice }: InvoiceDetailClientProps) {
           <ArrowLeft className="h-4 w-4" />
           Back to Finance
         </Link>
+      </div>
+
+      {/* Email Actions — hidden in print */}
+      <div className="print:hidden flex items-center gap-3">
+        {canSend && (
+          <Button
+            onClick={handleSendInvoice}
+            disabled={isSending}
+            className="bg-caribbean-green hover:bg-caribbean-green/90 text-white gap-2"
+          >
+            <Send className="h-4 w-4" />
+            {isSending ? 'Sending...' : invoice.status === 'DRAFT' ? 'Send Invoice' : 'Resend Invoice'}
+          </Button>
+        )}
+        {canRemind && (
+          <Button
+            onClick={handleSendReminder}
+            disabled={isSending}
+            variant="outline"
+            className="gap-2"
+          >
+            <Bell className="h-4 w-4" />
+            {isSending ? 'Sending...' : 'Send Reminder'}
+          </Button>
+        )}
+        {invoice.status === 'SENT' && (
+          <span className="text-xs text-muted-foreground">
+            Sent {invoice.issuedAt ? format(new Date(invoice.issuedAt), 'MMM d, yyyy') : ''}
+          </span>
+        )}
       </div>
 
       {/* Invoice Detail Component */}

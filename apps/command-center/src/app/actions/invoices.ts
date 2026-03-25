@@ -156,6 +156,9 @@ export async function getInvoiceById(invoiceId: string) {
     const invoice = await db.invoice.findUnique({
       where: { id: invoiceId },
       include: {
+        lineItems: {
+          include: { product: true },
+        },
         order: {
           include: {
             lineItems: {
@@ -191,15 +194,22 @@ export async function getInvoiceById(invoiceId: string) {
       totalAmount: Number(invoice.totalAmount),
       paidAmount: Number(invoice.paidAmount),
       lateFeeAmount: computedLateFee,
-      order: {
-        ...invoice.order,
-        totalAmount: Number(invoice.order.totalAmount),
-        lineItems: invoice.order.lineItems.map((item) => ({
-          ...item,
-          unitPrice: Number(item.unitPrice),
-          totalPrice: Number(item.totalPrice),
-        })),
-      },
+      lineItems: invoice.lineItems.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+        totalPrice: Number(item.totalPrice),
+      })),
+      order: invoice.order
+        ? {
+            ...invoice.order,
+            totalAmount: Number(invoice.order.totalAmount),
+            lineItems: invoice.order.lineItems.map((item) => ({
+              ...item,
+              unitPrice: Number(item.unitPrice),
+              totalPrice: Number(item.totalPrice),
+            })),
+          }
+        : null,
       payments: invoice.payments.map((p) => ({
         ...p,
         amount: Number(p.amount),
@@ -412,7 +422,7 @@ export async function getARAgingReport(): Promise<ARAgingReport> {
       return {
         id: invoice.id,
         invoiceNumber: invoice.invoiceNumber,
-        orderNumber: invoice.order.orderNumber,
+        orderNumber: invoice.order?.orderNumber || '—',
         customerName,
         totalAmount,
         paidAmount,

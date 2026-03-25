@@ -104,7 +104,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                       {invoice.invoiceNumber}
                     </TableCell>
                     <TableCell className="font-mono text-sm text-muted-foreground">
-                      {invoice.order.orderNumber}
+                      {invoice.order?.orderNumber || <span className="italic">Standalone</span>}
                     </TableCell>
                     <TableCell className="text-sm">
                       {invoice.customer
@@ -181,7 +181,7 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                     : 'No customer linked'}
                 </div>
                 <div className="text-xs text-muted-foreground font-mono">
-                  {invoice.order.orderNumber}
+                  {invoice.order?.orderNumber || 'Standalone Invoice'}
                 </div>
                 <div className="flex items-center justify-between pt-1">
                   <div className="text-xs text-muted-foreground">

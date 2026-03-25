@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InvoiceList } from './InvoiceList';
 import { ARAgingReport } from './ARAgingReport';
@@ -28,13 +29,24 @@ export function FinanceDashboardClient({ invoices, report }: FinanceDashboardCli
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Invoices</h2>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-caribbean-green hover:bg-caribbean-green/90 text-white gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Generate Invoice
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard/finance/invoices/new">
+              <Button
+                className="bg-caribbean-green hover:bg-caribbean-green/90 text-white gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                New Invoice
+              </Button>
+            </Link>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              From Order
+            </Button>
+          </div>
         </div>
         <InvoiceList invoices={invoices} />
       </section>
