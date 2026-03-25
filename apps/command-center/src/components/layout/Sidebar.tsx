@@ -20,6 +20,10 @@ import {
   ChevronRight,
   X,
   FileText,
+  MapPin,
+  Megaphone,
+  TicketPercent,
+  Calendar,
 } from 'lucide-react';
 import { hasPermission } from '@/lib/auth/permissions';
 import { logout } from '@/app/actions/auth';
@@ -41,15 +45,19 @@ type NavItem = {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   permission: string;
+  section?: string;
 };
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home, permission: 'dashboard' },
   { label: 'Production', href: '/dashboard/production', icon: Factory, permission: 'production' },
   { label: 'Inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory' },
+  { label: 'Locations', href: '/dashboard/locations', icon: MapPin, permission: 'locations' },
   { label: 'Orders', href: '/dashboard/orders', icon: ShoppingCart, permission: 'orders' },
+  { label: 'Events', href: '/dashboard/events', icon: Calendar, permission: 'events' },
   { label: 'Shipping', href: '/dashboard/shipping', icon: Truck, permission: 'shipping' },
   { label: 'Customers', href: '/dashboard/customers', icon: Users, permission: 'customers' },
+  { label: 'Promo Codes', href: '/dashboard/promo-codes', icon: TicketPercent, permission: 'promo-codes', section: 'Sales & Marketing' },
   { label: 'Finance', href: '/dashboard/finance', icon: DollarSign, permission: 'finance' },
   { label: 'Expenses', href: '/dashboard/finance/expenses', icon: Receipt, permission: 'finance' },
   { label: 'Revenue', href: '/dashboard/finance/revenue', icon: TrendingUp, permission: 'finance' },
@@ -115,12 +123,22 @@ function SidebarContent({
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-2">
-          {filteredNavItems.map((item) => {
+          {filteredNavItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const prevItem = filteredNavItems[index - 1];
+            const showSection = item.section && item.section !== prevItem?.section;
 
             return (
               <li key={item.href}>
+                {showSection && !collapsed && (
+                  <div className="flex items-center gap-2 px-3 pt-4 pb-1">
+                    <Megaphone className="w-3.5 h-3.5 text-caribbean-gold/60" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-caribbean-gold/60">
+                      {item.section}
+                    </span>
+                  </div>
+                )}
                 <Link
                   href={item.href}
                   onClick={onLinkClick}

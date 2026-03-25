@@ -218,6 +218,7 @@ model User {
   expensesSecondApproved Expense[]          @relation("ExpenseSecondApprover")
   documentsUploaded     Document[]          @relation("DocumentUploader")
   versionsUploaded      DocumentVersion[]   @relation("VersionUploader")
+  createdEvents         MarketEvent[]
 
   @@index([email])
   @@index([role])
@@ -364,10 +365,37 @@ model SalesChannel {
   // Relations
   sales  Sale[]
   orders Order[]
+  events MarketEvent[]
 
   @@index([name])
   @@index([type])
   @@index([isActive])
+}
+
+model MarketEvent {
+  id          String   @id @default(cuid())
+  name        String
+  eventDate   DateTime
+  location    String?
+  boothFee    Decimal  @default(0)
+  travelCost  Decimal  @default(0)
+  supplyCost  Decimal  @default(0)
+  laborCost   Decimal  @default(0)
+  otherCost   Decimal  @default(0)
+  notes       String?
+  channelId   String
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  channel   SalesChannel @relation(fields: [channelId], references: [id])
+  createdBy User         @relation(fields: [createdById], references: [id])
+  sales     Sale[]
+
+  @@index([eventDate])
+  @@index([channelId])
+  @@index([createdById])
 }
 
 // ============================================================================
@@ -652,6 +680,7 @@ model Sale {
   saleDate        DateTime
   channelId       String
   productId       String
+  eventId         String?
   quantity        Int
   unitPrice       Decimal
   totalAmount     Decimal
@@ -665,11 +694,13 @@ model Sale {
   // Relations
   channel   SalesChannel @relation(fields: [channelId], references: [id])
   product   Product      @relation(fields: [productId], references: [id])
+  event     MarketEvent? @relation(fields: [eventId], references: [id])
   createdBy User         @relation(fields: [createdById], references: [id])
 
   @@index([saleDate])
   @@index([channelId])
   @@index([productId])
+  @@index([eventId])
   @@index([createdById])
   @@index([paymentMethod])
 }

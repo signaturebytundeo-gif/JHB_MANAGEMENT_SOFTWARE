@@ -245,6 +245,7 @@ export async function syncSquarePayments(): Promise<SyncResult> {
 
     revalidatePath('/dashboard/orders');
     revalidatePath('/dashboard');
+    revalidatePath('/dashboard/events');
 
     return {
       success: true,

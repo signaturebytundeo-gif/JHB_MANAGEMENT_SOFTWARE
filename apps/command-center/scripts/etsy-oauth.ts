@@ -21,7 +21,7 @@ import { resolve } from 'node:path';
 const ENV_FILE = resolve(import.meta.dirname ?? __dirname, '..', '.env.local');
 const REDIRECT_URI = 'http://localhost:3003/oauth/redirect';
 const PORT = 3003;
-const SCOPES = 'transactions_r email_r';
+const SCOPES = 'transactions_r shops_r email_r';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -169,15 +169,46 @@ async function main() {
       const accessToken: string = tokens.access_token;
       const refreshToken: string = tokens.refresh_token;
 
+      // Auto-detect shop ID from the authenticated user
+      const sharedSecret = getEnvValue(readEnvFile(), 'ETSY_SHARED_SECRET');
+      const xApiKey = sharedSecret ? `${clientId}:${sharedSecret}` : clientId;
+      let detectedShopId = '';
+      try {
+        // Extract user_id from token (format: "userId.rest")
+        const userId = accessToken.split('.')[0];
+        const shopRes = await fetch(
+          `https://openapi.etsy.com/v3/application/users/${userId}/shops`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'x-api-key': xApiKey,
+            },
+          }
+        );
+        if (shopRes.ok) {
+          const shopData = await shopRes.json();
+          detectedShopId = String(shopData.shop_id || '');
+          console.log(`  Detected shop: ${shopData.shop_name} (ID: ${detectedShopId})`);
+        }
+      } catch {
+        // Non-fatal — user can set ETSY_SHOP_ID manually
+      }
+
       // Update .env.local
       let updated = readEnvFile();
       updated = upsertEnvValue(updated, 'ETSY_ACCESS_TOKEN', accessToken);
       updated = upsertEnvValue(updated, 'ETSY_REFRESH_TOKEN', refreshToken);
+      if (detectedShopId) {
+        updated = upsertEnvValue(updated, 'ETSY_SHOP_ID', detectedShopId);
+      }
       writeFileSync(ENV_FILE, updated);
 
       console.log('\nTokens saved to .env.local');
       console.log(`  Access token:  ${accessToken.slice(0, 20)}...`);
       console.log(`  Refresh token: ${refreshToken.slice(0, 20)}...`);
+      if (detectedShopId) {
+        console.log(`  Shop ID:       ${detectedShopId}`);
+      }
       console.log(`  Expires in:    ${tokens.expires_in}s`);
       console.log('\nRestart the dev server to pick up the new tokens.\n');
 

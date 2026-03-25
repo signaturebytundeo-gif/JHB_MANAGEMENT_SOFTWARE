@@ -45,23 +45,21 @@ export async function getRecentSquarePayments(
   let cursor: string | undefined;
 
   for (let page = 0; page < MAX_PAGES; page++) {
-    const body: Record<string, unknown> = {
-      begin_time: beginTime,
-      sort_order: 'DESC',
-      limit: 100,
-    };
+    // Use GET /v2/payments with query params (search POST returns 404 on some accounts)
+    const url = new URL(`${baseUrl}/v2/payments`);
+    url.searchParams.set('begin_time', beginTime);
+    url.searchParams.set('sort_order', 'DESC');
+    url.searchParams.set('limit', '100');
     if (cursor) {
-      body.cursor = cursor;
+      url.searchParams.set('cursor', cursor);
     }
 
-    const response = await fetch(`${baseUrl}/v2/payments/search`, {
-      method: 'POST',
+    const response = await fetch(url.toString(), {
       headers: {
         'Authorization': `Bearer ${config.accessToken}`,
         'Content-Type': 'application/json',
         'Square-Version': '2024-01-18',
       },
-      body: JSON.stringify(body),
       signal: AbortSignal.timeout(30_000),
     });
 
