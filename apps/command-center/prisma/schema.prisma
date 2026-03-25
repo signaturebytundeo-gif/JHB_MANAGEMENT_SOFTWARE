@@ -746,19 +746,25 @@ model Shipment {
   orderNotes        String?
   items             String?         // JSON string of items in shipment
 
+  // EasyPost integration fields
+  easypostShipmentId String?        // EasyPost shp_... ID — needed for refund/void calls
+  websiteOrderId     String?        // FK to WebsiteOrder — links shipment to any order source
+
   createdById       String
   shippedAt         DateTime?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
   // Relations
-  createdBy        User      @relation(fields: [createdById], references: [id])
-  shipFromLocation Location? @relation(fields: [shipFromLocationId], references: [id])
+  createdBy        User          @relation(fields: [createdById], references: [id])
+  shipFromLocation Location?     @relation(fields: [shipFromLocationId], references: [id])
+  websiteOrder     WebsiteOrder? @relation(fields: [websiteOrderId], references: [id])
 
   @@index([status])
   @@index([trackingNumber])
   @@index([stripePaymentIntentId])
   @@index([createdAt])
+  @@index([websiteOrderId])
 }
 
 // ============================================================================
@@ -821,11 +827,21 @@ model WebsiteOrder {
   confirmationEmailSentAt DateTime?
   shippingEmailSentAt     DateTime?
   deliveryEmailSentAt     DateTime?
+
+  // Shipping address fields (extracted from marketplace orders or entered manually)
+  shippingAddressLine1  String?
+  shippingAddressLine2  String?
+  shippingCity          String?
+  shippingState         String?
+  shippingZip           String?
+  shippingCountry       String?   @default("US")
+
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
   // Relations
-  customer Customer @relation(fields: [customerId], references: [id])
+  customer  Customer   @relation(fields: [customerId], references: [id])
+  shipments Shipment[]
 
   @@index([status])
   @@index([orderDate])
