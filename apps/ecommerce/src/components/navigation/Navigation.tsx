@@ -7,9 +7,9 @@ import { useCartStore } from '@/lib/cart-store'
 
 const navItems = [
   { name: 'Shop', href: '/shop' },
+  { name: 'Restaurant Partners', href: '/restaurant-partners' },
   { name: 'Our Story', href: '/our-story' },
   { name: 'Recipes', href: '/recipes' },
-  { name: 'Subscribe', href: '/subscribe', comingSoon: true },
 ]
 
 export default function Navigation() {
@@ -44,11 +44,6 @@ export default function Navigation() {
                 className="text-white hover:text-brand-gold transition-colors text-sm font-medium"
               >
                 {item.name}
-                {item.comingSoon && (
-                  <span className="ml-1 text-xs text-brand-gold opacity-75">
-                    (Soon)
-                  </span>
-                )}
               </Link>
             ))}
             <button
@@ -113,11 +108,6 @@ export default function Navigation() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
-                {item.comingSoon && (
-                  <span className="ml-2 text-xs text-brand-gold opacity-75">
-                    (Coming Soon)
-                  </span>
-                )}
               </Link>
             ))}
             <button
