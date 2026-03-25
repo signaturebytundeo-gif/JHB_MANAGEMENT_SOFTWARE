@@ -4,6 +4,7 @@ import { useActionState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { createEvent, updateEvent } from '@/app/actions/events';
 import type { EventFormState } from '@/lib/validators/events';
+import { LocationAutocomplete } from './LocationAutocomplete';
 
 interface Channel {
   id: string;
@@ -85,11 +86,10 @@ export function EventForm({ channels, defaultValues }: EventFormProps) {
 
         <div>
           <label className={labelClass}>Location</label>
-          <input
-            type="text"
+          <LocationAutocomplete
             name="location"
             defaultValue={defaultValues?.location ?? ''}
-            placeholder="Address or venue"
+            placeholder="Search address or venue..."
             className={inputClass}
           />
         </div>

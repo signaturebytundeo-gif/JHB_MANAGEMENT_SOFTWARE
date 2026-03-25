@@ -203,6 +203,25 @@ export async function getEventById(id: string) {
       Number(event.laborCost) +
       Number(event.otherCost);
 
+    // Aggregate items sold by product
+    const productMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+    for (const sale of event.sales) {
+      const key = sale.product.id;
+      const existing = productMap.get(key);
+      if (existing) {
+        existing.quantity += sale.quantity;
+        existing.revenue += Number(sale.totalAmount);
+      } else {
+        productMap.set(key, {
+          name: sale.product.name,
+          quantity: sale.quantity,
+          revenue: Number(sale.totalAmount),
+        });
+      }
+    }
+    const itemsSold = Array.from(productMap.values()).sort((a, b) => b.revenue - a.revenue);
+    const totalItemsSold = itemsSold.reduce((sum, i) => sum + i.quantity, 0);
+
     return {
       ...event,
       boothFee: Number(event.boothFee),
@@ -218,6 +237,8 @@ export async function getEventById(id: string) {
       revenue,
       costs,
       netPnL: revenue - costs,
+      itemsSold,
+      totalItemsSold,
     };
   } catch (error) {
     console.error('Error fetching event:', error);
@@ -284,6 +305,49 @@ export async function assignSalesToEvent(eventId: string, saleIds: string[]) {
   } catch (error) {
     console.error('Error assigning sales:', error);
     return { message: 'Failed to assign sales' };
+  }
+}
+
+export async function addManualSaleToEvent(
+  eventId: string,
+  productId: string,
+  quantity: number,
+  unitPrice: number,
+  notes?: string
+) {
+  try {
+    const session = await verifyManagerOrAbove();
+
+    const event = await db.marketEvent.findUnique({
+      where: { id: eventId },
+      select: { channelId: true, eventDate: true },
+    });
+    if (!event) return { message: 'Event not found' };
+
+    const totalAmount = quantity * unitPrice;
+
+    await db.sale.create({
+      data: {
+        saleDate: event.eventDate,
+        channelId: event.channelId,
+        productId,
+        eventId,
+        quantity,
+        unitPrice,
+        totalAmount,
+        paymentMethod: 'CASH',
+        notes: notes || 'Manual event sale',
+        createdById: session.userId,
+      },
+    });
+
+    revalidatePath(`/dashboard/events/${eventId}`);
+    revalidatePath('/dashboard/events');
+    revalidatePath('/dashboard/orders');
+    return { success: true, message: 'Sale added to event' };
+  } catch (error) {
+    console.error('Error adding manual sale:', error);
+    return { message: 'Failed to add sale' };
   }
 }
 
