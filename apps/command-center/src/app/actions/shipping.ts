@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { verifyManagerOrAbove } from '@/lib/dal';
 import { createShipmentSchema, type ShipmentFormState } from '@/lib/validators/shipping';
-import { createUPSShipment, voidUPSShipment, trackUPSShipment, validateUPSAddress } from '@/lib/ups';
+import { createEasyPostShipment, refundEasyPostShipment } from '@/lib/easypost';
+import { sendShippingConfirmationEmail } from '@/lib/emails/customer-emails';
+import { voidUPSShipment, trackUPSShipment, validateUPSAddress } from '@/lib/ups';
 import { ShipmentStatus } from '@prisma/client';
 import Stripe from 'stripe';
 
@@ -219,7 +221,9 @@ export async function createAndShipLabel(
       length: formData.get('length') as string,
       width: formData.get('width') as string,
       height: formData.get('height') as string,
-      serviceCode: (formData.get('serviceCode') as string) || '03',
+      serviceCode: (formData.get('serviceCode') as string) || 'Ground',
+      carrier: (formData.get('carrier') as string) || 'UPS',
+      websiteOrderId: (formData.get('websiteOrderId') as string) || undefined,
       shipFromLocationId: formData.get('shipFromLocationId') as string,
       stripePaymentIntentId: formData.get('stripePaymentIntentId') as string,
       orderNotes: formData.get('orderNotes') as string,
@@ -245,24 +249,35 @@ export async function createAndShipLabel(
       return { message: 'Ship-from location not found or has no address' };
     }
 
-    // Validate recipient address (non-blocking)
-    try {
-      const validation = await validateUPSAddress({
+    // Call EasyPost to create shipment and purchase label
+    const easypostResult = await createEasyPostShipment({
+      shipFrom: {
+        name: process.env.SHIP_FROM_NAME ?? location.name,
+        street1: process.env.SHIP_FROM_ADDRESS ?? (location.address || '12345 Main St'),
+        city: process.env.SHIP_FROM_CITY ?? 'Miami',
+        state: process.env.SHIP_FROM_STATE ?? 'FL',
+        zip: process.env.SHIP_FROM_ZIP ?? '33101',
+      },
+      shipTo: {
+        name: data.recipientName,
         addressLine1: data.addressLine1,
         addressLine2: data.addressLine2 || undefined,
         city: data.city,
-        state: data.state,
+        state: data.state.toUpperCase(),
         zip: data.zip,
         country: data.country || 'US',
-      });
-      if (!validation.valid && validation.suggestion) {
-        console.log('UPS address suggestion:', validation.suggestion);
-      }
-    } catch {
-      // Non-critical, continue
-    }
+        phone: data.recipientPhone || undefined,
+      },
+      packageWeightLbs: data.weight,  // DB stores lbs — easypost.ts converts to oz internally
+      dimensions:
+        data.length && data.width && data.height &&
+        typeof data.length === 'number' && typeof data.width === 'number' && typeof data.height === 'number'
+          ? { length: data.length, width: data.width, height: data.height }
+          : undefined,
+      carrier: (data.carrier as 'UPS' | 'USPS') ?? 'UPS',
+    });
 
-    // Create shipment record as DRAFT
+    // Create shipment record with EasyPost response data
     const shipment = await db.shipment.create({
       data: {
         recipientName: data.recipientName,
@@ -278,52 +293,50 @@ export async function createAndShipLabel(
         length: data.length && typeof data.length === 'number' ? data.length : null,
         width: data.width && typeof data.width === 'number' ? data.width : null,
         height: data.height && typeof data.height === 'number' ? data.height : null,
-        serviceCode: data.serviceCode || '03',
+        serviceCode: data.serviceCode || 'Ground',
         shipFromLocationId: data.shipFromLocationId,
         stripePaymentIntentId: data.stripePaymentIntentId || null,
         orderNotes: data.orderNotes || null,
         items: data.items || null,
-        status: ShipmentStatus.DRAFT,
+        easypostShipmentId: easypostResult.easypostShipmentId,
+        websiteOrderId: data.websiteOrderId ?? null,
+        trackingNumber: easypostResult.trackingNumber,
+        labelData: easypostResult.labelData,
+        labelFormat: easypostResult.labelFormat,
+        shippingCost: easypostResult.shippingCost,
+        status: ShipmentStatus.LABEL_CREATED,
         createdById: session.userId,
       },
     });
 
-    // Call UPS API to create shipment and get label
-    const upsResult = await createUPSShipment({
-      shipFrom: {
-        name: location.name,
-        address: location.address,
-      },
-      shipTo: {
-        name: data.recipientName,
-        phone: data.recipientPhone || undefined,
-        addressLine1: data.addressLine1,
-        addressLine2: data.addressLine2 || undefined,
-        city: data.city,
-        state: data.state.toUpperCase(),
-        zip: data.zip,
-        country: data.country || 'US',
-      },
-      packageWeight: data.weight,
-      packageDimensions:
-        data.length && data.width && data.height &&
-        typeof data.length === 'number' && typeof data.width === 'number' && typeof data.height === 'number'
-          ? { length: data.length, width: data.width, height: data.height }
-          : undefined,
-      serviceCode: data.serviceCode || '03',
-    });
+    // If linked to a WebsiteOrder, update its status to SHIPPED
+    if (data.websiteOrderId) {
+      await db.websiteOrder.update({
+        where: { id: data.websiteOrderId },
+        data: {
+          status: 'SHIPPED',
+          trackingNumber: easypostResult.trackingNumber,
+          carrier: easypostResult.carrier,
+          shippedAt: new Date(),
+        },
+      });
+    }
 
-    // Update shipment with UPS response
-    await db.shipment.update({
-      where: { id: shipment.id },
-      data: {
-        trackingNumber: upsResult.trackingNumber,
-        labelData: upsResult.labelData,
-        labelFormat: upsResult.labelFormat,
-        shippingCost: upsResult.shippingCost,
-        status: ShipmentStatus.LABEL_CREATED,
-      },
-    });
+    // Send shipping confirmation email when email address is available
+    if (data.websiteOrderId && data.recipientEmail) {
+      try {
+        await sendShippingConfirmationEmail({
+          customerFirstName: data.recipientName.split(' ')[0],
+          customerEmail: data.recipientEmail,
+          orderId: data.websiteOrderId,
+          carrier: easypostResult.carrier,
+          trackingNumber: easypostResult.trackingNumber,
+        });
+      } catch (emailError) {
+        // Non-critical — label was created successfully; log and continue
+        console.error('[createAndShipLabel] Shipping confirmation email failed:', emailError);
+      }
+    }
 
     revalidatePath('/dashboard/shipping');
 
@@ -331,8 +344,8 @@ export async function createAndShipLabel(
       success: true,
       message: 'Label created successfully',
       shipmentId: shipment.id,
-      trackingNumber: upsResult.trackingNumber,
-      labelData: upsResult.labelData,
+      trackingNumber: easypostResult.trackingNumber,
+      labelData: easypostResult.labelData,
     };
   } catch (error) {
     console.error('Error creating shipment:', error);
@@ -364,11 +377,17 @@ export async function voidShipmentLabel(shipmentId: string): Promise<{
       return { success: false, message: 'Only labels with LABEL_CREATED status can be voided' };
     }
 
-    if (!shipment.trackingNumber) {
+    if (!shipment.trackingNumber && !shipment.easypostShipmentId) {
       return { success: false, message: 'No tracking number to void' };
     }
 
-    await voidUPSShipment(shipment.trackingNumber);
+    // EasyPost labels (new): refund via EasyPost API using shp_... ID
+    // Legacy UPS labels (pre-migration): void via UPS direct API using tracking number
+    if (shipment.easypostShipmentId) {
+      await refundEasyPostShipment(shipment.easypostShipmentId);
+    } else if (shipment.trackingNumber) {
+      await voidUPSShipment(shipment.trackingNumber);
+    }
 
     await db.shipment.update({
       where: { id: shipmentId },
