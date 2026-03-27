@@ -16,6 +16,12 @@ export interface EtsyOrderData {
   shippingCost: number;
   orderTotal: number;
   orderDate: Date;
+  shippingAddressLine1: string | null;
+  shippingAddressLine2: string | null;
+  shippingCity: string | null;
+  shippingState: string | null;
+  shippingZip: string | null;
+  shippingCountry: string | null;
 }
 
 const ETSY_API_BASE = 'https://openapi.etsy.com';
@@ -184,6 +190,12 @@ export async function getRecentEtsyOrders(
         shippingCost,
         orderTotal: grandTotal,
         orderDate: new Date(receipt.created_timestamp * 1000),
+        shippingAddressLine1: receipt.first_line ?? null,
+        shippingAddressLine2: receipt.second_line ?? null,
+        shippingCity: receipt.city ?? null,
+        shippingState: receipt.state ?? null,
+        shippingZip: receipt.zip ?? null,
+        shippingCountry: receipt.country_iso ?? null,
       });
     }
 
