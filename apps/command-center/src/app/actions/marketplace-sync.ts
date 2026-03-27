@@ -316,6 +316,12 @@ export async function syncAmazonOrders(): Promise<SyncResult> {
             status: 'NEW',
             source: 'AMAZON',
             orderDate: order.orderDate,
+            shippingAddressLine1: order.shippingAddressLine1,
+            shippingAddressLine2: order.shippingAddressLine2,
+            shippingCity: order.shippingCity,
+            shippingState: order.shippingState,
+            shippingZip: order.shippingZip,
+            shippingCountry: order.shippingCountry,
           },
         });
 
@@ -412,6 +418,12 @@ export async function syncEtsyOrders(): Promise<SyncResult> {
             status: 'NEW',
             source: 'ETSY',
             orderDate: order.orderDate,
+            shippingAddressLine1: order.shippingAddressLine1,
+            shippingAddressLine2: order.shippingAddressLine2,
+            shippingCity: order.shippingCity,
+            shippingState: order.shippingState,
+            shippingZip: order.shippingZip,
+            shippingCountry: order.shippingCountry,
           },
         });
 

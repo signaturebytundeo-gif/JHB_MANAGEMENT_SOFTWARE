@@ -16,6 +16,12 @@ export interface AmazonOrderData {
   shippingCost: number;
   orderTotal: number;
   orderDate: Date;
+  shippingAddressLine1: string | null;
+  shippingAddressLine2: string | null;
+  shippingCity: string | null;
+  shippingState: string | null;
+  shippingZip: string | null;
+  shippingCountry: string | null;
 }
 
 const SP_API_BASE = 'https://sellingpartnerapi-na.amazon.com';
@@ -142,6 +148,8 @@ export async function getRecentAmazonOrders(
       const firstName = nameParts[0] || 'Amazon';
       const lastName = nameParts.slice(1).join(' ') || 'Customer';
 
+      const shippingAddr = order.ShippingAddress;
+
       orders.push({
         orderId: order.AmazonOrderId,
         customerEmail: order.BuyerInfo?.BuyerEmail || `${order.AmazonOrderId}@marketplace.amazon.com`,
@@ -152,6 +160,12 @@ export async function getRecentAmazonOrders(
           items.reduce((sum, i) => sum + i.price * i.quantity, 0),
         orderTotal: parseFloat(order.OrderTotal?.Amount ?? '0'),
         orderDate: new Date(order.PurchaseDate),
+        shippingAddressLine1: shippingAddr?.AddressLine1 ?? null,
+        shippingAddressLine2: shippingAddr?.AddressLine2 ?? null,
+        shippingCity: shippingAddr?.City ?? null,
+        shippingState: shippingAddr?.StateOrRegion ?? null,
+        shippingZip: shippingAddr?.PostalCode ?? null,
+        shippingCountry: shippingAddr?.CountryCode ?? null,
       });
     }
 
