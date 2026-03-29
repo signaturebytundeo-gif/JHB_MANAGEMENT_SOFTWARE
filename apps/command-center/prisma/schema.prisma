@@ -189,7 +189,7 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String
-  password      String?   // Nullable for magic link users
+  password      String? // Nullable for magic link users
   role          Role      @default(SALES_REP)
   emailVerified DateTime?
   isActive      Boolean   @default(true)
@@ -197,28 +197,28 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  invitesSent           InviteToken[]
-  createdBatches        Batch[]
-  conductedQCTests      QCTest[]
-  createdSales          Sale[]
-  stockAdjustments      StockAdjustment[]
-  inventoryTransactions InventoryTransaction[]
-  shipments             Shipment[]
-  marketplaceSyncs      MarketplaceSync[]
-  createdMovements      InventoryMovement[] @relation("MovementCreator")
-  approvedMovements     InventoryMovement[] @relation("MovementApprover")
-  createdOrders         Order[]             @relation("OrderCreator")
-  approvedOrders        Order[]             @relation("OrderApprover")
-  secondApprovedOrders  Order[]             @relation("OrderSecondApprover")
-  invoicePayments       InvoicePayment[]
-  leadsAssigned         Lead[]              @relation("LeadAssignee")
-  leadsCreated          Lead[]              @relation("LeadCreator")
-  expensesCreated       Expense[]           @relation("ExpenseCreator")
-  expensesApproved      Expense[]           @relation("ExpenseApprover")
-  expensesSecondApproved Expense[]          @relation("ExpenseSecondApprover")
-  documentsUploaded     Document[]          @relation("DocumentUploader")
-  versionsUploaded      DocumentVersion[]   @relation("VersionUploader")
-  createdEvents         MarketEvent[]
+  invitesSent            InviteToken[]
+  createdBatches         Batch[]
+  conductedQCTests       QCTest[]
+  createdSales           Sale[]
+  stockAdjustments       StockAdjustment[]
+  inventoryTransactions  InventoryTransaction[]
+  shipments              Shipment[]
+  marketplaceSyncs       MarketplaceSync[]
+  createdMovements       InventoryMovement[]    @relation("MovementCreator")
+  approvedMovements      InventoryMovement[]    @relation("MovementApprover")
+  createdOrders          Order[]                @relation("OrderCreator")
+  approvedOrders         Order[]                @relation("OrderApprover")
+  secondApprovedOrders   Order[]                @relation("OrderSecondApprover")
+  invoicePayments        InvoicePayment[]
+  leadsAssigned          Lead[]                 @relation("LeadAssignee")
+  leadsCreated           Lead[]                 @relation("LeadCreator")
+  expensesCreated        Expense[]              @relation("ExpenseCreator")
+  expensesApproved       Expense[]              @relation("ExpenseApprover")
+  expensesSecondApproved Expense[]              @relation("ExpenseSecondApprover")
+  documentsUploaded      Document[]             @relation("DocumentUploader")
+  versionsUploaded       DocumentVersion[]      @relation("VersionUploader")
+  createdEvents          MarketEvent[]
 
   @@index([email])
   @@index([role])
@@ -260,17 +260,17 @@ model MagicLinkToken {
 // ============================================================================
 
 model Product {
-  id            String   @id @default(cuid())
-  name          String
-  sku           String   @unique
-  size          String
-  unitsPerCase  Int?     // Nullable for TBD packaging
-  description   String?
-  reorderPoint  Int      @default(0)  // Default reorder threshold in units
-  leadTimeDays  Int      @default(14) // Default production/procurement lead time
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  sku          String   @unique
+  size         String
+  unitsPerCase Int? // Nullable for TBD packaging
+  description  String?
+  reorderPoint Int      @default(0) // Default reorder threshold in units
+  leadTimeDays Int      @default(14) // Default production/procurement lead time
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   pricingTiers          PricingTier[]
@@ -287,13 +287,13 @@ model Product {
 }
 
 model PricingTier {
-  id         String   @id @default(cuid())
-  productId  String
-  tierName   String   // e.g., "Wholesale Cash", "Wholesale Net 30", "Retail"
-  unitPrice  Decimal
-  casePrice  Decimal?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  productId String
+  tierName  String // e.g., "Wholesale Cash", "Wholesale Net 30", "Retail"
+  unitPrice Decimal
+  casePrice Decimal?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -305,7 +305,7 @@ model PricingTier {
 model VolumeDiscount {
   id              String   @id @default(cuid())
   minCases        Int
-  maxCases        Int?     // Nullable for unlimited (11+)
+  maxCases        Int? // Nullable for unlimited (11+)
   discountPercent Decimal
   description     String
   createdAt       DateTime @default(now())
@@ -316,7 +316,7 @@ model VolumeDiscount {
 
 model FrequencyDiscount {
   id                 String   @id @default(cuid())
-  frequency          String   // "quarterly" or "annual"
+  frequency          String // "quarterly" or "annual"
   discountPercent    Decimal
   additionalBenefits String?
   createdAt          DateTime @default(now())
@@ -330,23 +330,23 @@ model FrequencyDiscount {
 // ============================================================================
 
 model Location {
-  id               String            @id @default(cuid())
-  name             String            @unique
+  id               String       @id @default(cuid())
+  name             String       @unique
   type             LocationType
   address          String?
   description      String?
-  deliverySchedule String?           // e.g., "Weekly delivery"
-  isActive         Boolean           @default(true)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  deliverySchedule String? // e.g., "Weekly delivery"
+  isActive         Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   // Relations
   batchAllocations      BatchAllocation[]
   stockAdjustments      StockAdjustment[]
   inventoryTransactions InventoryTransaction[]
   shipments             Shipment[]
-  movementsFrom         InventoryMovement[] @relation("FromLocation")
-  movementsTo           InventoryMovement[] @relation("ToLocation")
+  movementsFrom         InventoryMovement[]    @relation("FromLocation")
+  movementsTo           InventoryMovement[]    @relation("ToLocation")
   orders                Order[]
 
   @@index([name])
@@ -406,10 +406,10 @@ model MarketEvent {
 model SubscriptionPlan {
   id                 String   @id @default(cuid())
   name               String   @unique
-  billingCycle       String   // "monthly" or "annual"
+  billingCycle       String // "monthly" or "annual"
   price              Decimal
-  includedProducts   String   // Description of what's included
-  loyaltyReward      String?  // e.g., "1 month free at 6 months"
+  includedProducts   String // Description of what's included
+  loyaltyReward      String? // e.g., "1 month free at 6 months"
   cancellationPolicy String?
   isActive           Boolean  @default(true)
   createdAt          DateTime @default(now())
@@ -427,7 +427,7 @@ model ApprovalThreshold {
   id           String   @id @default(cuid())
   minAmount    Decimal
   maxAmount    Decimal? // Nullable for unlimited
-  approvalType String   // "auto", "single_member", "dual_member", "dual_bank"
+  approvalType String // "auto", "single_member", "dual_member", "dual_bank"
   description  String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -458,35 +458,35 @@ model CoPackerPartner {
 }
 
 model Batch {
-  id                     String           @id @default(cuid())
-  batchCode              String           @unique
-  productId              String
-  productionDate         DateTime         @default(now())
-  productionSource       ProductionSource
-  status                 BatchStatus      @default(PLANNED)
-  totalUnits             Int
-  notes                  String?
-  coPackerPartnerId      String?
-  coPackerLotNumber      String?
-  coPackerReceivingDate  DateTime?
-  laborCostTotal         Decimal?         @default(0)
-  overheadCostTotal      Decimal?         @default(0)
-  createdById            String
-  isActive               Boolean          @default(true)
-  deletedAt              DateTime?
-  deletedReason          String?
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+  id                    String           @id @default(cuid())
+  batchCode             String           @unique
+  productId             String
+  productionDate        DateTime         @default(now())
+  productionSource      ProductionSource
+  status                BatchStatus      @default(PLANNED)
+  totalUnits            Int
+  notes                 String?
+  coPackerPartnerId     String?
+  coPackerLotNumber     String?
+  coPackerReceivingDate DateTime?
+  laborCostTotal        Decimal?         @default(0)
+  overheadCostTotal     Decimal?         @default(0)
+  createdById           String
+  isActive              Boolean          @default(true)
+  deletedAt             DateTime?
+  deletedReason         String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   // Relations
-  product            Product            @relation(fields: [productId], references: [id])
-  coPackerPartner    CoPackerPartner?   @relation(fields: [coPackerPartnerId], references: [id])
-  createdBy          User               @relation(fields: [createdById], references: [id])
+  product            Product             @relation(fields: [productId], references: [id])
+  coPackerPartner    CoPackerPartner?    @relation(fields: [coPackerPartnerId], references: [id])
+  createdBy          User                @relation(fields: [createdById], references: [id])
   qcTests            QCTest[]
   allocations        BatchAllocation[]
   materials          BatchMaterial[]
   inventoryMovements InventoryMovement[]
-  documents          Document[]         @relation("BatchDocuments")
+  documents          Document[]          @relation("BatchDocuments")
 
   @@index([batchCode])
   @@index([productId])
@@ -533,7 +533,7 @@ model BatchAllocation {
 }
 
 model RawMaterial {
-  id             String          @id @default(cuid())
+  id             String   @id @default(cuid())
   name           String
   supplier       String
   lotNumber      String
@@ -542,9 +542,9 @@ model RawMaterial {
   quantity       Decimal
   unit           String
   costPerUnit    Decimal?
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
   batchMaterials BatchMaterial[]
@@ -580,7 +580,7 @@ model InventoryMovement {
   batchId          String
   fromLocationId   String?
   toLocationId     String?
-  quantity         Int                        // Always positive; direction determined by from/to
+  quantity         Int // Always positive; direction determined by from/to
   reason           InventoryAdjustmentReason? // Required for ADJUSTMENT type
   notes            String?
   requiresApproval Boolean                    @default(false)
@@ -608,11 +608,11 @@ model InventoryMovement {
 
 model PackagingMaterial {
   id              String    @id @default(cuid())
-  name            String    // e.g., "5oz Glass Bottle", "Standard Cap", "Front Label"
-  type            String    // BOTTLE, CAP, LABEL, BOX, OTHER
+  name            String // e.g., "5oz Glass Bottle", "Standard Cap", "Front Label"
+  type            String // BOTTLE, CAP, LABEL, BOX, OTHER
   supplier        String
   currentQuantity Int       @default(0)
-  unit            String    // e.g., "units", "rolls", "sheets"
+  unit            String // e.g., "units", "rolls", "sheets"
   reorderPoint    Int       @default(0)
   leadTimeDays    Int       @default(14)
   costPerUnit     Decimal?
@@ -630,7 +630,7 @@ model StockAdjustment {
   id             String           @id @default(cuid())
   productId      String
   locationId     String?
-  quantityChange Int              // positive = add, negative = subtract
+  quantityChange Int // positive = add, negative = subtract
   reason         AdjustmentReason
   notes          String?
   createdById    String
@@ -653,9 +653,9 @@ model InventoryTransaction {
   productId      String
   locationId     String
   type           TransactionType
-  quantityChange Int             // positive = add, negative = subtract
-  referenceId    String?         // batchId, saleId, or transfer pair ID
-  reason         String?         // For ADJUSTMENT type (e.g., "Damage", "Counting Error")
+  quantityChange Int // positive = add, negative = subtract
+  referenceId    String? // batchId, saleId, or transfer pair ID
+  reason         String? // For ADJUSTMENT type (e.g., "Damage", "Counting Error")
   notes          String?
   createdById    String
   createdAt      DateTime        @default(now())
@@ -711,49 +711,49 @@ model Sale {
 // ============================================================================
 
 model Shipment {
-  id                String          @id @default(cuid())
-  status            ShipmentStatus  @default(DRAFT)
+  id     String         @id @default(cuid())
+  status ShipmentStatus @default(DRAFT)
 
   // Recipient
-  recipientName     String
-  recipientEmail    String?
-  recipientPhone    String?
-  addressLine1      String
-  addressLine2      String?
-  city              String
-  state             String
-  zip               String
-  country           String          @default("US")
+  recipientName  String
+  recipientEmail String?
+  recipientPhone String?
+  addressLine1   String
+  addressLine2   String?
+  city           String
+  state          String
+  zip            String
+  country        String  @default("US")
 
   // Package
-  weight            Decimal         // lbs
-  length            Decimal?        // inches
-  width             Decimal?
-  height            Decimal?
+  weight Decimal // lbs
+  length Decimal? // inches
+  width  Decimal?
+  height Decimal?
 
   // Shipment details
-  serviceCode       String          @default("03") // 03 = UPS Ground
+  serviceCode        String  @default("03") // 03 = UPS Ground
   shipFromLocationId String?
 
   // UPS response data
-  trackingNumber    String?
-  labelData         String?         // base64-encoded label image (PNG)
-  labelFormat       String?         // PNG, ZPL, etc.
-  shippingCost      Decimal?        // in dollars
+  trackingNumber String?
+  labelData      String? // base64-encoded label image (PNG)
+  labelFormat    String? // PNG, ZPL, etc.
+  shippingCost   Decimal? // in dollars
 
   // Order reference
-  stripePaymentIntentId String?     // Link to website order
-  orderNotes        String?
-  items             String?         // JSON string of items in shipment
+  stripePaymentIntentId String? // Link to website order
+  orderNotes            String?
+  items                 String? // JSON string of items in shipment
 
   // EasyPost integration fields
-  easypostShipmentId String?        // EasyPost shp_... ID — needed for refund/void calls
-  websiteOrderId     String?        // FK to WebsiteOrder — links shipment to any order source
+  easypostShipmentId String? // EasyPost shp_... ID — needed for refund/void calls
+  websiteOrderId     String? // FK to WebsiteOrder — links shipment to any order source
 
-  createdById       String
-  shippedAt         DateTime?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdById String
+  shippedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
   createdBy        User          @relation(fields: [createdById], references: [id])
@@ -772,28 +772,28 @@ model Shipment {
 // ============================================================================
 
 model Customer {
-  id             String       @id @default(cuid())
-  email          String       @unique
-  firstName      String
-  lastName       String
-  phone          String?
-  orderCount     Int          @default(0)
-  totalSpent     Decimal      @default(0)
+  id         String  @id @default(cuid())
+  email      String  @unique
+  firstName  String
+  lastName   String
+  phone      String?
+  orderCount Int     @default(0)
+  totalSpent Decimal @default(0)
 
   // CRM fields (Phase 5)
-  customerType   CustomerType @default(RETAIL)
-  company        String?
-  paymentTerms   String?      // "net_30", "net_15", "cash"
-  creditLimit    Decimal?
-  billingAddress String?
+  customerType    CustomerType @default(RETAIL)
+  company         String?
+  paymentTerms    String? // "net_30", "net_15", "cash"
+  creditLimit     Decimal?
+  billingAddress  String?
   shippingAddress String?
-  city           String?
-  state          String?
-  zip            String?
-  notes          String?
+  city            String?
+  state           String?
+  zip             String?
+  notes           String?
 
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   orders                WebsiteOrder[]
@@ -809,18 +809,18 @@ model Customer {
 }
 
 model WebsiteOrder {
-  id             String      @id @default(cuid())
-  orderId        String      @unique // from website (e.g. Stripe PI id)
-  stripeEventId  String?     @unique // Stripe checkout.session.completed event ID — idempotency key
-  customerId     String
-  items          String      // JSON array of line items
-  shippingCost   Decimal
-  orderTotal     Decimal
-  status         OrderStatus @default(NEW)
-  source         OrderSource @default(WEBSITE)
-  orderDate      DateTime
-  promoCode      String?     // Sales rep promo code used (e.g. "AJBAR26")
-  promoDiscount  Decimal?    // Discount amount applied (in dollars)
+  id                      String      @id @default(cuid())
+  orderId                 String      @unique // from website (e.g. Stripe PI id)
+  stripeEventId           String?     @unique // Stripe checkout.session.completed event ID — idempotency key
+  customerId              String
+  items                   String // JSON array of line items
+  shippingCost            Decimal
+  orderTotal              Decimal
+  status                  OrderStatus @default(NEW)
+  source                  OrderSource @default(WEBSITE)
+  orderDate               DateTime
+  promoCode               String? // Sales rep promo code used (e.g. "AJBAR26")
+  promoDiscount           Decimal? // Discount amount applied (in dollars)
   trackingNumber          String?
   carrier                 String?
   shippedAt               DateTime?
@@ -829,15 +829,15 @@ model WebsiteOrder {
   deliveryEmailSentAt     DateTime?
 
   // Shipping address fields (extracted from marketplace orders or entered manually)
-  shippingAddressLine1  String?
-  shippingAddressLine2  String?
-  shippingCity          String?
-  shippingState         String?
-  shippingZip           String?
-  shippingCountry       String?   @default("US")
+  shippingAddressLine1 String?
+  shippingAddressLine2 String?
+  shippingCity         String?
+  shippingState        String?
+  shippingZip          String?
+  shippingCountry      String? @default("US")
 
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   customer  Customer   @relation(fields: [customerId], references: [id])
@@ -854,17 +854,17 @@ model WebsiteOrder {
 // ============================================================================
 
 model MarketplaceSync {
-  id              String       @id @default(cuid())
-  platform        SyncPlatform
-  status          SyncStatus   @default(RUNNING)
-  startedAt       DateTime     @default(now())
-  completedAt     DateTime?
-  recordsFound    Int          @default(0)
-  recordsCreated  Int          @default(0)
-  recordsSkipped  Int          @default(0)
-  errorMessage    String?
-  errorDetails    String?      // JSON string of detailed errors
-  triggeredById   String?
+  id             String       @id @default(cuid())
+  platform       SyncPlatform
+  status         SyncStatus   @default(RUNNING)
+  startedAt      DateTime     @default(now())
+  completedAt    DateTime?
+  recordsFound   Int          @default(0)
+  recordsCreated Int          @default(0)
+  recordsSkipped Int          @default(0)
+  errorMessage   String?
+  errorDetails   String? // JSON string of detailed errors
+  triggeredById  String?
 
   // Relations
   triggeredBy User? @relation(fields: [triggeredById], references: [id])
@@ -879,39 +879,39 @@ model MarketplaceSync {
 // ============================================================================
 
 model Order {
-  id                 String              @id @default(cuid())
-  orderNumber        String              @unique
-  status             OperatorOrderStatus @default(DRAFT)
-  orderType          OperatorOrderType   @default(STANDARD)
-  customerId         String?
-  channelId          String
-  locationId         String
-  paymentMethod      PaymentMethod
-  orderDate          DateTime            @default(now())
-  notes              String?
+  id            String              @id @default(cuid())
+  orderNumber   String              @unique
+  status        OperatorOrderStatus @default(DRAFT)
+  orderType     OperatorOrderType   @default(STANDARD)
+  customerId    String?
+  channelId     String
+  locationId    String
+  paymentMethod PaymentMethod
+  orderDate     DateTime            @default(now())
+  notes         String?
 
   // Catering-specific fields (ORD-09)
-  depositAmount      Decimal?
-  depositPaidAt      DateTime?
-  balanceDueDate     DateTime?
-  eventDate          DateTime?
+  depositAmount  Decimal?
+  depositPaidAt  DateTime?
+  balanceDueDate DateTime?
+  eventDate      DateTime?
 
   // Farmers market / event fields (ORD-08)
-  eventLocation      String?
-  weatherNotes       String?
-  footTrafficNotes   String?
+  eventLocation    String?
+  weatherNotes     String?
+  footTrafficNotes String?
 
   // Approval tracking (ORD-06)
-  totalAmount        Decimal             @default(0)
+  totalAmount        Decimal   @default(0)
   approvalStatus     String?
   approvedById       String?
   secondApprovedById String?
   approvedAt         DateTime?
 
   // Audit
-  createdById        String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
   customer           Customer?           @relation("CustomerOperatorOrders", fields: [customerId], references: [id])
@@ -940,7 +940,7 @@ model OrderLineItem {
   unitPrice       Decimal
   totalPrice      Decimal
   discountPercent Decimal? // Discount applied (volume, frequency, or promotional)
-  discountReason  String?  // "volume", "frequency", "promotional"
+  discountReason  String? // "volume", "frequency", "promotional"
 
   // Relations
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -1055,7 +1055,7 @@ model Expense {
   receiptUrl           String?
   vendorName           String?
   notes                String?
-  approvalStatus       String?         // "auto_approved", "pending_single", "pending_dual", "pending_bank", "approved", "rejected"
+  approvalStatus       String? // "auto_approved", "pending_single", "pending_dual", "pending_bank", "approved", "rejected"
   approvedById         String?
   secondApprovedById   String?
   approvedAt           DateTime?
@@ -1076,12 +1076,12 @@ model Expense {
 }
 
 model Budget {
-  id              String          @id @default(cuid())
-  period          String          // "YYYY-MM"
-  category        ExpenseCategory
-  budgetedAmount  Decimal
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id             String          @id @default(cuid())
+  period         String // "YYYY-MM"
+  category       ExpenseCategory
+  budgetedAmount Decimal
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@unique([period, category])
   @@index([period])
@@ -1111,19 +1111,19 @@ model DistributorAgreement {
 }
 
 model SubscriptionMember {
-  id                      String             @id @default(cuid())
-  customerId              String
-  planId                  String
-  status                  SubscriptionStatus @default(ACTIVE)
-  startDate               DateTime
-  renewalDate             DateTime?
-  cancelledAt             DateTime?
-  loyaltyMonths           Int                @default(0)
-  loyaltyRewardAt         DateTime?
-  renewalReminderSentAt   DateTime?          // Idempotent reminder tracking
-  notes                   String?
-  createdAt               DateTime           @default(now())
-  updatedAt               DateTime           @updatedAt
+  id                    String             @id @default(cuid())
+  customerId            String
+  planId                String
+  status                SubscriptionStatus @default(ACTIVE)
+  startDate             DateTime
+  renewalDate           DateTime?
+  cancelledAt           DateTime?
+  loyaltyMonths         Int                @default(0)
+  loyaltyRewardAt       DateTime?
+  renewalReminderSentAt DateTime? // Idempotent reminder tracking
+  notes                 String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   // Relations
   customer Customer         @relation("CustomerSubscriptions", fields: [customerId], references: [id])
@@ -1192,13 +1192,13 @@ model Document {
   isTemplate     Boolean          @default(false)
 
   // Polymorphic nullable FKs — at most one is non-null
-  customerId     String?
-  orderId        String?
-  batchId        String?
+  customerId String?
+  orderId    String?
+  batchId    String?
 
-  uploadedById   String
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  uploadedById String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   customer   Customer?         @relation("CustomerDocuments", fields: [customerId], references: [id])
