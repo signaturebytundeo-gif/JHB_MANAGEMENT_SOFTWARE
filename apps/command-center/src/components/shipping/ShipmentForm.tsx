@@ -18,6 +18,18 @@ import { UPS_SERVICES } from '@/lib/ups';
 import type { StripeOrderData } from '@/app/actions/shipping';
 import { Download } from 'lucide-react';
 
+interface WebsiteOrderPreFill {
+  id: string;
+  customerName: string;
+  customerEmail?: string;
+  shippingAddressLine1?: string | null;
+  shippingAddressLine2?: string | null;
+  shippingCity?: string | null;
+  shippingState?: string | null;
+  shippingZip?: string | null;
+  shippingCountry?: string | null;
+}
+
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
   'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
@@ -41,10 +53,11 @@ function SubmitButton() {
 interface ShipmentFormProps {
   locations: { id: string; name: string; type: string; address: string | null }[];
   prefillOrder?: StripeOrderData | null;
+  websiteOrder?: WebsiteOrderPreFill;
   onSuccess?: () => void;
 }
 
-export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFormProps) {
+export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess }: ShipmentFormProps) {
   const [state, formAction] = useActionState(createAndShipLabel, undefined);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -119,6 +132,16 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
         </>
       )}
 
+      {/* Hidden websiteOrderId + pre-fill banner for marketplace/website orders */}
+      {websiteOrder && (
+        <>
+          <input type="hidden" name="websiteOrderId" value={websiteOrder.id} />
+          <div className="bg-caribbean-green/10 border border-caribbean-green/30 px-4 py-3 rounded-md text-sm text-caribbean-gold">
+            Address pre-filled from order — {websiteOrder.customerName}
+          </div>
+        </>
+      )}
+
       {/* Recipient Section */}
       <div>
         <h3 className="text-sm font-semibold text-caribbean-gold mb-3">Recipient Information</h3>
@@ -129,7 +152,7 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
               id="recipientName"
               name="recipientName"
               required
-              defaultValue={prefillOrder?.customerName || ''}
+              defaultValue={websiteOrder?.customerName || prefillOrder?.customerName || ''}
               className="h-11"
             />
             {state?.errors?.recipientName && (
@@ -142,7 +165,7 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
               id="recipientEmail"
               name="recipientEmail"
               type="email"
-              defaultValue={prefillOrder?.customerEmail || ''}
+              defaultValue={websiteOrder?.customerEmail || prefillOrder?.customerEmail || ''}
               className="h-11"
             />
             {state?.errors?.recipientEmail && (
@@ -171,7 +194,7 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
               id="addressLine1"
               name="addressLine1"
               required
-              defaultValue={prefillOrder?.shippingAddress?.line1 || ''}
+              defaultValue={websiteOrder?.shippingAddressLine1 || prefillOrder?.shippingAddress?.line1 || ''}
               className="h-11"
             />
             {state?.errors?.addressLine1 && (
@@ -183,7 +206,7 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
             <Input
               id="addressLine2"
               name="addressLine2"
-              defaultValue={prefillOrder?.shippingAddress?.line2 || ''}
+              defaultValue={websiteOrder?.shippingAddressLine2 || prefillOrder?.shippingAddress?.line2 || ''}
               className="h-11"
             />
           </div>
@@ -193,7 +216,7 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
               id="city"
               name="city"
               required
-              defaultValue={prefillOrder?.shippingAddress?.city || ''}
+              defaultValue={websiteOrder?.shippingCity || prefillOrder?.shippingAddress?.city || ''}
               className="h-11"
             />
             {state?.errors?.city && (
@@ -202,7 +225,7 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
           </div>
           <div className="space-y-2">
             <Label htmlFor="state">State *</Label>
-            <Select name="state" defaultValue={prefillOrder?.shippingAddress?.state || ''} required>
+            <Select name="state" defaultValue={websiteOrder?.shippingState || prefillOrder?.shippingAddress?.state || ''} required>
               <SelectTrigger id="state" className="h-11">
                 <SelectValue placeholder="Select state" />
               </SelectTrigger>
@@ -224,7 +247,7 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
               id="zip"
               name="zip"
               required
-              defaultValue={prefillOrder?.shippingAddress?.zip || ''}
+              defaultValue={websiteOrder?.shippingZip || prefillOrder?.shippingAddress?.zip || ''}
               className="h-11"
             />
             {state?.errors?.zip && (
@@ -298,6 +321,18 @@ export function ShipmentForm({ locations, prefillOrder, onSuccess }: ShipmentFor
       <div>
         <h3 className="text-sm font-semibold text-caribbean-gold mb-3">Shipment Options</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="carrier">Carrier *</Label>
+            <Select name="carrier" defaultValue="UPS">
+              <SelectTrigger id="carrier" className="h-11">
+                <SelectValue placeholder="Select carrier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="UPS">UPS</SelectItem>
+                <SelectItem value="USPS">USPS</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="shipFromLocationId">Ship From *</Label>
             <Select name="shipFromLocationId" required>

@@ -20,6 +20,8 @@ import { OrderStatusBadge } from '@/components/orders/OrderStatusBadge';
 import { OrderActions } from '@/components/orders/OrderActions';
 import { PickPackList } from '@/components/orders/PickPackList';
 import { getPickPackList } from '@/app/actions/operator-orders';
+import { ShipmentForm } from '@/components/shipping/ShipmentForm';
+import { getShippingLocations } from '@/app/actions/shipping';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -64,7 +66,10 @@ export default async function OrderDetailPage({ params }: PageProps) {
     return <OperatorOrderDetail order={operatorOrder} pickPackData={pickPackData} />;
   }
 
-  const order = await getWebsiteOrderById(id);
+  const [order, shippingLocations] = await Promise.all([
+    getWebsiteOrderById(id),
+    getShippingLocations(),
+  ]);
   if (!order) notFound();
 
   const items = parseItems(order.items);
@@ -215,9 +220,24 @@ export default async function OrderDetailPage({ params }: PageProps) {
             </div>
             <div className="sm:col-span-2">
               <div className="text-sm font-medium text-muted-foreground">Shipping Address</div>
-              <div className="mt-1 text-sm text-muted-foreground italic">
-                Not captured — address data is stored with Stripe, not in the order record
-              </div>
+              {order.shippingAddressLine1 ? (
+                <div className="mt-1 text-sm">
+                  <div>{order.shippingAddressLine1}</div>
+                  {order.shippingAddressLine2 && <div>{order.shippingAddressLine2}</div>}
+                  <div>
+                    {[order.shippingCity, order.shippingState, order.shippingZip]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </div>
+                  {order.shippingCountry && order.shippingCountry !== 'US' && (
+                    <div>{order.shippingCountry}</div>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-1 text-sm text-muted-foreground italic">
+                  No shipping address on record
+                </div>
+              )}
             </div>
           </div>
 
@@ -264,6 +284,34 @@ export default async function OrderDetailPage({ params }: PageProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Create Shipping Label — only for non-shipped orders */}
+      {order.status !== 'SHIPPED' && order.status !== 'DELIVERED' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5" />
+              Create Shipping Label
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ShipmentForm
+              locations={shippingLocations}
+              websiteOrder={{
+                id: order.id,
+                customerName: `${order.customer.firstName} ${order.customer.lastName}`,
+                customerEmail: order.customer.email ?? undefined,
+                shippingAddressLine1: order.shippingAddressLine1,
+                shippingAddressLine2: order.shippingAddressLine2,
+                shippingCity: order.shippingCity,
+                shippingState: order.shippingState,
+                shippingZip: order.shippingZip,
+                shippingCountry: order.shippingCountry,
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
