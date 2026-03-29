@@ -66,8 +66,8 @@ export async function getMarketplaceStatus(): Promise<PlatformStatus[]> {
           errorMessage: sync.errorMessage,
         };
       }
-    } catch {
-      // DB not migrated yet — leave undefined
+    } catch (err) {
+      console.error(`[marketplace-sync] getMarketplaceStatus DB error for ${platform}:`, err);
     }
 
     statuses.push({ platform, configured, missingVars, lastSync });
@@ -92,7 +92,8 @@ export async function getSyncHistory(platform?: SyncPlatform) {
     });
 
     return syncs;
-  } catch {
+  } catch (err) {
+    console.error('[marketplace-sync] getSyncHistory error:', err);
     return [];
   }
 }
