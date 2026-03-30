@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { socialProfiles } from '@/data/social-media'
+import { socialProfiles, featuredPosts } from '@/data/social-media'
+import SocialCarousel from './SocialCarousel'
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -58,6 +59,14 @@ const platforms = [
 ]
 
 export default function SocialFeedPreview() {
+  // Mix all posts into one carousel that rotates through platforms
+  const allSlides = featuredPosts.map((post) => ({
+    id: post.id,
+    platform: post.platform,
+    embedUrl: post.embedUrl,
+    caption: post.caption,
+  }))
+
   return (
     <section className="py-16 sm:py-24 px-4">
       <div className="max-w-6xl mx-auto">
@@ -70,7 +79,16 @@ export default function SocialFeedPreview() {
           </p>
         </div>
 
-        {/* Platform cards */}
+        {/* Auto-rotating carousel of social content */}
+        <div className="max-w-3xl mx-auto mb-12">
+          <SocialCarousel
+            slides={allSlides}
+            autoPlay
+            interval={5000}
+          />
+        </div>
+
+        {/* Platform follow cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {platforms.map((platform) => (
             <a
