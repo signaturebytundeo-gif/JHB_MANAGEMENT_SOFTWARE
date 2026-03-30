@@ -167,7 +167,7 @@ export async function getRecentEtsyOrders(
         name: t.title || 'Unknown Item',
         quantity: t.quantity || 1,
         price: parseFloat(t.price?.amount ?? '0') /
-          Math.pow(10, t.price?.divisor ?? 2),
+          (t.price?.divisor ?? 100),
         sku: t.sku,
       }));
 
@@ -177,10 +177,10 @@ export async function getRecentEtsyOrders(
 
       const grandTotal =
         parseFloat(receipt.grandtotal?.amount ?? '0') /
-        Math.pow(10, receipt.grandtotal?.divisor ?? 2);
+        (receipt.grandtotal?.divisor ?? 100);
       const shippingCost =
         parseFloat(receipt.total_shipping_cost?.amount ?? '0') /
-        Math.pow(10, receipt.total_shipping_cost?.divisor ?? 2);
+        (receipt.total_shipping_cost?.divisor ?? 100);
 
       orders.push({
         orderId: String(receipt.receipt_id),
