@@ -5,9 +5,9 @@ import { db } from '@/lib/db';
 import { verifyManagerOrAbove } from '@/lib/dal';
 import { isPlatformConfigured, getMissingEnvVars } from '@/lib/integrations/config';
 import { getRecentSquarePayments } from '@/lib/integrations/square';
-import { getRecentAmazonOrders } from '@/lib/integrations/amazon';
-import { getRecentEtsyOrders } from '@/lib/integrations/etsy';
-import type { SyncPlatform, SyncStatus } from '@prisma/client';
+import { getRecentAmazonOrders, getAmazonOrderStatuses } from '@/lib/integrations/amazon';
+import { getRecentEtsyOrders, getEtsyFulfillmentData } from '@/lib/integrations/etsy';
+import type { SyncPlatform, SyncStatus, OrderStatus } from '@prisma/client';
 
 // ============================================================================
 // Types
@@ -465,4 +465,110 @@ export async function syncEtsyOrders(): Promise<SyncResult> {
     await completeSyncRecord(syncRecord.id, 'FAILED', 0, 0, 0, error.message);
     return { success: false, message: `Etsy sync failed: ${error.message}`, recordsFound: 0, recordsCreated: 0, recordsSkipped: 0 };
   }
+}
+
+// ============================================================================
+// Fulfillment Status Sync — update order statuses + tracking from marketplaces
+// ============================================================================
+
+export async function syncFulfillmentStatuses(): Promise<SyncResult> {
+  await verifyManagerOrAbove();
+
+  let updated = 0;
+  let found = 0;
+  const errors: string[] = [];
+
+  // ── Amazon: update order statuses ──────────────────────────────────
+  try {
+    const amazonOrders = await db.websiteOrder.findMany({
+      where: { source: 'AMAZON', status: { in: ['NEW', 'PROCESSING'] } },
+      select: { id: true, orderId: true },
+    });
+
+    if (amazonOrders.length > 0) {
+      // Strip "AMZ-" prefix to get real Amazon order IDs
+      const amazonIds = amazonOrders.map((o) => o.orderId.replace('AMZ-', ''));
+      const statuses = await getAmazonOrderStatuses(amazonIds);
+
+      for (const status of statuses) {
+        const dbOrder = amazonOrders.find(
+          (o) => o.orderId === `AMZ-${status.orderId}`
+        );
+        if (!dbOrder) continue;
+
+        const STATUS_MAP: Record<string, OrderStatus> = {
+          Shipped: 'SHIPPED',
+          Delivered: 'DELIVERED',
+          Cancelled: 'CANCELLED',
+        };
+        const newStatus = STATUS_MAP[status.orderStatus];
+
+        if (newStatus) {
+          await db.websiteOrder.update({
+            where: { id: dbOrder.id },
+            data: {
+              status: newStatus,
+              ...(newStatus === 'SHIPPED' ? { shippedAt: new Date() } : {}),
+            },
+          });
+          updated++;
+        }
+        found++;
+      }
+    }
+  } catch (err: any) {
+    errors.push(`Amazon: ${err.message}`);
+  }
+
+  // ── Etsy: update statuses + tracking ───────────────────────────────
+  try {
+    const etsyOrders = await db.websiteOrder.findMany({
+      where: { source: 'ETSY', status: { in: ['NEW', 'PROCESSING'] } },
+      select: { id: true, orderId: true },
+    });
+
+    if (etsyOrders.length > 0) {
+      // Strip "ETSY-" prefix to get real receipt IDs
+      const receiptIds = etsyOrders.map((o) => o.orderId.replace('ETSY-', ''));
+      const fulfillments = await getEtsyFulfillmentData(receiptIds);
+
+      for (const f of fulfillments) {
+        const dbOrder = etsyOrders.find(
+          (o) => o.orderId === `ETSY-${f.receiptId}`
+        );
+        if (!dbOrder) continue;
+
+        if (f.isShipped) {
+          await db.websiteOrder.update({
+            where: { id: dbOrder.id },
+            data: {
+              status: 'SHIPPED' as OrderStatus,
+              trackingNumber: f.trackingCode,
+              carrier: f.carrierName,
+              shippedAt: f.shippedTimestamp || new Date(),
+            },
+          });
+          updated++;
+        }
+        found++;
+      }
+    }
+  } catch (err: any) {
+    errors.push(`Etsy: ${err.message}`);
+  }
+
+  revalidatePath('/dashboard/orders');
+  revalidatePath('/dashboard');
+
+  const message = `Updated ${updated} order statuses` +
+    (found > 0 ? ` (${found} checked)` : '') +
+    (errors.length > 0 ? ` — Errors: ${errors.join('; ')}` : '');
+
+  return {
+    success: errors.length === 0,
+    message,
+    recordsFound: found,
+    recordsCreated: updated,
+    recordsSkipped: 0,
+  };
 }

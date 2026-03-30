@@ -176,3 +176,47 @@ export async function getRecentAmazonOrders(
 
   return orders;
 }
+
+// ============================================================================
+// Fulfillment status sync — get order status + tracking for existing orders
+// ============================================================================
+
+export interface AmazonFulfillmentData {
+  orderId: string;
+  orderStatus: string; // Shipped, Delivered, Cancelled, etc.
+}
+
+export async function getAmazonOrderStatuses(
+  orderIds: string[]
+): Promise<AmazonFulfillmentData[]> {
+  if (!isPlatformConfigured('AMAZON') || orderIds.length === 0) return [];
+
+  const results: AmazonFulfillmentData[] = [];
+
+  // Amazon SP-API doesn't have a bulk status endpoint.
+  // Fetch orders in batches using getOrders with order IDs filter (max 50 per call).
+  for (let i = 0; i < orderIds.length; i += 50) {
+    const batch = orderIds.slice(i, i + 50);
+    const config = getAmazonConfig();
+
+    try {
+      const data = await spApiGet('/orders/v0/orders', {
+        MarketplaceIds: config.marketplaceId,
+        AmazonOrderIds: batch.join(','),
+      });
+
+      for (const order of data.payload?.Orders ?? []) {
+        results.push({
+          orderId: order.AmazonOrderId,
+          orderStatus: order.OrderStatus, // Shipped, Delivered, Unshipped, Cancelled
+        });
+      }
+    } catch (err) {
+      console.error('[amazon] Failed to fetch order statuses:', err);
+    }
+
+    if (i + 50 < orderIds.length) await delay(PAGE_DELAY_MS);
+  }
+
+  return results;
+}

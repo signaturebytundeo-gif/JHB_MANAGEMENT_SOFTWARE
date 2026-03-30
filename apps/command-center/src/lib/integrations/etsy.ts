@@ -207,3 +207,64 @@ export async function getRecentEtsyOrders(
 
   return orders;
 }
+
+// ============================================================================
+// Fulfillment status sync — get tracking data for existing Etsy orders
+// ============================================================================
+
+export interface EtsyFulfillmentData {
+  receiptId: string;
+  isShipped: boolean;
+  carrierName: string | null;
+  trackingCode: string | null;
+  shippedTimestamp: Date | null;
+}
+
+export async function getEtsyFulfillmentData(
+  receiptIds: string[]
+): Promise<EtsyFulfillmentData[]> {
+  if (!isPlatformConfigured('ETSY') || receiptIds.length === 0) return [];
+
+  const config = getEtsyConfig();
+  const results: EtsyFulfillmentData[] = [];
+
+  // Fetch all receipts (Etsy doesn't support filtering by receipt_id list,
+  // so we fetch all shipped receipts and match)
+  const url = new URL(
+    `/v3/application/shops/${config.shopId}/receipts`,
+    ETSY_API_BASE
+  );
+  url.searchParams.set('limit', '100');
+  url.searchParams.set('was_shipped', 'true');
+
+  try {
+    const response = await etsyFetch(url.toString());
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Etsy API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json();
+    const receiptIdSet = new Set(receiptIds);
+
+    for (const receipt of data.results ?? []) {
+      const rid = String(receipt.receipt_id);
+      if (!receiptIdSet.has(rid)) continue;
+
+      const shipment = receipt.shipments?.[0];
+      results.push({
+        receiptId: rid,
+        isShipped: receipt.is_shipped === true,
+        carrierName: shipment?.carrier_name ?? null,
+        trackingCode: shipment?.tracking_code ?? null,
+        shippedTimestamp: shipment?.shipment_notification_timestamp
+          ? new Date(shipment.shipment_notification_timestamp * 1000)
+          : null,
+      });
+    }
+  } catch (err) {
+    console.error('[etsy] Failed to fetch fulfillment data:', err);
+  }
+
+  return results;
+}

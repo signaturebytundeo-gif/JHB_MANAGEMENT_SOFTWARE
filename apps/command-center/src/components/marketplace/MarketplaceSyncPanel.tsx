@@ -6,10 +6,12 @@ import { SyncHistoryTable } from './SyncHistoryTable';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { PackageCheck } from 'lucide-react';
 import {
   syncSquarePayments,
   syncAmazonOrders,
   syncEtsyOrders,
+  syncFulfillmentStatuses,
   getMarketplaceStatus,
   getSyncHistory,
 } from '@/app/actions/marketplace-sync';
@@ -55,6 +57,7 @@ export function MarketplaceSyncPanel({
   const [statuses, setStatuses] = useState(initialStatuses);
   const [history, setHistory] = useState(initialHistory);
   const [syncingPlatforms, setSyncingPlatforms] = useState<Set<SyncPlatform>>(new Set());
+  const [syncingFulfillment, setSyncingFulfillment] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const refreshData = () => {
@@ -113,6 +116,23 @@ export function MarketplaceSyncPanel({
     }
   };
 
+  const handleFulfillmentSync = async () => {
+    setSyncingFulfillment(true);
+    try {
+      const result = await syncFulfillmentStatuses();
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(`Fulfillment sync failed: ${error.message}`);
+    } finally {
+      setSyncingFulfillment(false);
+      refreshData();
+    }
+  };
+
   const isSyncingAny = syncingPlatforms.size > 0;
 
   return (
@@ -120,16 +140,27 @@ export function MarketplaceSyncPanel({
       {/* Platform Cards */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Marketplace Integrations</h2>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleSyncAll}
-          disabled={isSyncingAny}
-          className="border-caribbean-gold"
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isSyncingAny ? 'animate-spin' : ''}`} />
-          Sync All
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleFulfillmentSync}
+            disabled={syncingFulfillment || isSyncingAny}
+          >
+            <PackageCheck className={`w-4 h-4 mr-2 ${syncingFulfillment ? 'animate-spin' : ''}`} />
+            {syncingFulfillment ? 'Updating...' : 'Update Statuses'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSyncAll}
+            disabled={isSyncingAny}
+            className="border-caribbean-gold"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isSyncingAny ? 'animate-spin' : ''}`} />
+            Sync All
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
