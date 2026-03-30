@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 interface SaleFormProps {
   channels: { id: string; name: string }[];
   products: { id: string; name: string; sku: string }[];
+  locations: { id: string; name: string; type: string }[];
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -46,13 +47,15 @@ function SubmitButton() {
   );
 }
 
-export function SaleForm({ channels, products }: SaleFormProps) {
+export function SaleForm({ channels, products, locations }: SaleFormProps) {
   const [state, formAction] = useActionState(createSale, undefined);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
     PaymentMethod.CASH
   );
   const [quantity, setQuantity] = useState(0);
   const [unitPrice, setUnitPrice] = useState(0);
+  const [selectedChannel, setSelectedChannel] = useState('');
+  const [newChannelName, setNewChannelName] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
 
   const today = new Date().toISOString().split('T')[0];
@@ -64,10 +67,13 @@ export function SaleForm({ channels, products }: SaleFormProps) {
       setQuantity(0);
       setUnitPrice(0);
       setPaymentMethod(PaymentMethod.CASH);
+      setSelectedChannel('');
+      setNewChannelName('');
     }
   }, [state]);
 
   const computedTotal = quantity * unitPrice;
+  const isNewChannel = selectedChannel === '__new__';
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4">
@@ -93,10 +99,15 @@ export function SaleForm({ channels, products }: SaleFormProps) {
         )}
       </div>
 
-      {/* Channel */}
+      {/* Channel with quick-add option */}
       <div className="space-y-2">
         <Label htmlFor="channelId">Sales Channel</Label>
-        <Select name="channelId" required>
+        <Select
+          name="channelId"
+          required
+          value={selectedChannel}
+          onValueChange={setSelectedChannel}
+        >
           <SelectTrigger id="channelId" className="h-11 text-base">
             <SelectValue placeholder="Select channel" />
           </SelectTrigger>
@@ -106,8 +117,23 @@ export function SaleForm({ channels, products }: SaleFormProps) {
                 {channel.name}
               </SelectItem>
             ))}
+            <SelectItem value="__new__" className="text-caribbean-green font-medium">
+              + Add New Channel
+            </SelectItem>
           </SelectContent>
         </Select>
+        {isNewChannel && (
+          <Input
+            name="newChannelName"
+            type="text"
+            placeholder="e.g., Direct Sale, Pop-Up, Wholesale"
+            value={newChannelName}
+            onChange={(e) => setNewChannelName(e.target.value)}
+            required
+            className="text-base h-11 border-caribbean-green/50"
+            autoFocus
+          />
+        )}
         {state?.errors?.channelId && (
           <p className="text-sm text-red-500">{state.errors.channelId[0]}</p>
         )}
@@ -131,6 +157,26 @@ export function SaleForm({ channels, products }: SaleFormProps) {
         {state?.errors?.productId && (
           <p className="text-sm text-red-500">{state.errors.productId[0]}</p>
         )}
+      </div>
+
+      {/* Location — where the product is coming from */}
+      <div className="space-y-2">
+        <Label htmlFor="locationId">Pulled From (Location)</Label>
+        <Select name="locationId">
+          <SelectTrigger id="locationId" className="h-11 text-base">
+            <SelectValue placeholder="Select location (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            {locations.map((loc) => (
+              <SelectItem key={loc.id} value={loc.id}>
+                {loc.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Selecting a location deducts inventory from that location.
+        </p>
       </div>
 
       {/* Quantity + Unit Price (side by side) */}

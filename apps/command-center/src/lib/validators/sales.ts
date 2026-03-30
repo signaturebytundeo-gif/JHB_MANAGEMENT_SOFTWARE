@@ -4,7 +4,9 @@ import { PaymentMethod } from '@prisma/client';
 export const createSaleSchema = z.object({
   saleDate: z.coerce.date(),
   channelId: z.string().min(1, 'Sales channel is required'),
+  newChannelName: z.string().optional(),
   productId: z.string().min(1, 'Product is required'),
+  locationId: z.string().optional(),
   quantity: z.coerce.number().int().positive('Quantity must be positive'),
   unitPrice: z.coerce.number().positive('Unit price must be positive'),
   paymentMethod: z.nativeEnum(PaymentMethod),

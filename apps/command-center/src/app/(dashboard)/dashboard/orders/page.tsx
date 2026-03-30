@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { getSales, getChannels, getProducts } from '@/app/actions/sales';
+import { getSales, getChannels, getProducts, getLocationsForSale } from '@/app/actions/sales';
 import { getWebsiteOrders } from '@/app/actions/orders';
 import { getMarketplaceStatus, getSyncHistory } from '@/app/actions/marketplace-sync';
 import { getOperatorOrders } from '@/app/actions/operator-orders';
@@ -13,10 +13,11 @@ import { OperatorOrderList } from '@/components/orders/OperatorOrderList';
 import { OrdersTabs } from './tabs';
 
 async function SalesContent() {
-  const [sales, channels, products] = await Promise.all([
+  const [sales, channels, products, locations] = await Promise.all([
     getSales(),
     getChannels(),
     getProducts(),
+    getLocationsForSale(),
   ]);
 
   return (
@@ -25,7 +26,7 @@ async function SalesContent() {
       <div className="lg:col-span-1">
         <div className="rounded-lg border bg-card p-4 lg:p-6 lg:sticky lg:top-24">
           <h2 className="text-lg font-semibold mb-4">Log a Sale</h2>
-          <SaleForm channels={channels} products={products} />
+          <SaleForm channels={channels} products={products} locations={locations} />
         </div>
       </div>
 

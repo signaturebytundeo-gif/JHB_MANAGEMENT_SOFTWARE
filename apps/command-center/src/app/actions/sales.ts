@@ -21,7 +21,9 @@ export async function createSale(
     const validatedFields = createSaleSchema.safeParse({
       saleDate: formData.get('saleDate'),
       channelId: formData.get('channelId'),
+      newChannelName: formData.get('newChannelName') || undefined,
       productId: formData.get('productId'),
+      locationId: formData.get('locationId') || undefined,
       quantity: formData.get('quantity'),
       unitPrice: formData.get('unitPrice'),
       paymentMethod: formData.get('paymentMethod'),
@@ -37,13 +39,33 @@ export async function createSale(
 
     const data = validatedFields.data;
 
+    // Handle "new channel" — create it on the fly if channelId is '__new__'
+    let channelId = data.channelId;
+    if (channelId === '__new__' && data.newChannelName?.trim()) {
+      const existing = await db.salesChannel.findFirst({
+        where: { name: { equals: data.newChannelName.trim(), mode: 'insensitive' } },
+      });
+      if (existing) {
+        channelId = existing.id;
+      } else {
+        const newChannel = await db.salesChannel.create({
+          data: {
+            name: data.newChannelName.trim(),
+            type: 'RETAIL',
+            description: 'Created from manual sale form',
+          },
+        });
+        channelId = newChannel.id;
+      }
+    }
+
     // Compute total server-side
     const totalAmount = data.quantity * data.unitPrice;
 
     await db.sale.create({
       data: {
         saleDate: data.saleDate,
-        channelId: data.channelId,
+        channelId,
         productId: data.productId,
         quantity: data.quantity,
         unitPrice: data.unitPrice,
@@ -55,8 +77,23 @@ export async function createSale(
       },
     });
 
+    // Deduct inventory from the selected location
+    if (data.locationId) {
+      await db.inventoryTransaction.create({
+        data: {
+          productId: data.productId,
+          locationId: data.locationId,
+          quantityChange: -data.quantity,
+          type: 'SALE_DEDUCTION',
+          notes: `Sale: ${data.quantity} units via ${data.newChannelName || 'manual sale'}`,
+          createdById: session.userId,
+        },
+      });
+    }
+
     revalidatePath('/dashboard/orders');
     revalidatePath('/dashboard');
+    revalidatePath('/dashboard/inventory');
 
     return {
       success: true,
@@ -236,6 +273,19 @@ export async function getSalesMetrics(month?: Date) {
       openOrderCount: 0,
       accountsReceivable: 0,
     };
+  }
+}
+
+export async function getLocationsForSale() {
+  try {
+    return await db.location.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, type: true },
+    });
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    return [];
   }
 }
 
