@@ -63,7 +63,7 @@ async function OperatorOrdersContent() {
   return (
     <div className="rounded-lg border bg-card p-4 lg:p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Operator Orders</h2>
+        <h2 className="text-lg font-semibold">Purchase Orders</h2>
         <Link
           href="/dashboard/orders/new"
           className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-caribbean-green text-white text-sm font-medium hover:bg-caribbean-green/90 transition-colors"

@@ -89,7 +89,7 @@ export function OperatorOrderList({ orders }: OperatorOrderListProps) {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  No operator orders found
+                  No purchase orders found
                 </TableCell>
               </TableRow>
             ) : (
@@ -135,7 +135,7 @@ export function OperatorOrderList({ orders }: OperatorOrderListProps) {
       <div className="md:hidden space-y-3">
         {filtered.length === 0 ? (
           <div className="text-center text-muted-foreground py-8 text-sm">
-            No operator orders found
+            No purchase orders found
           </div>
         ) : (
           filtered.map((order) => (

@@ -53,7 +53,7 @@ export function OrdersTabs({ manualSales, websiteOrders, marketplaceSync, operat
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          Operator Orders
+          Purchase Orders
         </button>
       </div>
 

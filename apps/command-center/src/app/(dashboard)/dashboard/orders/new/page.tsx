@@ -50,9 +50,9 @@ export default async function NewOperatorOrderPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">New Order</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">New Purchase Order</h1>
         <p className="text-muted-foreground mt-1">
-          Create an operator order from any channel with multi-line-item support.
+          Create a purchase order with multi-line-item support.
         </p>
       </div>
 

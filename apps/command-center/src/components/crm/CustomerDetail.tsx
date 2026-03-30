@@ -252,7 +252,7 @@ export function CustomerDetail({ customer }: CustomerDetailProps) {
         <h3 className="text-lg font-semibold mb-4">Purchase History</h3>
         {customer.operatorOrders.length === 0 ? (
           <div className="text-center text-muted-foreground py-8 text-sm">
-            No operator orders yet
+            No purchase orders yet
           </div>
         ) : (
           <div className="overflow-x-auto">
