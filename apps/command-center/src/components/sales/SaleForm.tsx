@@ -56,6 +56,7 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
   const [unitPrice, setUnitPrice] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
+  const [isPromo, setIsPromo] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const today = new Date().toISOString().split('T')[0];
@@ -69,10 +70,12 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
       setPaymentMethod(PaymentMethod.CASH);
       setSelectedChannel('');
       setNewChannelName('');
+      setIsPromo(false);
     }
   }, [state]);
 
-  const computedTotal = quantity * unitPrice;
+  const effectivePrice = isPromo ? 0 : unitPrice;
+  const computedTotal = quantity * effectivePrice;
   const isNewChannel = selectedChannel === '__new__';
 
   return (
@@ -159,6 +162,35 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
         )}
       </div>
 
+      {/* Promo / Giveaway Toggle */}
+      <div className="flex items-center gap-3 py-2">
+        <button
+          type="button"
+          onClick={() => {
+            setIsPromo(!isPromo);
+            if (!isPromo) setUnitPrice(0);
+          }}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            isPromo ? 'bg-amber-500' : 'bg-gray-600'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+              isPromo ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+        <div>
+          <span className={`text-sm font-medium ${isPromo ? 'text-amber-500' : 'text-muted-foreground'}`}>
+            Promo / Giveaway
+          </span>
+          {isPromo && (
+            <p className="text-xs text-amber-500/70">$0.00 — tracked as giveaway, excluded from revenue</p>
+          )}
+        </div>
+        <input type="hidden" name="isPromo" value={isPromo ? 'true' : 'false'} />
+      </div>
+
       {/* Location — where the product is coming from */}
       <div className="space-y-2">
         <Label htmlFor="locationId">Pulled From (Location)</Label>
@@ -200,17 +232,30 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="unitPrice">Unit Price ($)</Label>
-          <Input
-            id="unitPrice"
-            name="unitPrice"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            placeholder="e.g., 8.99"
-            required
-            className="text-base h-11"
-            onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}
-          />
+          {isPromo ? (
+            <>
+              <Input
+                id="unitPrice-display"
+                type="text"
+                value="$0.00 (Promo)"
+                disabled
+                className="text-base h-11 text-amber-500 font-medium"
+              />
+              <input type="hidden" name="unitPrice" value="0" />
+            </>
+          ) : (
+            <Input
+              id="unitPrice"
+              name="unitPrice"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              placeholder="e.g., 8.99"
+              required
+              className="text-base h-11"
+              onChange={(e) => setUnitPrice(parseFloat(e.target.value) || 0)}
+            />
+          )}
           {state?.errors?.unitPrice && (
             <p className="text-sm text-red-500">{state.errors.unitPrice[0]}</p>
           )}
@@ -218,17 +263,24 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
       </div>
 
       {/* Computed Total */}
-      {computedTotal > 0 && (
+      {isPromo && quantity > 0 ? (
+        <div className="bg-amber-500/10 border border-amber-500/30 px-4 py-3 rounded-md">
+          <p className="text-sm text-amber-500">Giveaway</p>
+          <p className="text-2xl font-bold text-amber-500">
+            {quantity} unit{quantity !== 1 ? 's' : ''} — $0.00
+          </p>
+        </div>
+      ) : computedTotal > 0 ? (
         <div className="bg-caribbean-green/10 border border-caribbean-green/30 px-4 py-3 rounded-md">
           <p className="text-sm text-muted-foreground">Total</p>
           <p className="text-2xl font-bold text-caribbean-green">
             ${computedTotal.toFixed(2)}
           </p>
         </div>
-      )}
+      ) : null}
 
-      {/* Payment Method Toggle */}
-      <div className="space-y-2">
+      {/* Payment Method Toggle — hidden for promos */}
+      {!isPromo && <div className="space-y-2">
         <Label>Payment Method</Label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {Object.values(PaymentMethod).map((method) => (
@@ -247,7 +299,7 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
           ))}
         </div>
         <input type="hidden" name="paymentMethod" value={paymentMethod} />
-      </div>
+      </div>}
 
       {/* Reference Number */}
       <div className="space-y-2">

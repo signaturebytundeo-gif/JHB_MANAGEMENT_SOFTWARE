@@ -26,6 +26,7 @@ export async function createSale(
       locationId: formData.get('locationId') || undefined,
       quantity: formData.get('quantity'),
       unitPrice: formData.get('unitPrice'),
+      isPromo: formData.get('isPromo') === 'true',
       paymentMethod: formData.get('paymentMethod'),
       referenceNumber: formData.get('referenceNumber') || undefined,
       notes: formData.get('notes') || undefined,
@@ -59,8 +60,9 @@ export async function createSale(
       }
     }
 
-    // Compute total server-side
-    const totalAmount = data.quantity * data.unitPrice;
+    // Compute total server-side — promos are always $0
+    const effectivePrice = data.isPromo ? 0 : data.unitPrice;
+    const totalAmount = data.quantity * effectivePrice;
 
     await db.sale.create({
       data: {
@@ -68,11 +70,14 @@ export async function createSale(
         channelId,
         productId: data.productId,
         quantity: data.quantity,
-        unitPrice: data.unitPrice,
+        unitPrice: effectivePrice,
         totalAmount,
-        paymentMethod: data.paymentMethod,
+        isPromo: data.isPromo,
+        paymentMethod: data.isPromo ? 'OTHER' : data.paymentMethod,
         referenceNumber: data.referenceNumber,
-        notes: data.notes,
+        notes: data.isPromo
+          ? `[PROMO/GIVEAWAY] ${data.notes || ''}`.trim()
+          : data.notes,
         createdById: session.userId,
       },
     });
