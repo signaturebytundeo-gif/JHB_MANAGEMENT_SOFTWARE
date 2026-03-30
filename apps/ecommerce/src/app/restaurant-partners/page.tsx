@@ -1,15 +1,52 @@
 import type { Metadata } from 'next'
 import RestaurantOrderForm from './RestaurantOrderForm'
+import { generateBreadcrumbJsonLd, generateFAQJsonLd, sanitizeJsonLd } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Restaurant Partners | Jamaica House Brand',
+  title: 'Wholesale Jamaican Jerk Sauce for Restaurants',
   description:
-    'Wholesale pricing for restaurants. Authentic Jamaican Jerk Sauce — 1-gallon BOH format or 5oz table bottles. 30+ years of Caribbean heritage.',
+    'Wholesale pricing for restaurants, caterers, and food service. Authentic Jamaican Jerk Sauce — 1-gallon BOH format ($50) or 5oz table bottles (case of 12 for $60). 30+ years of Caribbean heritage.',
+  openGraph: {
+    title: 'Restaurant Partners - Jamaica House Brand Wholesale',
+    description: 'Wholesale Jamaican jerk sauce for restaurants. 1-gallon or case pricing available.',
+  },
+  alternates: {
+    canonical: 'https://jamaicahousebrand.com/restaurant-partners',
+  },
 }
 
+const wholesaleFAQs = [
+  {
+    question: 'What wholesale sizes are available for restaurants?',
+    answer: 'We offer two formats: Back of House 1-gallon containers at $50 (intro pricing) for marinades, glazes, and cooking, and Front of House cases of 12x5oz bottles at $60 for table service.',
+  },
+  {
+    question: 'How do I place a wholesale order?',
+    answer: 'Fill out our restaurant order form on this page and we\'ll confirm within 1 business day. We offer introductory 3-month pricing for new restaurant partners.',
+  },
+  {
+    question: 'Is the jerk sauce suitable for commercial kitchen use?',
+    answer: 'Absolutely. Our sauce is used in our own three Jamaica House restaurants. It works for marinades, glazes, wing sauces, burger spreads, and even craft cocktails like Jerk Margaritas.',
+  },
+]
+
 export default function RestaurantPartnersPage() {
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Home', url: 'https://jamaicahousebrand.com' },
+    { name: 'Restaurant Partners', url: 'https://jamaicahousebrand.com/restaurant-partners' },
+  ])
+  const faqJsonLd = generateFAQJsonLd(wholesaleFAQs)
+
   return (
     <div className="min-h-screen bg-brand-dark">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(faqJsonLd) }}
+      />
       {/* Hero */}
       <section className="relative bg-brand-green overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 py-16 sm:py-20 text-center relative z-10">

@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getRecipeBySlug, recipes } from '@/data/recipes'
-import { generateRecipeJsonLd, sanitizeJsonLd } from '@/lib/seo'
+import { generateRecipeJsonLd, generateBreadcrumbJsonLd, sanitizeJsonLd } from '@/lib/seo'
 import RecipeHero from '@/components/recipes/RecipeHero'
 import IngredientList from '@/components/recipes/IngredientList'
 import InstructionSteps from '@/components/recipes/InstructionSteps'
@@ -28,12 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${recipe.title} - Jamaica House Brand Recipes`,
-    description: recipe.description,
+    title: `${recipe.title} Recipe - Made with Jamaica House Brand Jerk Sauce`,
+    description: `${recipe.description} Ready in ${recipe.prepTime + recipe.cookTime} minutes. Serves ${recipe.servings}.`,
     openGraph: {
-      title: `${recipe.title} - Jamaica House Brand`,
+      title: `${recipe.title} - Jamaica House Brand Recipe`,
       description: recipe.description,
       images: [{ url: recipe.image }],
+    },
+    alternates: {
+      canonical: `https://jamaicahousebrand.com/recipes/${slug}`,
     },
   }
 }
@@ -46,15 +49,23 @@ export default async function RecipePage({ params }: Props) {
     notFound()
   }
 
-  // Generate schema.org Recipe JSON-LD
+  // Generate schema.org Recipe JSON-LD + Breadcrumbs
   const recipeJsonLd = generateRecipeJsonLd(recipe)
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Home', url: 'https://jamaicahousebrand.com' },
+    { name: 'Recipes', url: 'https://jamaicahousebrand.com/recipes' },
+    { name: recipe.title, url: `https://jamaicahousebrand.com/recipes/${recipe.slug}` },
+  ])
 
   return (
     <>
-      {/* Schema.org JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(recipeJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(breadcrumbJsonLd) }}
       />
 
       <main className="bg-brand-dark min-h-screen">

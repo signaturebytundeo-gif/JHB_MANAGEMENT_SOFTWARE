@@ -3,19 +3,49 @@ import { products } from '@/data/products'
 import { bundles } from '@/data/bundles'
 import ProductCard from '@/components/ui/ProductCard'
 import BundleCard from '@/components/ui/BundleCard'
+import { generateItemListJsonLd, generateBreadcrumbJsonLd, sanitizeJsonLd } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Shop Authentic Jamaican Sauces',
-  description: 'Browse our collection of handcrafted Jamaican sauces. Original Jerk Sauce in 2oz, 5oz, and 10oz sizes, plus our Escovitch Pikliz.',
+  title: 'Shop Authentic Jamaican Jerk Sauce & Sauces Online',
+  description: 'Buy authentic Jamaican jerk sauce online. Original Jerk Sauce in 2oz, 5oz, and 10oz sizes, plus Escovitch Pikliz. Zero calories, all natural. Bundle & save up to $7.97. Free shipping over $50.',
   openGraph: {
-    title: 'Shop Jamaica House Brand Sauces',
-    description: 'Handcrafted Jamaican sauces from a 30-year family recipe.',
+    title: 'Shop Jamaica House Brand - Authentic Jamaican Sauces',
+    description: 'Handcrafted Jamaican sauces from a 30-year family recipe. Zero calories, all natural.',
+    images: [{
+      url: '/images/products/product-lineup.jpg',
+      width: 1200,
+      height: 630,
+      alt: 'Jamaica House Brand sauce collection',
+    }],
+  },
+  alternates: {
+    canonical: 'https://jamaicahousebrand.com/shop',
   },
 }
 
 export default function ShopPage() {
+  const allItems = [...products, ...bundles].map((item) => ({
+    name: item.name,
+    url: `https://jamaicahousebrand.com/products/${item.slug}`,
+    image: item.image,
+    price: item.price,
+  }))
+  const itemListJsonLd = generateItemListJsonLd(allItems, 'Jamaica House Brand Sauces')
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Home', url: 'https://jamaicahousebrand.com' },
+    { name: 'Shop', url: 'https://jamaicahousebrand.com/shop' },
+  ])
+
   return (
     <div className="pt-8 sm:pt-12 pb-16 sm:pb-24 px-4">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(itemListJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(breadcrumbJsonLd) }}
+      />
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-12">

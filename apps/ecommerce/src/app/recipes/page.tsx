@@ -1,20 +1,46 @@
 import { Metadata } from 'next'
 import { recipes } from '@/data/recipes'
 import RecipeGrid from '@/components/recipes/RecipeGrid'
+import { generateBreadcrumbJsonLd, generateItemListJsonLd, sanitizeJsonLd } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Recipes',
-  description: 'Discover authentic Jamaican recipes featuring Jamaica House Brand sauces. From jerk chicken to escovitch fish, bring restaurant flavors to your kitchen.',
+  title: 'Jamaican Recipes with Authentic Jerk Sauce',
+  description: 'Discover authentic Jamaican recipes featuring Jamaica House Brand sauces. Jerk chicken, escovitch fish, Caribbean marinades and more. Easy recipes with cook times and step-by-step instructions.',
   openGraph: {
-    title: 'Recipes - Jamaica House Brand',
-    description: 'Authentic Jamaican recipes featuring our signature sauces.',
+    title: 'Jamaican Recipes - Jamaica House Brand',
+    description: 'Authentic Jamaican recipes featuring our signature sauces. From jerk chicken to escovitch fish.',
     images: ['/images/recipes/og-recipes.jpg'],
+  },
+  alternates: {
+    canonical: 'https://jamaicahousebrand.com/recipes',
   },
 }
 
 export default function RecipesPage() {
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Home', url: 'https://jamaicahousebrand.com' },
+    { name: 'Recipes', url: 'https://jamaicahousebrand.com/recipes' },
+  ])
+  const recipeListJsonLd = generateItemListJsonLd(
+    recipes.map((r) => ({
+      name: r.title,
+      url: `https://jamaicahousebrand.com/recipes/${r.slug}`,
+      image: r.image,
+      price: 0,
+    })),
+    'Jamaica House Brand Recipes'
+  )
+
   return (
     <main className="bg-brand-dark min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(recipeListJsonLd) }}
+      />
       {/* Hero Header Section */}
       <section className="py-24 px-4 text-center">
         <h1 className="text-5xl md:text-6xl font-bold text-white">

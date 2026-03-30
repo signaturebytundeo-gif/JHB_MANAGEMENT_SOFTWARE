@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getProductBySlug, products } from '@/data/products'
 import { getBundleBySlug, bundles } from '@/data/bundles'
-import { generateProductJsonLd, sanitizeJsonLd } from '@/lib/seo'
+import { generateProductJsonLd, generateBreadcrumbJsonLd, sanitizeJsonLd } from '@/lib/seo'
 import { formatPrice } from '@/lib/utils'
 import ImageGallery from '@/components/product/ImageGallery'
 import ProductInfo from '@/components/product/ProductInfo'
@@ -33,12 +33,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = getProductBySlug(slug)
   if (product) {
     return {
-      title: `${product.name} ${product.size} | Jamaica House Brand`,
-      description: product.description,
+      title: `${product.name} ${product.size} - Buy Authentic Jamaican Jerk Sauce`,
+      description: `${product.description} Starting at $${(product.price / 100).toFixed(2)}. Free shipping over $50.`,
       openGraph: {
-        title: `${product.name} ${product.size}`,
+        title: `${product.name} ${product.size} | Jamaica House Brand`,
         description: product.description,
         images: [{ url: product.image }],
+      },
+      alternates: {
+        canonical: `https://jamaicahousebrand.com/products/${slug}`,
       },
     }
   }
@@ -46,12 +49,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const bundle = getBundleBySlug(slug)
   if (bundle) {
     return {
-      title: `${bundle.name} | Jamaica House Brand`,
-      description: bundle.description,
+      title: `${bundle.name} - Save $${(bundle.savings / 100).toFixed(2)} | Jamaica House Brand`,
+      description: `${bundle.description} Bundle price: $${(bundle.price / 100).toFixed(2)}. Save $${(bundle.savings / 100).toFixed(2)} vs buying individually.`,
       openGraph: {
-        title: bundle.name,
+        title: `${bundle.name} | Jamaica House Brand`,
         description: bundle.description,
         images: [{ url: bundle.image }],
+      },
+      alternates: {
+        canonical: `https://jamaicahousebrand.com/products/${slug}`,
       },
     }
   }
@@ -78,12 +84,21 @@ export default async function ProductDetailPage({ params }: Props) {
       inStock: product.inStock,
       rating: product.rating,
     })
+    const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+      { name: 'Home', url: 'https://jamaicahousebrand.com' },
+      { name: 'Shop', url: 'https://jamaicahousebrand.com/shop' },
+      { name: `${product.name} ${product.size}`, url: `https://jamaicahousebrand.com/products/${product.slug}` },
+    ])
 
     return (
       <>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(productJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(breadcrumbJsonLd) }}
         />
         <div className="pt-8 sm:pt-12 pb-16 sm:pb-24 px-4">
           <div className="max-w-7xl mx-auto">

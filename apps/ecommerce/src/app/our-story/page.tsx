@@ -5,21 +5,45 @@ import TeamSection from '@/components/story/TeamSection'
 import RestaurantLocations from '@/components/story/RestaurantLocations'
 import StoryCTA from '@/components/story/StoryCTA'
 import { storyContent } from '@/data/story-content'
+import { restaurants } from '@/data/restaurants'
+import { generateLocalBusinessJsonLd, generateBreadcrumbJsonLd, sanitizeJsonLd } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  title: 'Our Story',
+  title: 'Our Story - Chef Anthony & 30 Years of Jamaican Flavor',
   description:
-    "From age 11 in Jamaica to three South Florida restaurants — discover how Chef Anthony's 30-year journey led to Jamaica House Brand's authentic jerk sauce.",
+    "From three South Florida restaurants to your table — discover how Chef Anthony's 30-year family recipe became Jamaica House Brand's authentic jerk sauce. Visit our Miami and Fort Lauderdale locations.",
   openGraph: {
     title: 'Our Story - Jamaica House Brand',
-    description: "Chef Anthony's journey from Jamaica to your table.",
+    description: "Chef Anthony's 30-year journey from Jamaica House restaurants to bottled jerk sauce.",
     images: ['/images/story/hero.jpg'],
+  },
+  alternates: {
+    canonical: 'https://jamaicahousebrand.com/our-story',
   },
 }
 
 export default function OurStoryPage() {
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Home', url: 'https://jamaicahousebrand.com' },
+    { name: 'Our Story', url: 'https://jamaicahousebrand.com/our-story' },
+  ])
+  const activeRestaurants = restaurants.filter((r) => !r.comingSoon)
+
   return (
     <main className="bg-brand-dark">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: sanitizeJsonLd(breadcrumbJsonLd) }}
+      />
+      {activeRestaurants.map((restaurant) => (
+        <script
+          key={restaurant.id}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: sanitizeJsonLd(generateLocalBusinessJsonLd(restaurant)),
+          }}
+        />
+      ))}
       {/* Hero Section */}
       <StoryHero
         title={storyContent.hero.title}

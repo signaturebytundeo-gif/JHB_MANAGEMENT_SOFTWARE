@@ -10,6 +10,7 @@ const navItems = [
   { name: 'Restaurant Partners', href: '/restaurant-partners' },
   { name: 'Our Story', href: '/our-story' },
   { name: 'Recipes', href: '/recipes' },
+  { name: 'Community', href: '/community' },
 ]
 
 export default function Navigation() {
