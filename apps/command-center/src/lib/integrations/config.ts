@@ -20,25 +20,25 @@ export function getMissingEnvVars(platform: SyncPlatform): string[] {
 
 export function getSquareConfig() {
   return {
-    accessToken: process.env.SQUARE_ACCESS_TOKEN ?? '',
-    environment: (process.env.SQUARE_ENVIRONMENT ?? 'sandbox') as 'sandbox' | 'production',
+    accessToken: (process.env.SQUARE_ACCESS_TOKEN ?? '').trim(),
+    environment: ((process.env.SQUARE_ENVIRONMENT ?? 'sandbox').trim()) as 'sandbox' | 'production',
   };
 }
 
 export function getAmazonConfig() {
   return {
-    clientId: process.env.AMAZON_SP_CLIENT_ID ?? '',
-    clientSecret: process.env.AMAZON_SP_CLIENT_SECRET ?? '',
-    refreshToken: process.env.AMAZON_SP_REFRESH_TOKEN ?? '',
-    marketplaceId: process.env.AMAZON_SP_MARKETPLACE_ID ?? 'ATVPDKIKX0DER',
+    clientId: (process.env.AMAZON_SP_CLIENT_ID ?? '').trim(),
+    clientSecret: (process.env.AMAZON_SP_CLIENT_SECRET ?? '').trim(),
+    refreshToken: (process.env.AMAZON_SP_REFRESH_TOKEN ?? '').trim(),
+    marketplaceId: (process.env.AMAZON_SP_MARKETPLACE_ID ?? 'ATVPDKIKX0DER').trim(),
   };
 }
 
 export function getEtsyConfig() {
   return {
-    apiKey: process.env.ETSY_API_KEY ?? '',
-    sharedSecret: process.env.ETSY_SHARED_SECRET ?? '',
-    shopId: process.env.ETSY_SHOP_ID ?? '',
-    accessToken: process.env.ETSY_ACCESS_TOKEN ?? '',
+    apiKey: (process.env.ETSY_API_KEY ?? '').trim(),
+    sharedSecret: (process.env.ETSY_SHARED_SECRET ?? '').trim(),
+    shopId: (process.env.ETSY_SHOP_ID ?? '').trim(),
+    accessToken: (process.env.ETSY_ACCESS_TOKEN ?? '').trim(),
   };
 }
