@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jamaica House Brand — Marketing Command Center</title>
+<style>
+:root {
+  --gold: #F5A623;
+  --green: #1B8C3A;
+  --dark: #1a1a1a;
+  --red: #C0392B;
+  --cream: #FFF8F0;
+  --gray: #6B7280;
+  --light: #F3F4F6;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--cream); color: var(--dark); }
+.top-bar { background: linear-gradient(135deg, var(--dark) 0%, #2d2d2d 100%); color: #fff; padding: 16px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.top-bar h1 { font-size:1.3rem; letter-spacing:1px; }
+.top-bar h1 span { color: var(--gold); }
+.top-bar .meta { font-size:0.8rem; opacity:0.7; }
+.layout { display:flex; min-height:calc(100vh - 56px); }
+.sidebar { width:260px; background:#fff; border-right:1px solid #e5e7eb; padding:16px 0; position:sticky; top:56px; height:calc(100vh - 56px); overflow-y:auto; flex-shrink:0; }
+.sidebar .nav-group { padding:8px 16px; font-size:0.7rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--gray); margin-top:12px; }
+.sidebar a { display:flex; align-items:center; gap:10px; padding:10px 20px; text-decoration:none; color:var(--dark); font-size:0.88rem; border-left:3px solid transparent; transition:all 0.15s; }
+.sidebar a:hover { background:var(--light); }
+.sidebar a.active { background:#FEF3C7; border-left-color:var(--gold); font-weight:600; }
+.sidebar .badge { background:var(--gold); color:#fff; font-size:0.65rem; padding:2px 6px; border-radius:10px; margin-left:auto; }
+.main { flex:1; padding:32px; max-width:960px; }
+.section { display:none; }
+.section.active { display:block; }
+.section-header { margin-bottom:24px; }
+.section-header h2 { font-size:1.6rem; color:var(--dark); margin-bottom:4px; }
+.section-header .subtitle { color:var(--gray); font-size:0.9rem; }
+.card { background:#fff; border-radius:12px; padding:24px; margin-bottom:20px; box-shadow:var(--shadow); position:relative; }
+.card .label { display:inline-block; font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; padding:3px 10px; border-radius:20px; margin-bottom:12px; font-weight:600; }
+.label-product { background:#DBEAFE; color:#1D4ED8; }
+.label-btsc { background:#D1FAE5; color:#065F46; }
+.label-ugc { background:#FDE68A; color:#92400E; }
+.label-recipe { background:#FCE7F3; color:#9D174D; }
+.label-story { background:#E0E7FF; color:#3730A3; }
+.label-awareness { background:#DBEAFE; color:#1D4ED8; }
+.label-consideration { background:#FDE68A; color:#92400E; }
+.label-conversion { background:#D1FAE5; color:#065F46; }
+.card h3 { font-size:1.1rem; margin-bottom:8px; }
+.card .hook { font-weight:700; font-size:1rem; color:var(--dark); background:#FEF3C7; padding:8px 12px; border-radius:8px; margin:8px 0; border-left:4px solid var(--gold); }
+.card .story { margin:10px 0; line-height:1.7; color:#374151; }
+.card .cta-line { font-weight:600; color:var(--green); margin-top:8px; }
+.card .overlay { font-size:0.8rem; color:var(--red); font-weight:600; margin-top:6px; }
+.copy-btn { position:absolute; top:16px; right:16px; background:var(--dark); color:#fff; border:none; padding:6px 14px; border-radius:6px; font-size:0.75rem; cursor:pointer; transition:all 0.2s; }
+.copy-btn:hover { background:var(--gold); }
+.copy-btn.copied { background:var(--green); }
+.email-card { border-left:4px solid var(--gold); }
+.email-card .day { font-size:0.75rem; color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+.email-card .subject { font-size:1rem; font-weight:700; margin:6px 0; }
+table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+table th { background:var(--dark); color:#fff; padding:10px 12px; text-align:left; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; }
+table td { padding:10px 12px; border-bottom:1px solid #e5e7eb; }
+table tr:hover { background:#FEF3C7; }
+.pillar-tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:600; }
+.p-product { background:#DBEAFE; color:#1D4ED8; }
+.p-market { background:#D1FAE5; color:#065F46; }
+.p-recipe { background:#FCE7F3; color:#9D174D; }
+.p-story { background:#E0E7FF; color:#3730A3; }
+.p-ugc { background:#FDE68A; color:#92400E; }
+.dm-template { background:#fff; border-radius:12px; padding:20px; margin-bottom:16px; box-shadow:var(--shadow); }
+.dm-template .tier { font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--gold); font-weight:700; margin-bottom:8px; }
+.slide { background:#fff; border-radius:12px; padding:20px; margin-bottom:16px; box-shadow:var(--shadow); border-left:4px solid var(--green); }
+.slide .slide-num { font-size:0.7rem; color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+.investor-section { margin-bottom:20px; }
+.investor-section h4 { color:var(--gold); font-size:0.8rem; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px; }
+.priority-high { border-left:4px solid var(--red); }
+.priority-med { border-left:4px solid var(--gold); }
+.filter-bar { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.filter-btn { padding:6px 16px; border-radius:20px; border:1px solid #d1d5db; background:#fff; font-size:0.8rem; cursor:pointer; transition:all 0.15s; }
+.filter-btn.active { background:var(--gold); color:#fff; border-color:var(--gold); }
+.stats-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { background:#fff; border-radius:10px; padding:16px; text-align:center; box-shadow:var(--shadow); }
+.stat-card .num { font-size:1.8rem; font-weight:700; color:var(--gold); }
+.stat-card .label2 { font-size:0.75rem; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; }
+.booth-item { background:#fff; border-radius:12px; padding:20px; margin-bottom:16px; box-shadow:var(--shadow); }
+.booth-item h4 { color:var(--green); margin-bottom:8px; }
+.search-box { width:100%; padding:10px 16px; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem; margin-bottom:20px; }
+.ab-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:700; }
+.ab-a { background:#DBEAFE; color:#1D4ED8; }
+.ab-b { background:#FCE7F3; color:#9D174D; }
+.test-first { background:var(--green); color:#fff; font-size:0.65rem; padding:2px 8px; border-radius:4px; margin-left:6px; }
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{padding:16px;}
+  .top-bar h1{font-size:1rem;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+.mobile-nav { display:none; }
+@media(max-width:768px){
+  .mobile-nav { display:block; padding:12px; background:#fff; border-bottom:1px solid #e5e7eb; overflow-x:auto; white-space:nowrap; }
+  .mobile-nav a { display:inline-block; padding:6px 14px; margin-right:6px; border-radius:20px; background:var(--light); text-decoration:none; color:var(--dark); font-size:0.8rem; }
+  .mobile-nav a.active { background:var(--gold); color:#fff; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1><span>JAMAICA HOUSE BRAND</span> &mdash; Marketing Command Center</h1>
+  <div class="meta">v1.0 &bull; jamaicahousebrand.com &bull; Management Dashboard</div>
+</div>
+
+<div class="mobile-nav" id="mobileNav"></div>
+
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+  <div class="nav-group">Content</div>
+  <a href="#" data-section="tiktok" class="active">TikTok Scripts <span class="badge">10</span></a>
+  <a href="#" data-section="instagram">IG Captions <span class="badge">20</span></a>
+  <a href="#" data-section="replies">Comment Replies <span class="badge">15</span></a>
+  <div class="nav-group">Advertising</div>
+  <a href="#" data-section="meta-ads">Meta Ad Campaign <span class="badge">6</span></a>
+  <div class="nav-group">Email</div>
+  <a href="#" data-section="lead-magnets">Lead Magnets <span class="badge">3</span></a>
+  <a href="#" data-section="post-purchase">Post-Purchase Emails <span class="badge">5</span></a>
+  <a href="#" data-section="cold-email">Whole Foods Pitch <span class="badge">3</span></a>
+  <div class="nav-group">Strategy</div>
+  <a href="#" data-section="calendar">30-Day Calendar</a>
+  <a href="#" data-section="influencer">Influencer DMs <span class="badge">6</span></a>
+  <a href="#" data-section="shoot-list">Shoot List</a>
+  <div class="nav-group">Sales</div>
+  <a href="#" data-section="booth">Booth Copy</a>
+  <a href="#" data-section="investor">Investor Summary</a>
+  <a href="#" data-section="pitch-deck">Retail Pitch Deck</a>
+</nav>
+
+<main class="main">
+
+<!-- ============================== SECTION 1: TIKTOK SCRIPTS ============================== -->
+<div class="section active" id="tiktok">
+  <div class="section-header">
+    <h2>TikTok Video Scripts</h2>
+    <p class="subtitle">10 scripts &bull; 30-45 seconds each &bull; Hook &rarr; Story &rarr; CTA format</p>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">10</div><div class="label2">Scripts</div></div>
+    <div class="stat-card"><div class="num">30-45s</div><div class="label2">Read Time</div></div>
+    <div class="stat-card"><div class="num">3-Part</div><div class="label2">Structure</div></div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 1 — "The Smell Test"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "WHY EVERYBODY STOP AT OUR BOOTH"</div>
+    <div class="hook">HOOK: "You ever walk through a farmers market and your nose makes you turn around?"</div>
+    <div class="story">STORY: "That's what happens every Saturday at Cooper City Farmers Market. People walk past, then they stop. They back up. They follow the smell. That's Chef Anthony's authentic Jamaican jerk sauce — a 30-year family recipe, made right here in South Florida. No shortcuts. Real scotch bonnet peppers. Real allspice. The kind of sauce your grandmother would nod at. Every single weekend, people come back for more bottles because one taste and you're done looking."</div>
+    <div class="cta-line">CTA: "Pull up to Cooper City Farmers Market this Saturday. Come find Jamaica House Brand before we sell out."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 2 — "30 Years in a Bottle"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "THIS RECIPE IS OLDER THAN YOUR FAVORITE RESTAURANT"</div>
+    <div class="hook">HOOK: "30 years. That's how long this recipe's been in Chef Anthony's family."</div>
+    <div class="story">STORY: "Before the bottles. Before the farmers market. Before any of this — this jerk sauce was just something the family made at cookouts. Uncle would fire up the grill, this sauce would come out, and nobody was leaving that yard. Now Chef Anthony's bringing that same authentic Jamaican jerk sauce to South Florida. Same recipe. Same fire. Jamaica House Brand isn't something we invented for a shelf. It's something we grew up on and decided to share."</div>
+    <div class="cta-line">CTA: "Taste 30 years of family flavor. Find us at Cooper City Farmers Market or hit the link in bio."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 3 — "The Chicken Wing Challenge"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "I DARE YOU TO USE JUST A LITTLE"</div>
+    <div class="hook">HOOK: "Everybody says they're gonna use just a little bit. Nobody does."</div>
+    <div class="story">STORY: "I watched a man at Cooper City Farmers Market last week — he tasted the sample, bought one bottle, came back twenty minutes later for three more. That's what Chef Anthony's authentic Jamaican jerk sauce does to people. You put it on chicken wings thinking you'll be reasonable. Next thing you know you're marinating everything in the fridge. Pork chops. Shrimp. I've seen somebody put it on eggs, and honestly? It worked. This 30-year family recipe doesn't play fair."</div>
+    <div class="cta-line">CTA: "Come see for yourself. Jamaica House Brand — Cooper City Farmers Market, every weekend."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 4 — "Not That Grocery Store Stuff"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "PUT THAT GROCERY STORE SAUCE DOWN"</div>
+    <div class="hook">HOOK: "If your jerk sauce came off a grocery store shelf, we need to talk."</div>
+    <div class="story">STORY: "I'm not trying to be rude but that stuff in the big bottle with the pretty label? That's not jerk sauce. That's brown sugar with ideas. Real authentic Jamaican jerk sauce has heat that builds. It's got layers — allspice, scotch bonnet, thyme, garlic — and it hits different every bite. Chef Anthony's been perfecting this 30-year family recipe right here in South Florida. Jamaica House Brand is what jerk sauce is supposed to taste like. Ask anybody who grew up on the real thing."</div>
+    <div class="cta-line">CTA: "Upgrade your kitchen. Link in bio or find us at Cooper City Farmers Market."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 5 — "Chef Anthony's Origin"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "THE MAN BEHIND THE SAUCE"</div>
+    <div class="hook">HOOK: "Let me tell you about the man who won't let me change a single ingredient."</div>
+    <div class="story">STORY: "Chef Anthony started cooking before he could see over the counter. Learned this jerk sauce recipe from family — watched it get made a hundred times before he ever touched the pot himself. 30 years later, he's still making it the exact same way. No preservatives. No filler. No 'close enough.' He'll taste a batch and start over if the pepper ratio isn't right. That's the kind of person making your food when you pick up Jamaica House Brand. A chef who treats a bottle of authentic Jamaican jerk sauce like his reputation depends on it. Because it does."</div>
+    <div class="cta-line">CTA: "Meet Chef Anthony at Cooper City Farmers Market this Saturday. He'll be the one smiling behind the booth."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 6 — "The Cookout Test"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "BRING THIS TO A COOKOUT AND WATCH WHAT HAPPENS"</div>
+    <div class="hook">HOOK: "You want to win a cookout without even touching the grill?"</div>
+    <div class="story">STORY: "Bring a bottle of Jamaica House Brand. That's it. Just set it on the table. Somebody's gonna pick it up, read the label, try it on whatever's closest. Then they're gonna look at you different. Like you just leveled up the whole backyard. That's the power of Chef Anthony's authentic Jamaican jerk sauce. A 30-year family recipe made in South Florida that turns you into everybody's favorite guest. I've seen friendships start over this sauce at Cooper City Farmers Market. I'm not exaggerating."</div>
+    <div class="cta-line">CTA: "Be that person at the next cookout. Grab a bottle — link in bio."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 7 — "The Repeat Customer"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "SHE CAME BACK 3 WEEKS IN A ROW"</div>
+    <div class="hook">HOOK: "This woman has shown up three Saturdays straight asking for the same thing."</div>
+    <div class="story">STORY: "First week she tried a sample at Cooper City Farmers Market. Bought one bottle. Second week she came back — said she used the whole thing in four days. Bought two. Third week? She brought her mom. Her mom tasted it and said it reminded her of home. That's when you know. Chef Anthony's authentic Jamaican jerk sauce isn't just a condiment. It's a 30-year family recipe that unlocks memories for people. Grown folks tasting it and going quiet for a second because it takes them somewhere. That's what Jamaica House Brand does."</div>
+    <div class="cta-line">CTA: "Come taste what she tasted. Cooper City Farmers Market — we're there every weekend."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 8 — "Five Ingredients You Can't Fake"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "YOU CAN'T FAKE THIS FLAVOR"</div>
+    <div class="hook">HOOK: "Everybody asks what's in it. Here's what's NOT in it."</div>
+    <div class="story">STORY: "No artificial colors. No preservatives. No high fructose anything. Chef Anthony's authentic Jamaican jerk sauce is built on scotch bonnet peppers, allspice, thyme, garlic, and time. That's a 30-year family recipe that never needed shortcuts. Most sauces you buy are trying to imitate this flavor with chemicals. Jamaica House Brand is the real thing made by real hands right here in South Florida. You can read every ingredient on the label and actually know what it is. That's rare. And you can taste the difference the second it hits your tongue."</div>
+    <div class="cta-line">CTA: "Real sauce, real ingredients. Find us at Cooper City Farmers Market or tap the link."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 9 — "Caribbean Proud"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "STRAIGHT FROM JAMAICA TO SOUTH FLORIDA"</div>
+    <div class="hook">HOOK: "This sauce is a love letter to where we come from."</div>
+    <div class="story">STORY: "Jamaica isn't just an island. It's a flavor. It's a feeling. It's standing over a drum grill with smoke in your face and not caring because what's cooking is about to change everybody's mood. Chef Anthony brought that energy to South Florida with Jamaica House Brand. This authentic Jamaican jerk sauce carries a 30-year family recipe that connects you straight to the Caribbean. Every bottle we sell at Cooper City Farmers Market is us saying — we're proud of where we come from, and we want you to taste why."</div>
+    <div class="cta-line">CTA: "Carry a piece of Jamaica home. Link in bio or pull up Saturday."</div>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Script 10 — "The Neighbor Pitch"</h3>
+    <div class="overlay">ON-SCREEN TEXT: "LET ME PUT YOU ON TO SOMETHING"</div>
+    <div class="hook">HOOK: "Aye, come here. Let me put you on to something real quick."</div>
+    <div class="story">STORY: "You know how everybody's got a sauce they swear by? This is mine. Jamaica House Brand. Chef Anthony makes this authentic Jamaican jerk sauce from a 30-year family recipe — and I'm telling you, once you try it, everything else in your cabinet is gonna collect dust. I put it on jerk chicken, obviously. But try it on grilled fish. Try it on rice and peas. Try it as a marinade overnight — that's the move right there. We're out here in South Florida every weekend at Cooper City Farmers Market. This isn't a sales pitch. This is me being a good neighbor."</div>
+    <div class="cta-line">CTA: "Come through Saturday. Ask for Chef Anthony. Tell him Tunde sent you."</div>
+  </div>
+</div>
+
+<!-- ============================== SECTION 2: INSTAGRAM CAPTIONS ============================== -->
+<div class="section" id="instagram">
+  <div class="section-header">
+    <h2>Instagram Captions</h2>
+    <p class="subtitle">20 captions &bull; SEO-optimized &bull; 5 content pillars</p>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all" onclick="filterIG(this,'all')">All (20)</button>
+    <button class="filter-btn" data-filter="product" onclick="filterIG(this,'product')">Product (6)</button>
+    <button class="filter-btn" data-filter="bts" onclick="filterIG(this,'bts')">Behind the Scenes (5)</button>
+    <button class="filter-btn" data-filter="ugc" onclick="filterIG(this,'ugc')">Customer Reactions (4)</button>
+    <button class="filter-btn" data-filter="recipe" onclick="filterIG(this,'recipe')">Recipes (3)</button>
+    <button class="filter-btn" data-filter="story" onclick="filterIG(this,'story')">Brand Story (2)</button>
+  </div>
+
+  <div class="card ig-cap" data-pillar="product">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Product Showcase</span>
+    <h3>1. The Lineup Shot</h3>
+    <p class="story">Meet the family. 5oz for your weeknight dinner. 10oz for when you're serious about flavor. Our authentic Jamaican jerk sauce is made from a 30-year family recipe — no preservatives, no shortcuts, no apologies. Chef Anthony hand-checks every batch because good enough was never the standard. If you've been settling for that grocery store stuff, this is your sign to stop. Your chicken deserves better. Your ribs deserve better. YOU deserve better. Come taste the difference at Cooper City Farmers Market this Saturday or order at the link in bio.<br><br>#JamaicaHouseBrand #AuthenticJerkSauce #SouthFloridaFood</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="product">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Product Showcase</span>
+    <h3>2. The Pour Shot</h3>
+    <p class="story">Watch that pour. See those spices? That's allspice, scotch bonnet, thyme, and garlic — all you can pronounce, all you can trust. Our authentic Jamaican jerk sauce doesn't hide behind a paragraph of chemicals on the back label. This Caribbean jerk marinade comes from a 30-year family recipe that Chef Anthony refuses to change. Not one ingredient. Not ever. This is what real looks like in a bottle. Grab yours — link in bio.<br><br>#FarmersMarketFind #CaribbeanFood #JerkSauce</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="product">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Product Showcase</span>
+    <h3>3. The 5oz Travel Size</h3>
+    <p class="story">The 5oz that started it all. Small enough for the beach cooler. Powerful enough to change the whole cookout. People walk up to our booth at Cooper City Farmers Market and grab this thinking it's a sample — nah, this is a full weapon. Our authentic Jamaican jerk sauce packs 30 years of family recipe into every ounce. $8 and your flavor game changes permanently. South Florida food just got an upgrade. Link in bio.<br><br>#JerkSauce #SouthFloridaEats #JamaicaHouseBrand</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="product">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Product Showcase</span>
+    <h3>4. The Escovitch/Pikliz Feature</h3>
+    <p class="story">You thought we only did jerk? Meet our escovitch and pikliz — the other side of the Caribbean your kitchen's been missing. Same family recipe philosophy. Same zero-compromise approach. Different heat, different flavor, same Jamaica House Brand quality. Pair it with our authentic Jamaican jerk sauce and you've got a South Florida food experience that'll have your guests asking where you went to culinary school. You didn't. You just knew where to shop. Link in bio.<br><br>#CaribbeanFood #Escovitch #FarmersMarketFind</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="product">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Product Showcase</span>
+    <h3>5. The 10oz — Serious Bottle</h3>
+    <p class="story">The 10oz is for people who already know. You tried the sample. You bought the 5oz. You used it in two days and came back. This is that bottle. Our authentic Jamaican jerk sauce in the size that says "I'm not playing anymore." A 30-year family recipe, $14, and you won't need another sauce for a month. Unless you cook like we cook — then maybe two weeks. Find us at Cooper City Farmers Market or hit the link in bio.<br><br>#JamaicaHouseBrand #JerkSauce #MiamiFood</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="product">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Product Showcase</span>
+    <h3>6. The Ingredient Close-Up</h3>
+    <p class="story">Zoom in. Read the label. Every single ingredient in our authentic Jamaican jerk sauce is something your grandmother would recognize. That's not an accident — that's a 30-year family recipe that never needed artificial anything. Chef Anthony says if you can't find it at a Caribbean market, it doesn't go in the bottle. Period. This is what real South Florida food craftsmanship looks like. Clean label. Unmatched flavor. Jamaica House Brand. Link in bio.<br><br>#CleanLabel #AuthenticJerkSauce #CaribbeanJerkMarinade</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="bts">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-btsc">Behind the Scenes</span>
+    <h3>7. Saturday Morning Setup</h3>
+    <p class="story">5:45 AM. The sun isn't even up yet and we're already loading the truck. This is what farmers market life really looks like — before the pretty booth shots, before the crowd, before the first sale. Just us, the coolers, and a trunk full of authentic Jamaican jerk sauce. Every Saturday at Cooper City Farmers Market we set up like it's opening day. Because for somebody walking through that market, it might be their first time tasting a 30-year family recipe. And first impressions matter. Link in bio.<br><br>#FarmersMarketLife #SouthFloridaFood #BehindTheScenes</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="bts">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-btsc">Behind the Scenes</span>
+    <h3>8. The Booth Is Live</h3>
+    <p class="story">Cooper City Farmers Market is OPEN and the booth is looking right. Bottles lined up. Samples ready. Banner flying. This is our favorite part of the week — watching people discover Jamaica House Brand for the first time. The way their face changes after that first taste of our authentic Jamaican jerk sauce? That's why we wake up before dawn every Saturday. Come through before we sell out. It happens more than you'd think. Link in bio.<br><br>#CooperCityFarmersMarket #FarmersMarketFind #JamaicaHouseBrand</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="bts">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-btsc">Behind the Scenes</span>
+    <h3>9. Batch Day</h3>
+    <p class="story">Batch day is sacred. Chef Anthony won't let anybody rush it. The peppers have to hit right. The allspice has to bloom. The whole kitchen smells like Jamaica and nobody's complaining. This is what goes into every bottle of our authentic Jamaican jerk sauce — time, care, and a 30-year family recipe that doesn't believe in shortcuts. We could make it faster. We could make more. But that's not what Jamaica House Brand is about. Quality over everything. Link in bio.<br><br>#SmallBatch #CaribbeanJerkMarinade #SouthFloridaFood</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="bts">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-btsc">Behind the Scenes</span>
+    <h3>10. Packing Orders</h3>
+    <p class="story">Online orders going out today. Every bottle gets wrapped like it's a gift because honestly it is — you're sending somebody a 30-year family recipe in a bottle. Our authentic Jamaican jerk sauce ships right from South Florida to your door. We include a recipe card because we want you to do this Caribbean jerk marinade justice. Not just throw it on chicken and call it a day (though that works too). Link in bio to order yours.<br><br>#ShopSmall #JamaicaHouseBrand #FarmersMarketFind</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="bts">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-btsc">Behind the Scenes</span>
+    <h3>11. End of Market Day</h3>
+    <p class="story">Pack-up time at Cooper City Farmers Market and the cooler is LIGHT. That means it was a good day. We met new faces, reconnected with regulars, and ran through more bottles of authentic Jamaican jerk sauce than we expected. This is what South Florida food community looks like — real people supporting real products with real family recipes. We do this every Saturday and we never get tired of it. See you next week. Link in bio.<br><br>#FarmersMarketLife #SouthFloridaFood #WeekendVibes</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="ugc">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">Customer Reaction</span>
+    <h3>12. First Taste Face</h3>
+    <p class="story">THAT FACE. That's the face everybody makes when they try our authentic Jamaican jerk sauce for the first time at the farmers market. First the heat. Then the flavor. Then the "wait, what IS this?" We love it every single time. Chef Anthony's 30-year family recipe has been making people stop mid-chew at Cooper City Farmers Market for months now. You're next. Come get your own reaction video moment. Link in bio.<br><br>#TasteTest #JerkSauce #FarmersMarketFind</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="ugc">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">Customer Reaction</span>
+    <h3>13. The Repeat Buyer</h3>
+    <p class="story">When they come back for bottle number three and bring the whole family — that's how you know. This customer discovered our authentic Jamaican jerk sauce two Saturdays ago and now she's our biggest ambassador. She told us our Caribbean jerk marinade reminded her of her auntie's cooking back home. That's the highest compliment you can give a 30-year family recipe. We don't just sell sauce at the farmers market. We sell memories. Link in bio.<br><br>#CustomerLove #JamaicaHouseBrand #SouthFloridaFood</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="ugc">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">Customer Reaction</span>
+    <h3>14. The Cookout Report</h3>
+    <p class="story">Customer DM: "I brought your sauce to my brother's cookout and now everyone wants the website." THIS is why we do this. Our authentic Jamaican jerk sauce doesn't just taste good — it starts conversations. It makes you the person who found something amazing at a South Florida farmers market. We've heard this story a hundred times and it never gets old. A 30-year family recipe that turns you into everybody's favorite guest. That's Jamaica House Brand. Link in bio.<br><br>#CookoutSeason #JerkSauce #FoodFinds</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="ugc">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">Customer Reaction</span>
+    <h3>15. The Reorder Notification</h3>
+    <p class="story">Love getting these notifications. Another reorder from somebody who tried our authentic Jamaican jerk sauce once and said "never going back." That's the thing about a real 30-year family recipe — you don't need marketing to convince people. You just need one taste. Our Caribbean jerk marinade is doing the selling for us, one bottle at a time. From Cooper City Farmers Market to your door, South Florida food at its finest. Link in bio.<br><br>#Reorder #JamaicaHouseBrand #CaribbeanFood</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="recipe">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-recipe">Recipe Idea</span>
+    <h3>16. Jerk Chicken Wings</h3>
+    <p class="story">Jerk wings. No air fryer debate needed — these go on the grill. Marinate your wings in Jamaica House Brand authentic Jamaican jerk sauce for at least 4 hours (overnight if you're serious). Grill on medium heat, basting twice. The 30-year family recipe does all the heavy lifting — you just flip and wait. This Caribbean jerk marinade gives you that smoky-sweet-heat balance you can't get from a powder packet. Save this recipe. Thank us later. South Florida food at home. Link in bio.<br><br>#JerkChicken #GrillSeason #RecipeIdeas</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="recipe">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-recipe">Recipe Idea</span>
+    <h3>17. Jerk Shrimp Tacos</h3>
+    <p class="story">Jerk. Shrimp. Tacos. Three words that'll change your Tuesday night. Toss your shrimp in Jamaica House Brand authentic Jamaican jerk sauce, sear them hot and fast, pile them into a warm tortilla with mango slaw and a squeeze of lime. That's Caribbean jerk marinade meeting South Florida food culture and it's a beautiful thing. Chef Anthony's 30-year family recipe wasn't designed for tacos but it works like it was. Some recipes just find their way. Link in bio for the sauce and the full recipe.<br><br>#JerkShrimp #TacoTuesday #FarmersMarketFind</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="recipe">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-recipe">Recipe Idea</span>
+    <h3>18. The Overnight Marinade</h3>
+    <p class="story">The overnight move. Take whatever protein you're grilling tomorrow, coat it in Jamaica House Brand authentic Jamaican jerk sauce tonight, seal it, refrigerate, and let that 30-year family recipe work while you sleep. By morning those flavors have soaked into every fiber. This is how Caribbean jerk marinade was meant to be used — low and slow, not rushed. Pork shoulder, chicken thighs, whole fish — all of it transforms. This is the South Florida food secret your neighbors don't know yet. Link in bio.<br><br>#MarinadeMonday #JerkSauce #CookingTips</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="story">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-story">Brand Story</span>
+    <h3>19. Why We Started</h3>
+    <p class="story">People ask why we started Jamaica House Brand. Honest answer? Because we kept tasting "jerk sauce" that wasn't jerk sauce. Bottles with the right colors on the label but none of the soul inside. Chef Anthony's 30-year family recipe was sitting right there — the same authentic Jamaican jerk sauce that had been shutting down family cookouts for decades. We looked at each other and said "people need to taste the real thing." That's it. No focus groups. No venture capital pitch. Just a family recipe, a farmers market booth, and South Florida food lovers who showed up. Link in bio.<br><br>#OurStory #JamaicaHouseBrand #FamilyRecipe</p>
+  </div>
+
+  <div class="card ig-cap" data-pillar="story">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-story">Brand Story</span>
+    <h3>20. Chef Anthony's Promise</h3>
+    <p class="story">Chef Anthony made a promise when we bottled the first batch of Jamaica House Brand: "We don't change the recipe. Not for shelf life. Not for cost. Not for anybody." That's been the rule since day one and it's why our authentic Jamaican jerk sauce tastes like something from a home kitchen, not a factory line. This 30-year family recipe survived because it was never about scale — it was about flavor. Every bottle at Cooper City Farmers Market, every order shipped from South Florida, carries that promise. Link in bio.<br><br>#ChefAnthony #CaribbeanJerkMarinade #AuthenticFood</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 3: COMMENT REPLIES ============================== -->
+<div class="section" id="replies">
+  <div class="section-header">
+    <h2>Comment Reply Templates</h2>
+    <p class="subtitle">15 templates &bull; TikTok + Instagram &bull; Tunde's voice</p>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">First Taste Reaction</span>
+    <h3>1. Excited first-timer</h3>
+    <p class="story">"Yooo welcome to the family! That first taste always hits different right? Wait till you try it as an overnight marinade — that's when the magic really happens. Glad you found us!"</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">First Taste Reaction</span>
+    <h3>2. Surprised by flavor</h3>
+    <p class="story">"That face says everything! Chef Anthony's been perfecting that recipe for 30 years so when people taste it and go quiet for a second — that's the highest compliment. Welcome aboard."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Where to Buy</span>
+    <h3>3. Online buyer</h3>
+    <p class="story">"We got you! Head to jamaicahousebrand.com — ships right from South Florida to your door. And if you're local, we're at Cooper City Farmers Market every Saturday. Pull up and taste before you buy!"</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Where to Buy</span>
+    <h3>4. Specific location ask</h3>
+    <p class="story">"Right now you can grab it online at jamaicahousebrand.com or in person at Cooper City Farmers Market every Saturday. We're working on getting into more spots soon — stay tuned!"</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-recipe">How Spicy</span>
+    <h3>5. Heat level question</h3>
+    <p class="story">"Real talk — it's got a kick but it won't hurt you. The heat builds slow and the flavor is what stays. It's not a hot sauce, it's a jerk sauce. Big difference. Even people who don't do spicy come back for more."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-recipe">How Spicy</span>
+    <h3>6. Someone worried about heat</h3>
+    <p class="story">"Don't let the scotch bonnet peppers scare you! The allspice and thyme balance it out perfectly. We've had kids try it at the farmers market and ask for seconds. Come grab a free sample Saturday and judge for yourself."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-btsc">Farmers Market Location</span>
+    <h3>7. Near me question</h3>
+    <p class="story">"We're at Cooper City Farmers Market every Saturday here in South Florida! If that's not close to you, we ship nationwide from jamaicahousebrand.com. Either way we'll make sure you get the sauce."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-btsc">Farmers Market Location</span>
+    <h3>8. Different state</h3>
+    <p class="story">"We feel you! Wish we could be at every market in the country. For now, jamaicahousebrand.com ships to your door — and we pack every bottle like it's going to family. Because it is."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Online Order</span>
+    <h3>9. Wants to order online</h3>
+    <p class="story">"Say less! jamaicahousebrand.com — pick your size (5oz to get started, 10oz when you're ready to commit). We ship fast and we ship with love. Let us know what you think when it arrives!"</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-product">Online Order</span>
+    <h3>10. Shipping cost question</h3>
+    <p class="story">"Check jamaicahousebrand.com for the latest — we try to keep shipping as friendly as the sauce. Pro tip: grab a couple bottles to make it worth it. Trust us, you'll use them."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">Negative Review</span>
+    <h3>11. Too spicy complaint</h3>
+    <p class="story">"We hear you and appreciate the honest feedback! Everybody's heat tolerance is different. Try using it as a marinade with some coconut milk — it mellows the heat and brings out the sweet side. Give it one more shot and DM us how it goes."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-ugc">Negative Review</span>
+    <h3>12. General negative comment</h3>
+    <p class="story">"Appreciate you trying it and keeping it real with us. Everyone's palate is different. If you want to give us another shot, DM us — we'll work with you to find the right way to use it. We stand behind every bottle."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-story">Influencer Tag</span>
+    <h3>13. Foodie tags us (excited)</h3>
+    <p class="story">"Ayyyy we see you!! Love that you're rocking with Jamaica House Brand. Your audience needs to taste this — DM us, let's make something happen together."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-story">Influencer Tag</span>
+    <h3>14. Caribbean culture creator</h3>
+    <p class="story">"Family! You already know what this is. Real Caribbean flavor, 30-year recipe, no shortcuts. We'd love to get some bottles in your hands — check your DMs."</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="label label-story">Influencer Tag</span>
+    <h3>15. Large foodie account feature</h3>
+    <p class="story">"This made our whole week! Thank you for putting the spotlight on small-batch, family-made Caribbean sauce. This is what South Florida food is all about. Chef Anthony is smiling right now. Let's connect — DM us!"</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 4: META ADS ============================== -->
+<div class="section" id="meta-ads">
+  <div class="section-header">
+    <h2>Meta Ad Campaign</h2>
+    <p class="subtitle">3 ad sets &bull; 2 A/B variations each &bull; Full funnel</p>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">3</div><div class="label2">Ad Sets</div></div>
+    <div class="stat-card"><div class="num">6</div><div class="label2">Ad Variations</div></div>
+    <div class="stat-card"><div class="num">A/B</div><div class="label2">Test Ready</div></div>
+  </div>
+
+  <h3 style="margin:20px 0 12px;">Ad Set 1 — Awareness (South Florida Foodies, 25-45)</h3>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="ab-badge ab-a">Variation A</span><span class="test-first">TEST FIRST</span>
+    <span class="label label-awareness" style="margin-left:8px;">Awareness</span>
+    <h3 style="margin-top:10px;">Hook Angle: Discovery / Farmers Market Energy</h3>
+    <p><strong>Headline:</strong> The Jerk Sauce South Florida Can't Stop Buying</p>
+    <p><strong>Primary Text:</strong> Every Saturday at Cooper City Farmers Market, people stop mid-walk when they smell Chef Anthony's authentic Jamaican jerk sauce. 30-year family recipe. Real scotch bonnet peppers. No preservatives. One taste and you'll understand why we sell out. Jamaica House Brand — the farmers market find your kitchen's been waiting for.</p>
+    <p><strong>CTA Button:</strong> Learn More</p>
+    <p><strong>Image Direction:</strong> Wide shot of the JHB booth at Cooper City Farmers Market with customers sampling. Bottles in foreground, Chef Anthony mid-conversation with a smiling customer. Natural light, Saturday morning energy. Shoot candid, not posed.</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="ab-badge ab-b">Variation B</span>
+    <span class="label label-awareness" style="margin-left:8px;">Awareness</span>
+    <h3 style="margin-top:10px;">Hook Angle: Taste Challenge / Curiosity</h3>
+    <p><strong>Headline:</strong> Your "Favorite" Jerk Sauce Just Got Replaced</p>
+    <p><strong>Primary Text:</strong> Most jerk sauce on shelves is brown sugar with ideas. Jamaica House Brand is the real thing — a 30-year family recipe with scotch bonnet, allspice, and thyme. No shortcuts. Chef Anthony hand-checks every batch. Try it once and everything else in your cabinet collects dust. Made in South Florida. Sold at farmers markets. Shipped to your door.</p>
+    <p><strong>CTA Button:</strong> Learn More</p>
+    <p><strong>Image Direction:</strong> Close-up of the jerk sauce bottle with the pour mid-action onto grilled chicken. Steam rising. Shallow depth of field. Dark/moody food photography style. Text overlay: "30-Year Family Recipe."</p>
+  </div>
+
+  <h3 style="margin:20px 0 12px;">Ad Set 2 — Consideration (Retargeting + Market Geo)</h3>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="ab-badge ab-a">Variation A</span><span class="test-first">TEST FIRST</span>
+    <span class="label label-consideration" style="margin-left:8px;">Consideration</span>
+    <h3 style="margin-top:10px;">Hook Angle: Social Proof / Customer Reaction</h3>
+    <p><strong>Headline:</strong> "I Used the Whole Bottle in 4 Days"</p>
+    <p><strong>Primary Text:</strong> That's what our customers keep telling us. One bottle of Jamaica House Brand authentic Jamaican jerk sauce and the game changes. Wings, shrimp, pork chops, even eggs — this 30-year family recipe works on everything. Chef Anthony makes it in small batches right here in South Florida. 5oz ($8) to start. 10oz ($14) when you're ready. Your kitchen will thank you.</p>
+    <p><strong>CTA Button:</strong> Shop Now</p>
+    <p><strong>Image Direction:</strong> Video/carousel of real customer reaction clips from the farmers market. Quick cuts of people tasting, eyes going wide, coming back for seconds. End frame: product shot with both bottle sizes. UGC style, iPhone-shot feel.</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="ab-badge ab-b">Variation B</span>
+    <span class="label label-consideration" style="margin-left:8px;">Consideration</span>
+    <h3 style="margin-top:10px;">Hook Angle: Chef Anthony / Origin Story</h3>
+    <p><strong>Headline:</strong> A 30-Year Family Recipe, Now in Your Kitchen</p>
+    <p><strong>Primary Text:</strong> Chef Anthony learned this jerk sauce recipe watching his family in Jamaica. 30 years later he still won't change a single ingredient. No preservatives. No filler. Just authentic Jamaican jerk sauce the way it's supposed to be made. Every bottle of Jamaica House Brand carries that promise. We sell out at Cooper City Farmers Market most Saturdays — order online so you don't miss out.</p>
+    <p><strong>CTA Button:</strong> Shop Now</p>
+    <p><strong>Image Direction:</strong> Portrait of Chef Anthony in the kitchen or at the booth, looking directly at camera, warm smile, bottle in hand. Behind him: market activity, colorful booth. Lifestyle portrait — not stock-photo clean, real and warm.</p>
+  </div>
+
+  <h3 style="margin:20px 0 12px;">Ad Set 3 — Conversion (Online Purchase Push)</h3>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="ab-badge ab-a">Variation A</span><span class="test-first">TEST FIRST</span>
+    <span class="label label-conversion" style="margin-left:8px;">Conversion</span>
+    <h3 style="margin-top:10px;">Hook Angle: Direct Offer / Urgency</h3>
+    <p><strong>Headline:</strong> Get Jamaica House Brand Shipped to Your Door</p>
+    <p><strong>Primary Text:</strong> Stop waiting for Saturday. Chef Anthony's authentic Jamaican jerk sauce now ships straight from South Florida to your kitchen. 5oz ($8) — perfect for a first taste. 10oz ($14) — for when you already know. Same 30-year family recipe. Same small-batch quality. Order today at jamaicahousebrand.com and taste what the farmers market crowd has been raving about.</p>
+    <p><strong>CTA Button:</strong> Order Now</p>
+    <p><strong>Image Direction:</strong> Clean product shot: both bottle sizes on a rustic wooden cutting board with fresh ingredients (scotch bonnet, allspice, thyme) scattered around. Price callouts overlaid. Bright, appetizing, e-commerce ready. White/cream background.</p>
+  </div>
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <span class="ab-badge ab-b">Variation B</span>
+    <span class="label label-conversion" style="margin-left:8px;">Conversion</span>
+    <h3 style="margin-top:10px;">Hook Angle: Recipe Use Case / Lifestyle</h3>
+    <p><strong>Headline:</strong> Turn Any Meal Into a Caribbean Cookout</p>
+    <p><strong>Primary Text:</strong> Jerk chicken. Jerk shrimp tacos. Jerk-marinated pork chops. One bottle of Jamaica House Brand and your whole week of meals gets an upgrade. This authentic Jamaican jerk sauce is a 30-year family recipe — works as a marinade, a glaze, or straight out the bottle. 5oz ($8) or 10oz ($14). Ships from South Florida. Order at jamaicahousebrand.com.</p>
+    <p><strong>CTA Button:</strong> Order Now</p>
+    <p><strong>Image Direction:</strong> Carousel or video: 4 quick recipe scenes — wings on grill, shrimp in a pan, tacos being assembled, sauce being poured. Each scene 2-3 seconds. End card: "Order Now" with both bottles and prices. Fast cuts, appetite appeal, warm color grading.</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 5: LEAD MAGNETS ============================== -->
+<div class="section" id="lead-magnets">
+  <div class="section-header">
+    <h2>Lead Magnet Strategy</h2>
+    <p class="subtitle">3 lead magnets &bull; opt-in forms &bull; thank you messages &bull; first emails</p>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Lead Magnet 1: "5 Jerk Recipes That'll Make Your Kitchen Smell Like Jamaica"</h3>
+    <p class="story"><strong>Format:</strong> PDF recipe guide (5 pages, beautifully designed)<br><strong>What's inside:</strong> 5 recipes using Jamaica House Brand jerk sauce — jerk chicken (classic), jerk shrimp tacos, overnight jerk pork shoulder, jerk butter grilled corn, and jerk-glazed salmon. Each recipe includes Chef Anthony's tips.</p>
+    <hr style="margin:16px 0;">
+    <h4>Opt-in Form</h4>
+    <p><strong>Headline:</strong> Get Chef Anthony's 5 Best Jerk Recipes — Free</p>
+    <p><strong>Subheadline:</strong> The same recipes that sell out our booth every Saturday. Yours in 30 seconds.</p>
+    <p><strong>Button Text:</strong> Send Me The Recipes</p>
+    <p><strong>Fields:</strong> First Name, Email</p>
+    <hr style="margin:16px 0;">
+    <h4>Thank You Message</h4>
+    <p class="story">"You're in! Check your inbox — Chef Anthony's 5 best jerk recipes are on the way. Fair warning: once you try the overnight pork shoulder, you're going to need a bigger bottle. Welcome to the Jamaica House Brand family."</p>
+    <hr style="margin:16px 0;">
+    <h4>First Email</h4>
+    <p><strong>Subject:</strong> Your recipes are here (start with #3)</p>
+    <p class="story">"Hey [First Name],<br><br>Tunde here from Jamaica House Brand. Your recipe guide is attached — 5 of Chef Anthony's favorites using our authentic Jamaican jerk sauce.<br><br>Quick insider tip: start with Recipe #3, the overnight pork shoulder. It's the easiest one and it'll make your whole house smell like a Caribbean cookout. Marinate tonight, cook tomorrow. Trust the process.<br><br>If you need the sauce to make these happen, grab a bottle at jamaicahousebrand.com — the 10oz gives you enough for at least 3 of the 5 recipes.<br><br>Welcome to the family.<br><br>— Tunde<br>Jamaica House Brand"</p>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Lead Magnet 2: "The Jerk Sauce Pairing Guide"</h3>
+    <p class="story"><strong>Format:</strong> One-page visual PDF (printable, fridge-magnet worthy)<br><strong>What's inside:</strong> A pairing chart — which proteins, vegetables, and dishes work best with jerk sauce vs. escovitch/pikliz. Includes marinade times and serving suggestions.</p>
+    <hr style="margin:16px 0;">
+    <h4>Opt-in Form</h4>
+    <p><strong>Headline:</strong> What Goes With Jerk Sauce? (More Than You Think)</p>
+    <p><strong>Subheadline:</strong> Our free pairing guide shows you 15+ ways to use every bottle.</p>
+    <p><strong>Button Text:</strong> Get The Guide</p>
+    <p><strong>Fields:</strong> First Name, Email</p>
+    <hr style="margin:16px 0;">
+    <h4>Thank You Message</h4>
+    <p class="story">"Done! Your pairing guide is headed to your inbox. Print it out, stick it on the fridge, and never wonder 'what should I put this on' again. Spoiler: the answer is almost everything."</p>
+    <hr style="margin:16px 0;">
+    <h4>First Email</h4>
+    <p><strong>Subject:</strong> Put this on your fridge</p>
+    <p class="story">"Hey [First Name],<br><br>Tunde here. Your Jamaica House Brand pairing guide is attached.<br><br>Print it. Stick it on the fridge. Next time you're staring into the kitchen wondering what to cook — look at the chart. Our jerk sauce works with way more than just chicken (though the chicken is undefeated).<br><br>Personal favorite pairing? Jerk-marinated shrimp with mango slaw. Game changer.<br><br>If you need bottles, jamaicahousebrand.com has you covered. The 5oz is $8 — perfect for testing all those pairings.<br><br>Cook something great this week.<br><br>— Tunde"</p>
+  </div>
+
+  <div class="card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h3>Lead Magnet 3: "Host a Caribbean Cookout" Checklist</h3>
+    <p class="story"><strong>Format:</strong> Interactive PDF checklist (2 pages)<br><strong>What's inside:</strong> Complete cookout planning guide — shopping list, marinade timeline (what to prep when), music playlist suggestions, and a Jamaica House Brand product bundle recommendation.</p>
+    <hr style="margin:16px 0;">
+    <h4>Opt-in Form (for farmers market tablet/QR code)</h4>
+    <p><strong>Headline:</strong> Plan a Caribbean Cookout Like a Pro</p>
+    <p><strong>Subheadline:</strong> Free checklist + Chef Anthony's marinade timeline. Your friends will think you hired a caterer.</p>
+    <p><strong>Button Text:</strong> Send My Cookout Checklist</p>
+    <p><strong>Fields:</strong> First Name, Email</p>
+    <hr style="margin:16px 0;">
+    <h4>Thank You Message</h4>
+    <p class="story">"Your cookout checklist is on the way! Follow the timeline and your next backyard event is going to be legendary. Pro tip: double the marinade. Somebody always wants seconds."</p>
+    <hr style="margin:16px 0;">
+    <h4>First Email</h4>
+    <p><strong>Subject:</strong> Your cookout game is about to change</p>
+    <p class="story">"Hey [First Name],<br><br>Tunde here with your Caribbean Cookout Checklist. This is the same timeline Chef Anthony uses when he's cooking for family — and now it's yours.<br><br>The secret? Start marinating 24 hours before. The jerk sauce needs time to do its thing. Follow the checklist and your guests will think you've been doing this your whole life.<br><br>Need the sauce? Grab the 10oz at jamaicahousebrand.com — one bottle covers a cookout for 6-8 people easy.<br><br>Go make some memories.<br><br>— Tunde"</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 6: POST-PURCHASE EMAILS ============================== -->
+<div class="section" id="post-purchase">
+  <div class="section-header">
+    <h2>Post-Purchase Email Sequence</h2>
+    <p class="subtitle">5 emails &bull; 21-day sequence &bull; Welcome &rarr; Educate &rarr; Review &rarr; Refer &rarr; Reorder</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 1 — Day 0: Order Confirmation + Welcome</div>
+    <div class="subject">Subject: You just joined the family</div>
+    <p class="story">"Hey [First Name],<br><br>Tunde here from Jamaica House Brand. Your order is confirmed and we're packing it up right now.<br><br>Quick story before your sauce arrives: Chef Anthony — the man behind every bottle — has been making this jerk sauce for over 30 years. Started as a family recipe in Jamaica. Got passed down. Got perfected. Never got changed. What you're about to receive isn't something we cooked up for a brand. It's something we grew up on and finally decided to share.<br><br>No preservatives. No shortcuts. Just real authentic Jamaican jerk sauce made with scotch bonnet, allspice, thyme, and three decades of love.<br><br>Your order is on its way from South Florida. We'll send tracking as soon as it ships.<br><br>Welcome to the family for real.<br><br>— Tunde<br>Jamaica House Brand<br>jamaicahousebrand.com"</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 2 — Day 3: How to Use Your Sauce</div>
+    <div class="subject">Subject: 3 ways to use it tonight</div>
+    <p class="story">"Hey [First Name],<br><br>Your sauce should be there by now (or close). Here's how to put it to work immediately:<br><br><strong>1. The Classic — Jerk Chicken</strong><br>Coat chicken thighs generously. Marinate 4+ hours (overnight is elite). Grill on medium. Baste once while cooking. Done.<br><br><strong>2. The Surprise — Jerk Shrimp Tacos</strong><br>Toss shrimp in the sauce, sear hot and fast, pile into warm tortillas with mango slaw. Caribbean meets South Florida in one bite.<br><br><strong>3. The Pair-Up — Jerk + Escovitch/Pikliz</strong><br>If you grabbed our escovitch or pikliz too, put the jerk on the protein and the escovitch on the side. That combination is what Sunday dinner at a Jamaican home tastes like.<br><br>Pro tip from Chef Anthony: always let the marinade work overnight. The longer it sits, the deeper the flavor goes.<br><br>Cook something amazing.<br><br>— Tunde"</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 3 — Day 7: Review + UGC Request</div>
+    <div class="subject">Subject: How'd it turn out?</div>
+    <p class="story">"Hey [First Name],<br><br>You've had the sauce for about a week now. Be honest — what'd you make with it?<br><br>We'd love to hear about it (and see it). If you cooked something fire, here's what would make our whole week:<br><br><strong>Option 1:</strong> Leave us a quick review on the site. Doesn't have to be fancy — just real. [Review Link]<br><br><strong>Option 2:</strong> Film a quick taste reaction video and tag us @jamaicahousebrand on TikTok or Instagram. We repost our favorites and you get bragging rights forever.<br><br>Every review and video helps a small family brand like ours reach more people who deserve to taste the real thing. We appreciate you more than you know.<br><br>— Tunde"</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 4 — Day 14: Referral Program</div>
+    <div class="subject">Subject: Give $5, get $5. Simple.</div>
+    <p class="story">"Hey [First Name],<br><br>You've tasted it. You know it's real. Now pass it on.<br><br>Here's the deal: share your personal referral link with someone who needs better jerk sauce in their life. When they order, they get $5 off their first bottle — and you get $5 credit toward your next one.<br><br>[Your Referral Link]<br><br>Think about it — who in your circle is still using that grocery store stuff? You'd be doing them a favor. And yourself. Because $5 off your next bottle of authentic Jamaican jerk sauce is basically Chef Anthony saying thank you personally.<br><br>Share the flavor.<br><br>— Tunde<br><br>P.S. No limit on referrals. The more friends you put on, the more credit you stack."</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 5 — Day 21: Re-order + Market Schedule</div>
+    <div class="subject">Subject: Running low yet?</div>
+    <p class="story">"Hey [First Name],<br><br>If you've been using Jamaica House Brand the way we think you have, that bottle's gotta be getting light. No judgment — it happens to everybody.<br><br>Restock at jamaicahousebrand.com before your kitchen goes back to boring. The 10oz lasts most people about 3-4 weeks of regular use.<br><br>[Reorder Now Button]<br><br>And if you're in South Florida, come see us in person! Here's where we'll be this month:<br><br>Every Saturday — Cooper City Farmers Market<br>Check our Instagram @jamaicahousebrand for pop-up dates at Las Olas, Key Biscayne, and West Palm Beach markets.<br><br>Pull up, say what's up, and grab your bottles fresh. Chef Anthony's usually there — he loves putting faces to orders.<br><br>See you soon, family.<br><br>— Tunde"</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 7: COLD EMAIL — WHOLE FOODS ============================== -->
+<div class="section" id="cold-email">
+  <div class="section-header">
+    <h2>Whole Foods Cold Email Sequence</h2>
+    <p class="subtitle">3 emails &bull; under 150 words each &bull; 2 subject line options per email</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 1 — Cold Intro</div>
+    <div class="subject">Subject A: South Florida jerk sauce with 30 years of proof</div>
+    <div class="subject">Subject B: The jerk sauce your shoppers are already asking for</div>
+    <p class="story">"Hi [Buyer Name],<br><br>I'm Tunde Ogunjulugbe, founder of Jamaica House Brand — an authentic Jamaican jerk sauce made from a 30-year family recipe right here in South Florida.<br><br>We sell out weekly at Cooper City Farmers Market and ship online at jamaicahousebrand.com. Our customers don't just buy once — they come back every Saturday.<br><br>Two SKUs ready for retail: 5oz ($8 MSRP) and 10oz ($14 MSRP). Clean label. No preservatives. Small-batch production through Space Coast Productions.<br><br>Caribbean food is the fastest-growing ethnic food segment in the U.S. and your South Florida stores are perfectly positioned for it. Jamaica House Brand fills a gap between mass-market imports and artisan quality.<br><br>I'd love 15 minutes to share our story. Can I send a sample kit?<br><br>Best,<br>Tunde Ogunjulugbe<br>Jamaica House Brand<br>jamaicahousebrand.com"</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 2 — Follow-Up (Day 5)</div>
+    <div class="subject">Subject A: Quick follow-up — our farmers market numbers</div>
+    <div class="subject">Subject B: 200+ bottles/month from a single market</div>
+    <p class="story">"Hi [Buyer Name],<br><br>Following up on my note about Jamaica House Brand. Wanted to share some quick traction:<br><br>- 200+ bottles sold monthly at Cooper City Farmers Market alone<br>- 85%+ repeat customer rate from online orders<br>- Customer reaction videos averaging 50K+ views on TikTok<br>- Featured at Cooper City, Las Olas, Key Biscayne, and West Palm Beach markets<br><br>We're not trying to be on every shelf — we want to be on the right ones. Whole Foods' commitment to local and artisan brands is exactly where Jamaica House Brand belongs.<br><br>Happy to send a sample kit to your office this week. Two bottles, two minutes of your time.<br><br>Worth a taste?<br><br>Best,<br>Tunde"</p>
+  </div>
+
+  <div class="card email-card">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="day">Email 3 — Final Nudge (Day 12)</div>
+    <div class="subject">Subject A: Last note — sample kit on standby</div>
+    <div class="subject">Subject B: One taste is all I'm asking</div>
+    <p class="story">"Hi [Buyer Name],<br><br>Last note from me. I know your inbox is a war zone.<br><br>I have a Jamaica House Brand sample kit ready with your name on it — our 5oz and 10oz authentic Jamaican jerk sauce, plus our escovitch/pikliz. No pitch deck, no slide show. Just sauce.<br><br>If the flavor doesn't speak for itself, I'll never email you again. That's how confident I am in Chef Anthony's 30-year family recipe.<br><br>Just reply 'send it' with a shipping address and it's on the way.<br><br>Appreciate your time either way.<br><br>Best,<br>Tunde Ogunjulugbe<br>Founder, Jamaica House Brand<br>UM Architecture Alum | Miami Native<br>jamaicahousebrand.com"</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 8: 30-DAY CONTENT CALENDAR ============================== -->
+<div class="section" id="calendar">
+  <div class="section-header">
+    <h2>30-Day Content Calendar</h2>
+    <p class="subtitle">April 2026 &bull; TikTok 5x/week &bull; Instagram 4x/week</p>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">20</div><div class="label2">TikTok Posts</div></div>
+    <div class="stat-card"><div class="num">16</div><div class="label2">IG Posts</div></div>
+    <div class="stat-card"><div class="num">5</div><div class="label2">Pillars</div></div>
+  </div>
+
+  <div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Platform</th><th>Pillar</th><th>Concept</th><th>Caption Direction</th><th>#</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Apr 1 (Tue)</td><td>TikTok</td><td><span class="pillar-tag p-product">Product</span></td><td>"Put That Grocery Store Sauce Down"</td><td>Side-by-side comparison. Pour our sauce vs. big brand. Show the texture difference.</td><td>3</td></tr>
+      <tr><td>Apr 1 (Tue)</td><td>Instagram</td><td><span class="pillar-tag p-product">Product</span></td><td>5oz Bottle Feature</td><td>Clean product shot on cutting board with fresh ingredients. Highlight $8 price point.</td><td>3</td></tr>
+      <tr><td>Apr 2 (Wed)</td><td>TikTok</td><td><span class="pillar-tag p-recipe">Recipe</span></td><td>Jerk Chicken Wings — 60-sec Recipe</td><td>Quick recipe video: marinate, grill, baste, plate. Keep it raw, kitchen-shot on iPhone.</td><td>3</td></tr>
+      <tr><td>Apr 3 (Thu)</td><td>TikTok</td><td><span class="pillar-tag p-story">Brand Story</span></td><td>"30 Years in a Bottle" — Origin</td><td>Tunde talking to camera about how the recipe started. Family photos if available.</td><td>2</td></tr>
+      <tr><td>Apr 3 (Thu)</td><td>Instagram</td><td><span class="pillar-tag p-story">Brand Story</span></td><td>Chef Anthony Portrait</td><td>Portrait post of Chef Anthony with quote overlay about never changing the recipe.</td><td>2</td></tr>
+      <tr><td>Apr 4 (Fri)</td><td>TikTok</td><td><span class="pillar-tag p-market">Market</span></td><td>"Setting Up Before Dawn" — BTS</td><td>Time-lapse of market setup. 5:45 AM arrival to booth ready. Saturday prep energy.</td><td>3</td></tr>
+      <tr><td>Apr 4 (Fri)</td><td>Instagram</td><td><span class="pillar-tag p-market">Market</span></td><td>Saturday Market Announcement</td><td>"We're at Cooper City tomorrow!" Booth preview, what's in stock, hours.</td><td>2</td></tr>
+      <tr><td>Apr 5 (Sat)</td><td>TikTok</td><td><span class="pillar-tag p-ugc">UGC</span></td><td>Live Taste Reactions at Market</td><td>Film 5-6 people trying samples, quick cuts of reactions. Real, unscripted.</td><td>2</td></tr>
+      <tr><td>Apr 5 (Sat)</td><td>Instagram</td><td><span class="pillar-tag p-market">Market</span></td><td>Market Day Carousel</td><td>8-10 photos from the day: booth, crowd, bottles, Chef Anthony, happy customers.</td><td>3</td></tr>
+      <tr><td>Apr 7 (Mon)</td><td>TikTok</td><td><span class="pillar-tag p-product">Product</span></td><td>"What's NOT In Our Sauce"</td><td>Flip the script: list what we DON'T use (preservatives, HFCS, artificial color).</td><td>3</td></tr>
+      <tr><td>Apr 7 (Mon)</td><td>Instagram</td><td><span class="pillar-tag p-product">Product</span></td><td>Clean Label Close-Up</td><td>Macro shot of ingredients label. "Every ingredient you can pronounce."</td><td>2</td></tr>
+      <tr><td>Apr 8 (Tue)</td><td>TikTok</td><td><span class="pillar-tag p-ugc">UGC</span></td><td>Repost: Customer Cookout Video</td><td>Share a customer's cookout featuring JHB. Add commentary overlay.</td><td>2</td></tr>
+      <tr><td>Apr 9 (Wed)</td><td>TikTok</td><td><span class="pillar-tag p-recipe">Recipe</span></td><td>Jerk Shrimp Tacos — Tutorial</td><td>Step by step taco build. Toss shrimp, sear, assemble. Mango slaw close-up.</td><td>3</td></tr>
+      <tr><td>Apr 9 (Wed)</td><td>Instagram</td><td><span class="pillar-tag p-recipe">Recipe</span></td><td>Shrimp Taco Carousel</td><td>Step-by-step photo carousel: raw shrimp → sauce → pan → taco → bite shot.</td><td>3</td></tr>
+      <tr><td>Apr 10 (Thu)</td><td>TikTok</td><td><span class="pillar-tag p-market">Market</span></td><td>"The Repeat Customer" Story</td><td>Tell the story of someone who came back 3 weeks in a row. Conversational, to camera.</td><td>2</td></tr>
+      <tr><td>Apr 11 (Fri)</td><td>TikTok</td><td><span class="pillar-tag p-product">Product</span></td><td>Escovitch/Pikliz Spotlight</td><td>"You thought we only did jerk?" Introduce the rest of the product line.</td><td>3</td></tr>
+      <tr><td>Apr 11 (Fri)</td><td>Instagram</td><td><span class="pillar-tag p-product">Product</span></td><td>Full Product Lineup</td><td>All products styled together. "The Jamaica House Brand family."</td><td>3</td></tr>
+      <tr><td>Apr 12 (Sat)</td><td>TikTok</td><td><span class="pillar-tag p-market">Market</span></td><td>Live Market Day Vlog</td><td>Day-in-the-life at Cooper City. Setup, first customer, rush hour, pack-up.</td><td>2</td></tr>
+      <tr><td>Apr 12 (Sat)</td><td>Instagram</td><td><span class="pillar-tag p-ugc">UGC</span></td><td>Customer Quote Graphic</td><td>Design quote card: customer testimonial + photo from market. Warm tones.</td><td>2</td></tr>
+      <tr><td>Apr 14 (Mon)</td><td>TikTok</td><td><span class="pillar-tag p-story">Brand Story</span></td><td>"Why We Started Jamaica House Brand"</td><td>Tunde to camera: "Because we kept tasting jerk sauce that wasn't jerk sauce."</td><td>2</td></tr>
+      <tr><td>Apr 14 (Mon)</td><td>Instagram</td><td><span class="pillar-tag p-story">Brand Story</span></td><td>Founder Story Post</td><td>Tunde photo with long-form caption about the mission. Authentic, personal.</td><td>2</td></tr>
+      <tr><td>Apr 15 (Tue)</td><td>TikTok</td><td><span class="pillar-tag p-ugc">UGC</span></td><td>"The Cookout Test" — Script #6</td><td>Bring sauce to cookout scenario. Film reactions or reenact.</td><td>2</td></tr>
+      <tr><td>Apr 16 (Wed)</td><td>TikTok</td><td><span class="pillar-tag p-recipe">Recipe</span></td><td>Overnight Marinade Time-lapse</td><td>4 PM: sauce goes on pork. Cut to morning. Grill it. The payoff shot.</td><td>3</td></tr>
+      <tr><td>Apr 16 (Wed)</td><td>Instagram</td><td><span class="pillar-tag p-recipe">Recipe</span></td><td>Marinade Tips Carousel</td><td>5 slides: "How long to marinate" guide by protein. Clean, saveable design.</td><td>3</td></tr>
+      <tr><td>Apr 17 (Thu)</td><td>TikTok</td><td><span class="pillar-tag p-product">Product</span></td><td>"I Dare You To Use Just A Little"</td><td>Script #3. Film the scenario — start with a little, end up using half the bottle.</td><td>3</td></tr>
+      <tr><td>Apr 18 (Fri)</td><td>TikTok</td><td><span class="pillar-tag p-market">Market</span></td><td>Cooper City Preview + Special</td><td>"Tomorrow we're at Cooper City. First 10 customers get a free 2oz sample."</td><td>2</td></tr>
+      <tr><td>Apr 18 (Fri)</td><td>Instagram</td><td><span class="pillar-tag p-market">Market</span></td><td>Saturday Reminder Reel</td><td>Quick reel: bottle packing, label close-up, "see you tomorrow" text overlay.</td><td>2</td></tr>
+      <tr><td>Apr 19 (Sat)</td><td>TikTok</td><td><span class="pillar-tag p-ugc">UGC</span></td><td>Customer Reaction Compilation</td><td>Best reactions from today's market. 5-6 clips, quick cuts, music overlay.</td><td>2</td></tr>
+      <tr><td>Apr 19 (Sat)</td><td>Instagram</td><td><span class="pillar-tag p-ugc">UGC</span></td><td>Saturday Recap Stories → Post</td><td>Best stories from the day saved as a highlight reel post.</td><td>2</td></tr>
+      <tr><td>Apr 21 (Mon)</td><td>TikTok</td><td><span class="pillar-tag p-product">Product</span></td><td>"Caribbean Proud" — Script #9</td><td>Emotional brand piece. Jamaica flag colors, sauce pour, pride angle.</td><td>3</td></tr>
+      <tr><td>Apr 21 (Mon)</td><td>Instagram</td><td><span class="pillar-tag p-product">Product</span></td><td>10oz Feature Post</td><td>"The serious bottle." Product shot with price. For people who already know.</td><td>3</td></tr>
+      <tr><td>Apr 22 (Tue)</td><td>TikTok</td><td><span class="pillar-tag p-market">Market</span></td><td>"The Neighbor Pitch" — Script #10</td><td>Casual, talking-to-camera. "Let me put you on to something."</td><td>2</td></tr>
+      <tr><td>Apr 23 (Wed)</td><td>TikTok</td><td><span class="pillar-tag p-recipe">Recipe</span></td><td>Jerk Butter Corn on the Cob</td><td>Quick recipe: melt butter + jerk sauce, brush on grilled corn. Summer preview.</td><td>3</td></tr>
+      <tr><td>Apr 23 (Wed)</td><td>Instagram</td><td><span class="pillar-tag p-recipe">Recipe</span></td><td>Recipe Reel: Jerk Glazed Salmon</td><td>Beautiful plated shot. Glaze pour money shot. Recipe in caption.</td><td>3</td></tr>
+      <tr><td>Apr 24 (Thu)</td><td>TikTok</td><td><span class="pillar-tag p-story">Brand Story</span></td><td>Chef Anthony's Promise</td><td>"We don't change the recipe. Not for shelf life. Not for cost. Not for anybody."</td><td>2</td></tr>
+      <tr><td>Apr 25 (Fri)</td><td>Instagram</td><td><span class="pillar-tag p-market">Market</span></td><td>Weekend Market Schedule</td><td>All market locations for the weekend. Clean graphic with times and addresses.</td><td>2</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ============================== SECTION 9: INFLUENCER DMs ============================== -->
+<div class="section" id="influencer">
+  <div class="section-header">
+    <h2>Influencer Outreach DM Templates</h2>
+    <p class="subtitle">3 tiers &bull; initial DM + follow-up each &bull; TikTok + Instagram</p>
+  </div>
+
+  <div class="dm-template">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="tier">Tier 1: Micro Foodie Influencer (5K-50K) — Product Gifting</div>
+    <h3>Initial DM</h3>
+    <p class="story">Hey [Name]! Love your content — especially the [specific post/video]. I'm Tunde from Jamaica House Brand. We make authentic Jamaican jerk sauce from a 30-year family recipe here in South Florida. I'd love to send you a couple bottles on us — no strings, just want you to taste it and see what you think. If you're into it, we'd love a honest review. Drop your address if you're down!</p>
+    <hr style="margin:12px 0;">
+    <h3>Follow-Up (Day 5)</h3>
+    <p class="story">Hey [Name]! Just circling back — wanted to make sure my message didn't get lost in your DMs. The offer still stands for some free Jamaica House Brand jerk sauce. We ship from South Florida and the bottles look great on camera. Let me know if you're interested!</p>
+  </div>
+
+  <div class="dm-template">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="tier">Tier 2: Caribbean / Jamaican Culture Creator — Brand Alignment</div>
+    <h3>Initial DM</h3>
+    <p class="story">Hey [Name]! Your page is exactly what Caribbean culture online should look like — real and unapologetic. I'm Tunde from Jamaica House Brand. We make jerk sauce from a 30-year family recipe and sell it at South Florida farmers markets. Your audience would connect with what we're building. Would you be open to a collab? Could be a taste test, a recipe video, or just putting you on with some bottles. Whatever feels right.</p>
+    <hr style="margin:12px 0;">
+    <h3>Follow-Up (Day 5)</h3>
+    <p class="story">Hey [Name]! Following up on my message about Jamaica House Brand. We're all about keeping Caribbean food authentic and your platform does the same for culture. Would love to connect — even just a quick chat about what a collab could look like. No pressure either way!</p>
+  </div>
+
+  <div class="dm-template">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div class="tier">Tier 3: South Florida Lifestyle Creator — Farmers Market Feature</div>
+    <h3>Initial DM</h3>
+    <p class="story">Hey [Name]! Your South Florida content is fire — love how you highlight local gems. I'm Tunde from Jamaica House Brand. We're at Cooper City Farmers Market every Saturday with our authentic Jamaican jerk sauce. Would you be down to come through, try some samples, and maybe feature the market experience? We'll make sure you leave with bottles and content. Let me know!</p>
+    <hr style="margin:12px 0;">
+    <h3>Follow-Up (Day 5)</h3>
+    <p class="story">Hey [Name]! Just following up — our booth at Cooper City Farmers Market is always a vibe on Saturdays. If you're around this weekend, pull up! No commitment needed — just good food, good energy, and good content opportunities. We're there by 8 AM.</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 10: SHOOT LIST ============================== -->
+<div class="section" id="shoot-list">
+  <div class="section-header">
+    <h2>Farmers Market Content Shoot List</h2>
+    <p class="subtitle">Cooper City Farmers Market &bull; One Saturday &bull; Prioritized</p>
+  </div>
+
+  <h3 style="margin:20px 0 12px;">TikTok Video Concepts (10) — Film in Priority Order</h3>
+
+  <div class="card priority-high">
+    <span class="label label-product">HIGH PRIORITY — Film First</span>
+    <h3>1. Customer Taste Reaction Compilation</h3>
+    <p class="story">Film 8-10 people trying samples for the first time. Get permission. Capture the moment the flavor hits. Quick cuts. This is your highest-ROI content — film throughout the morning while reactions are fresh.</p>
+  </div>
+  <div class="card priority-high">
+    <span class="label label-product">HIGH PRIORITY</span>
+    <h3>2. Tunde's "Let Me Put You On" Pitch</h3>
+    <p class="story">Script #10 filmed live at the booth. Tunde talking to camera, casual, holding a bottle. One take, no script visible. Film during a lull between customers.</p>
+  </div>
+  <div class="card priority-high">
+    <span class="label label-product">HIGH PRIORITY</span>
+    <h3>3. The Pour Shot</h3>
+    <p class="story">Close-up of jerk sauce being poured onto grilled meat (if cooking at booth) or onto a sample plate. Slow motion if possible. This is your evergreen product hero shot.</p>
+  </div>
+  <div class="card priority-med">
+    <span class="label label-btsc">MEDIUM PRIORITY</span>
+    <h3>4. Setup Time-lapse</h3>
+    <p class="story">Start filming when you arrive. Set up phone on tripod. Capture the empty booth to fully stocked transformation. Speed up 10x. Great BTS content.</p>
+  </div>
+  <div class="card priority-med">
+    <span class="label label-btsc">MEDIUM PRIORITY</span>
+    <h3>5. Day-in-the-Life Vlog Clips</h3>
+    <p class="story">Throughout the day, film 10-15 second clips: loading the car, driving, setting up, first customer, rush hour, packing up. Edit together later.</p>
+  </div>
+  <div class="card">
+    <h3>6. "How Spicy Is It?" Challenge</h3>
+    <p class="story">Ask customers to rate the heat 1-10 after tasting. Capture the range of reactions. Fun, interactive, shareable.</p>
+  </div>
+  <div class="card">
+    <h3>7. Chef Anthony in Action</h3>
+    <p class="story">Film Chef Anthony talking about the sauce, interacting with customers, or explaining an ingredient. Authentic, not staged.</p>
+  </div>
+  <div class="card">
+    <h3>8. "What Would You Put This On?"</h3>
+    <p class="story">After people taste it, ask "What are you going to cook with this?" Capture their creative answers. People love giving food opinions.</p>
+  </div>
+  <div class="card">
+    <h3>9. Booth Walk-Up POV</h3>
+    <p class="story">Film from a customer's perspective walking through the market and discovering the JHB booth. The approach, the smell, the stop.</p>
+  </div>
+  <div class="card">
+    <h3>10. End of Day — Empty Cooler</h3>
+    <p class="story">Show the nearly-empty cooler at pack-up time. "Started with X bottles, ended with this." Social proof through scarcity.</p>
+  </div>
+
+  <h3 style="margin:24px 0 12px;">Instagram Photo Shot List (15)</h3>
+  <div style="overflow-x:auto;">
+  <table>
+    <thead><tr><th>#</th><th>Shot</th><th>Direction</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Hero product shot — both bottles</td><td>On rustic surface with fresh ingredients. Natural light. Booth in soft background.</td><td>HIGH</td></tr>
+      <tr><td>2</td><td>Chef Anthony portrait</td><td>Behind the booth, warm smile, bottle in hand. Eye contact with camera.</td><td>HIGH</td></tr>
+      <tr><td>3</td><td>Customer tasting close-up</td><td>Candid mid-taste reaction. Shallow depth of field.</td><td>HIGH</td></tr>
+      <tr><td>4</td><td>Full booth wide shot</td><td>Booth looking its best, banner visible, bottles lined up. No people blocking.</td><td>HIGH</td></tr>
+      <tr><td>5</td><td>Tunde at the booth</td><td>Action shot: handing sample, talking to customer, gesturing at products.</td><td>HIGH</td></tr>
+      <tr><td>6</td><td>Sauce pour action shot</td><td>Mid-pour onto food. Shallow DOF. Warm tones.</td><td>MED</td></tr>
+      <tr><td>7</td><td>2oz sample bottles</td><td>Lined up in rows, ready for customers. Clean, colorful.</td><td>MED</td></tr>
+      <tr><td>8</td><td>Ingredient flat lay</td><td>Scotch bonnet, allspice, thyme, garlic arranged around a bottle.</td><td>MED</td></tr>
+      <tr><td>9</td><td>Customer holding bottle</td><td>Happy customer just bought, holding bottle up. Get permission.</td><td>MED</td></tr>
+      <tr><td>10</td><td>Market atmosphere wide</td><td>Wider shot showing the market environment, crowds, energy.</td><td>MED</td></tr>
+      <tr><td>11</td><td>Escovitch/pikliz feature</td><td>Close-up of the other products. Texture and color detail.</td><td>MED</td></tr>
+      <tr><td>12</td><td>Label detail</td><td>Macro shot of ingredients list. "Read every word" angle.</td><td>LOW</td></tr>
+      <tr><td>13</td><td>Booth from distance</td><td>Shows booth in context of the market. How it stands out.</td><td>LOW</td></tr>
+      <tr><td>14</td><td>Hands exchanging bottle</td><td>Close-up of a sale moment: bottle going from Tunde to customer.</td><td>LOW</td></tr>
+      <tr><td>15</td><td>End of day — cooler shot</td><td>Nearly empty cooler. "That's a good Saturday" caption material.</td><td>LOW</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 style="margin:24px 0 12px;">Instagram Stories Sequences (3)</h3>
+  <div class="card">
+    <h3>Sequence 1: "Market Morning" (Post 8-9 AM)</h3>
+    <p class="story"><strong>Story 1:</strong> Alarm clock / sunrise — "Market day. Let's go." text overlay<br><strong>Story 2:</strong> Loading the car — bottles going in coolers<br><strong>Story 3:</strong> Arriving at Cooper City, setting up the booth<br><strong>Story 4:</strong> Booth ready — "We're live. Come through." + location sticker<br><strong>Story 5:</strong> Poll: "What are you marinating this weekend?" Chicken / Shrimp / Both</p>
+  </div>
+  <div class="card">
+    <h3>Sequence 2: "Rush Hour" (Post 10-11 AM)</h3>
+    <p class="story"><strong>Story 1:</strong> Crowd at the booth — boomerang of people reaching for samples<br><strong>Story 2:</strong> Quick video: someone tasting for the first time<br><strong>Story 3:</strong> Chef Anthony talking to a customer (candid)<br><strong>Story 4:</strong> Bottles disappearing — "Going fast today" text<br><strong>Story 5:</strong> Countdown sticker: "We're here till 2 PM!"</p>
+  </div>
+  <div class="card">
+    <h3>Sequence 3: "Pack Up" (Post 1-2 PM)</h3>
+    <p class="story"><strong>Story 1:</strong> Empty/near-empty cooler — "That's a wrap"<br><strong>Story 2:</strong> Thank you message — "Every face today made it worth the 5 AM alarm"<br><strong>Story 3:</strong> Reminder: "Can't make it to the market? jamaicahousebrand.com ships to your door" + link sticker<br><strong>Story 4:</strong> "See you next Saturday" with Question sticker: "What should we bring more of?"</p>
+  </div>
+
+  <h3 style="margin:24px 0 12px;">"Day in the Life" Reel Concept</h3>
+  <div class="card">
+    <h3>Reel: A Saturday with Jamaica House Brand (60-90 sec)</h3>
+    <p class="story">
+      <strong>Scene 1 (5 sec):</strong> 5:45 AM — Alarm goes off. Dark room. Text: "Market day."<br>
+      <strong>Scene 2 (5 sec):</strong> Loading bottles into coolers in the garage. Clink of glass.<br>
+      <strong>Scene 3 (5 sec):</strong> Driving to Cooper City. Sunrise through windshield. Caribbean music playing.<br>
+      <strong>Scene 4 (8 sec):</strong> Time-lapse of booth setup. Empty table to full display in 5 seconds.<br>
+      <strong>Scene 5 (5 sec):</strong> First customer walks up. Tunde: "Morning! Want to try something real?"<br>
+      <strong>Scene 6 (10 sec):</strong> Montage of taste reactions — 4-5 quick cuts of people trying samples.<br>
+      <strong>Scene 7 (5 sec):</strong> Chef Anthony explaining the recipe to a curious customer.<br>
+      <strong>Scene 8 (8 sec):</strong> Rush hour — booth is packed, bottles are moving, energy is high.<br>
+      <strong>Scene 9 (5 sec):</strong> Close-up: Tunde's hand placing a bottle in a bag for a customer.<br>
+      <strong>Scene 10 (5 sec):</strong> Pack-up. Empty cooler. Tunde: "Good day."<br>
+      <strong>Scene 11 (5 sec):</strong> Driving home. Text overlay: "Same time next Saturday. Cooper City Farmers Market."<br>
+      <strong>End Card (5 sec):</strong> Jamaica House Brand logo + "jamaicahousebrand.com" + "Link in bio"<br><br>
+      <strong>Audio:</strong> Upbeat reggae/dancehall instrumental. Natural market sounds mixed in.
+    </p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 11: BOOTH COPY ============================== -->
+<div class="section" id="booth">
+  <div class="section-header">
+    <h2>Farmers Market Booth Copy</h2>
+    <p class="subtitle">Banner &bull; Product cards &bull; Signs &bull; Sampling script</p>
+  </div>
+
+  <div class="booth-item">
+    <h4>1. Main Banner (Readable from 20 feet)</h4>
+    <p style="font-size:1.8rem; font-weight:800; color:var(--dark); margin:12px 0;">JAMAICA HOUSE BRAND</p>
+    <p style="font-size:1.2rem; font-weight:600; color:var(--gold);">Authentic Jamaican Jerk Sauce &bull; 30-Year Family Recipe</p>
+    <p style="font-size:0.85rem; color:var(--gray); margin-top:8px;">Design notes: Jamaica flag colors (black, green, gold). Bold sans-serif font. Logo prominent. Subheadline in gold. Clean, not cluttered.</p>
+  </div>
+
+  <div class="booth-item">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h4>2. Product Cards</h4>
+    <p><strong>5oz Authentic Jamaican Jerk Sauce — $8</strong><br>The perfect starter. Enough for 2-3 meals of serious Caribbean flavor. Scotch bonnet, allspice, thyme, garlic. No preservatives. Works as a marinade, glaze, or straight out the bottle.</p>
+    <hr style="margin:12px 0;">
+    <p><strong>10oz Authentic Jamaican Jerk Sauce — $14</strong><br>The family size. Same 30-year recipe, more flavor to go around. Marinates a full cookout's worth of chicken, pork, or seafood. The bottle our regulars come back for.</p>
+    <hr style="margin:12px 0;">
+    <p><strong>Escovitch / Pikliz — $10</strong><br>The other side of Caribbean flavor. Tangy, bright, with a slow heat that builds. Perfect paired with our jerk sauce or on its own with fish, rice, or anything that needs waking up.</p>
+  </div>
+
+  <div class="booth-item">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h4>3. Sampling Table Sign</h4>
+    <p style="font-size:1.3rem; font-weight:700; text-align:center; margin:12px 0;">TASTE THE REAL THING</p>
+    <p style="text-align:center; color:var(--gray);">Free samples &bull; 30-year family recipe &bull; Made in South Florida<br>Try it. Then try to walk away.</p>
+  </div>
+
+  <div class="booth-item">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h4>4. QR Code Sign</h4>
+    <p style="font-size:1.1rem; font-weight:700; text-align:center; margin:12px 0;">CAN'T CARRY IT HOME? WE SHIP.</p>
+    <p style="text-align:center;">Scan to order at jamaicahousebrand.com<br><span style="color:var(--gray); font-size:0.85rem;">Ships from South Florida to your door &bull; Recipes &bull; Reorder anytime</span></p>
+    <p style="text-align:center; margin-top:8px; font-size:0.8rem; color:var(--gray);">[QR CODE HERE → jamaicahousebrand.com]</p>
+  </div>
+
+  <div class="booth-item">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <h4>5. Verbal Sampling Script — Tunde's 30-Second Pitch</h4>
+    <p class="story" style="font-style:italic; line-height:1.8;">"Hey! Want to try some authentic Jamaican jerk sauce? [Hand them the 2oz sample cup] This is Jamaica House Brand — a 30-year family recipe made right here in South Florida. Chef Anthony — that's the man right there — he still makes every batch the same way his family taught him. Real scotch bonnet, real allspice, no preservatives, nothing artificial. [Let them taste] Good, right? Works on chicken, shrimp, pork — I've seen people put it on eggs and come back for more. We've got 5oz for $8 if you want to take it for a test drive, or the 10oz for $14 if you already know. And if you can't carry it today, scan that QR code — we ship to your door."</p>
+    <p style="margin-top:10px; font-size:0.8rem; color:var(--gray);"><strong>Close tips:</strong> If they hesitate, say: "Grab the 5oz — worst case you've got the best sauce in your fridge for under $10." If they're buying for a cookout: "Go with the 10oz — trust me, the 5oz goes fast when other people taste it."</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 12: INVESTOR SUMMARY ============================== -->
+<div class="section" id="investor">
+  <div class="section-header">
+    <h2>Investor Summary — One Pager</h2>
+    <p class="subtitle">Jamaica House Brand LLC &bull; $250K Convertible Note</p>
+  </div>
+
+  <div class="card" style="max-width:720px;">
+    <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+    <div style="text-align:center; margin-bottom:24px;">
+      <h3 style="font-size:1.5rem;">JAMAICA HOUSE BRAND LLC</h3>
+      <p style="color:var(--gold); font-weight:600;">Authentic Caribbean Flavor, Bottled for America</p>
+    </div>
+
+    <div class="investor-section">
+      <h4>The Brand</h4>
+      <p>Jamaica House Brand makes authentic Jamaican jerk sauce and escovitch/pikliz from a 30+ year family recipe originating from Jamaica House Restaurant. We're not another hot sauce company. We're a Caribbean food brand built on a recipe that was perfected over three decades before it ever touched a retail shelf. Founded by Tunde Ogunjulugbe — Miami native, University of Miami Architecture alum, and the person who decided South Florida deserved better jerk sauce than what's sitting in grocery store aisles.</p>
+    </div>
+
+    <div class="investor-section">
+      <h4>The Opportunity</h4>
+      <p>Caribbean food is one of the fastest-growing ethnic food segments in the United States. The hot sauce market alone exceeds $4.5B, yet authentic Caribbean jerk sauce remains underrepresented on retail shelves. Current options fall into two camps: mass-produced imports that sacrifice quality for scale (Grace, Walkerswood) and artisan brands with no distribution infrastructure. Jamaica House Brand sits in the white space — authentic small-batch quality with a brand, story, and operational foundation built for retail scale.</p>
+    </div>
+
+    <div class="investor-section">
+      <h4>Traction</h4>
+      <p>Currently sold at South Florida farmers markets including Cooper City, Las Olas, Key Biscayne, West Palm Beach, and Central Florida locations. Consistent weekly sellouts. 85%+ repeat customer rate on online orders through jamaicahousebrand.com. Growing TikTok and Instagram presence with customer reaction videos driving organic reach. Two retail-ready SKUs: 5oz ($8 MSRP) and 10oz ($14 MSRP) plus escovitch/pikliz. Manufacturing partnership established with Space Coast Productions for scalable production.</p>
+    </div>
+
+    <div class="investor-section">
+      <h4>The Ask</h4>
+      <p>Raising <strong>$250,000 via convertible note</strong> to fund the transition from farmers market brand to regional retail presence, with Whole Foods South Florida as our primary retail target.</p>
+    </div>
+
+    <div class="investor-section">
+      <h4>Use of Funds</h4>
+      <p><strong>Production Scale-Up (35%):</strong> Increase manufacturing capacity with Space Coast Productions for retail volume.<br>
+      <strong>Retail Launch (25%):</strong> Whole Foods slotting, broker fees, promotional programs, in-store demos.<br>
+      <strong>Brand & Marketing (20%):</strong> Packaging refresh for retail, digital marketing, influencer partnerships, content production.<br>
+      <strong>Operations (15%):</strong> Inventory, warehousing, fulfillment infrastructure, team hires.<br>
+      <strong>Working Capital (5%):</strong> Cash reserve for retailer payment terms and seasonal planning.</p>
+    </div>
+
+    <div class="investor-section">
+      <h4>Vision</h4>
+      <p>Jamaica House Brand will be the leading authentic Caribbean jerk sauce in American retail — starting with Whole Foods South Florida, expanding regionally, then nationally. We're building a Caribbean food platform, not just a sauce company. The jerk sauce opens the door. Escovitch, pikliz, marinades, and meal kits follow. Every product carries the same promise: a real family recipe, no compromises, flavor that takes you somewhere. The Caribbean diaspora in America is 4.5 million strong and growing. They're looking for the real thing. So is everyone else who's ever tasted it.</p>
+    </div>
+
+    <p style="text-align:center; margin-top:24px; color:var(--gray); font-size:0.85rem;"><strong>Tunde Ogunjulugbe</strong> &bull; Founder &bull; jamaicahousebrand.com &bull; @jamaicahousebrand</p>
+  </div>
+</div>
+
+<!-- ============================== SECTION 13: RETAIL PITCH DECK ============================== -->
+<div class="section" id="pitch-deck">
+  <div class="section-header">
+    <h2>Whole Foods Retail Pitch Deck Outline</h2>
+    <p class="subtitle">Slide-by-slide &bull; Content + visual direction &bull; Competitive positioning</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 1 of 9</div>
+    <h3>Brand Story</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li>Jamaica House Brand was born from a 30+ year family recipe at Jamaica House Restaurant — not invented in a test kitchen</li>
+      <li>Founded by Tunde Ogunjulugbe, Miami native and UM Architecture alum who saw a gap between authentic Caribbean flavor and what's on retail shelves</li>
+      <li>Built at South Florida farmers markets — the hardest proving ground in food. Every customer earned face-to-face.</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Split image — vintage photo of Jamaica House Restaurant alongside modern booth at Cooper City Farmers Market. Heritage meets hustle.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 2 of 9</div>
+    <h3>The Problem</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li>Retail jerk sauce is dominated by mass-produced imports (Grace, Walkerswood) that prioritize shelf stability over authentic flavor</li>
+      <li>Store-brand and generic options reduce jerk to "spicy brown sauce" — losing the scotch bonnet-allspice-thyme complexity that defines real Jamaican jerk</li>
+      <li>The 4.5M+ Caribbean diaspora in America — plus the explosion of Caribbean food on social media — creates demand that current shelf options don't satisfy</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Photo grid of current retail jerk sauce options with ingredient lists visible. Highlight preservative counts and artificial ingredients vs. JHB's clean label.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 3 of 9</div>
+    <h3>The Solution — Jamaica House Brand</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li>Authentic Jamaican jerk sauce: scotch bonnet, allspice, thyme, garlic — no preservatives, no artificial ingredients, no compromises</li>
+      <li>Two retail-ready SKUs (5oz / $8 MSRP, 10oz / $14 MSRP) plus escovitch/pikliz for cross-merchandising opportunities</li>
+      <li>Small-batch production through Space Coast Productions ensures quality at scale without sacrificing the recipe</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Product photography — both bottles + escovitch, styled with fresh ingredients. Clean white background, retail-presentation quality.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 4 of 9</div>
+    <h3>Market Opportunity</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li>U.S. hot sauce market: $4.5B+ and growing at 6.5% CAGR. Caribbean/jerk segment is fastest-growing within ethnic sauces</li>
+      <li>South Florida: #1 Caribbean population concentration in the U.S. — natural launch market with built-in cultural demand</li>
+      <li>Clean-label and artisan food trends accelerating — consumers willing to pay premium for authentic, transparent products</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Market size infographic. Pie chart of hot sauce category breakdown. South Florida demographic heat map showing Caribbean population density near Whole Foods locations.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 5 of 9</div>
+    <h3>Our Traction</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li>Active at 5+ South Florida farmers markets (Cooper City, Las Olas, Key Biscayne, West Palm Beach, Central Florida) — consistent weekly sellouts</li>
+      <li>85%+ online repeat purchase rate via jamaicahousebrand.com — proving sticky customer behavior before retail launch</li>
+      <li>Growing social presence: TikTok and Instagram customer reaction videos averaging strong organic reach; UGC-driven awareness</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Metrics dashboard graphic — bottles sold, market count, repeat rate, social reach. Include 2-3 embedded customer reaction screenshots.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 6 of 9</div>
+    <h3>Product Line</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li><strong>5oz Jerk Sauce ($8):</strong> Trial and impulse purchase size. Ideal for end-cap and checkout placement. Entry point for new customers.</li>
+      <li><strong>10oz Jerk Sauce ($14):</strong> Core SKU. Repeat buyer size. Strong margin for retailer. Competitive at shelf vs. premium peers.</li>
+      <li><strong>Escovitch/Pikliz ($10):</strong> Cross-sell opportunity. Expands the Caribbean flavor set. Unique product with no direct retail competitor at scale.</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Product lineup photo with pricing and margin data per SKU. Planogram suggestion showing shelf placement relative to competitor products.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 7 of 9</div>
+    <h3>Competitive Landscape</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li><strong>Grace Foods / Walkerswood:</strong> Mass-produced, imported. Recognizable but lack artisan quality and clean-label positioning. Jamaica House Brand differentiates on freshness, small-batch authenticity, and founder story.</li>
+      <li><strong>Scotchies:</strong> Restaurant-brand with some retail presence in Jamaica. No meaningful U.S. distribution. JHB is already active in the U.S. market with established customer base.</li>
+      <li><strong>Store Brands:</strong> Lowest quality tier. Generic formulas, no brand loyalty. JHB competes on an entirely different level — same shelf, different universe.</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Competitive positioning matrix — X-axis: authenticity (mass → artisan), Y-axis: retail readiness (local → national). JHB in the high-authenticity, growing-readiness quadrant.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 8 of 9</div>
+    <h3>Why Whole Foods</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li>Whole Foods' local and artisan brand programs align perfectly with Jamaica House Brand's identity — authentic, clean-label, founder-led, community-grown</li>
+      <li>South Florida Whole Foods stores index high for Caribbean food demand — our farmers market customer base overlaps directly with your shopper demographics</li>
+      <li>In-store demo potential is proven: our farmers market conversion rate (taste → buy) is exceptional and translates directly to the Whole Foods sampling model</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Map of South Florida Whole Foods locations overlaid with farmers market locations we currently serve. Show geographic overlap and customer crossover potential.</p>
+  </div>
+
+  <div class="slide">
+    <div class="slide-num">Slide 9 of 9</div>
+    <h3>Partnership Ask</h3>
+    <ul style="margin:10px 0; line-height:1.8;">
+      <li><strong>Initial ask:</strong> Shelf placement in 5-10 South Florida Whole Foods locations. Start with condiment/international aisle. 2 SKUs (5oz, 10oz) + escovitch.</li>
+      <li><strong>We commit to:</strong> In-store demos (Tunde and Chef Anthony personally), competitive promotional programs, social media support driving foot traffic to specific store locations.</li>
+      <li><strong>Growth path:</strong> Prove velocity in South Florida → expand to Southeast regional → national placement. We want to grow with Whole Foods, not just land on a shelf.</li>
+    </ul>
+    <p style="color:var(--gray); font-size:0.85rem;"><strong>Visual:</strong> Timeline graphic — Q1: South Florida pilot (5-10 stores) → Q2-Q3: Regional expansion → Q4+: National conversation. Include contact info: Tunde Ogunjulugbe, jamaicahousebrand.com</p>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// Navigation
+document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const id = link.dataset.section;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    link.classList.add('active');
+    document.querySelectorAll('.mobile-nav a').forEach(a => {
+      a.classList.toggle('active', a.dataset.section === id);
+    });
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+});
+
+// Mobile nav
+const mobileNav = document.getElementById('mobileNav');
+document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
+  const a = document.createElement('a');
+  a.href = '#';
+  a.textContent = link.textContent.trim().replace(/\d+$/, '');
+  a.dataset.section = link.dataset.section;
+  if(link.classList.contains('active')) a.classList.add('active');
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    link.click();
+  });
+  mobileNav.appendChild(a);
+});
+
+// Copy button
+function copyCard(btn) {
+  const card = btn.closest('.card, .dm-template, .booth-item');
+  const clone = card.cloneNode(true);
+  clone.querySelectorAll('.copy-btn, .label, .ab-badge, .test-first').forEach(el => el.remove());
+  const text = clone.innerText.trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Instagram filter
+function filterIG(btn, pillar) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ig-cap').forEach(card => {
+    if(pillar === 'all') { card.style.display = ''; return; }
+    card.style.display = card.dataset.pillar === pillar ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
