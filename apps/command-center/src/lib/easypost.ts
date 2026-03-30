@@ -98,6 +98,60 @@ export async function createEasyPostShipment(
   };
 }
 
+// ============================================================================
+// Tracking — check delivery status for any carrier via EasyPost
+// ============================================================================
+
+export interface TrackingResult {
+  trackingNumber: string;
+  carrier: string;
+  status: string; // EasyPost statuses: pre_transit, in_transit, out_for_delivery, delivered, return_to_sender, failure, error, unknown
+  estimatedDelivery: Date | null;
+  deliveredAt: Date | null;
+}
+
+// Map carrier names from marketplaces to EasyPost carrier codes
+const CARRIER_MAP: Record<string, string> = {
+  'UPS': 'UPS',
+  'UPS Freight': 'UPS',
+  'USPS': 'USPS',
+  'FedEx': 'FedEx',
+  'FEDEX': 'FedEx',
+  'DHL': 'DHLExpress',
+};
+
+export async function getTrackingStatus(
+  trackingNumber: string,
+  carrier?: string | null
+): Promise<TrackingResult | null> {
+  try {
+    const ep = getClient();
+
+    // EasyPost can auto-detect carrier, but it's faster with a hint
+    const carrierCode = carrier ? CARRIER_MAP[carrier] || carrier : undefined;
+
+    const tracker = await ep.Tracker.create({
+      tracking_code: trackingNumber,
+      ...(carrierCode ? { carrier: carrierCode } : {}),
+    });
+
+    return {
+      trackingNumber,
+      carrier: tracker.carrier || carrier || 'Unknown',
+      status: tracker.status || 'unknown',
+      estimatedDelivery: tracker.est_delivery_date
+        ? new Date(tracker.est_delivery_date)
+        : null,
+      deliveredAt: tracker.status === 'delivered' && tracker.tracking_details?.length
+        ? new Date(tracker.tracking_details[tracker.tracking_details.length - 1].datetime)
+        : null,
+    };
+  } catch (err) {
+    console.error(`[easypost] Tracking lookup failed for ${trackingNumber}:`, err);
+    return null;
+  }
+}
+
 export async function refundEasyPostShipment(
   easypostShipmentId: string
 ): Promise<boolean> {

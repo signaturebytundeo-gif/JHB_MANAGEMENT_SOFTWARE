@@ -7,6 +7,7 @@ import { isPlatformConfigured, getMissingEnvVars } from '@/lib/integrations/conf
 import { getRecentSquarePayments } from '@/lib/integrations/square';
 import { getRecentAmazonOrders, getAmazonOrderStatuses } from '@/lib/integrations/amazon';
 import { getRecentEtsyOrders, getEtsyFulfillmentData } from '@/lib/integrations/etsy';
+import { getTrackingStatus } from '@/lib/easypost';
 import type { SyncPlatform, SyncStatus, OrderStatus } from '@prisma/client';
 
 // ============================================================================
@@ -555,6 +556,46 @@ export async function syncFulfillmentStatuses(): Promise<SyncResult> {
     }
   } catch (err: any) {
     errors.push(`Etsy: ${err.message}`);
+  }
+
+  // ── Tracking check: update SHIPPED → DELIVERED via carrier tracking ──
+  try {
+    const shippedOrders = await db.websiteOrder.findMany({
+      where: {
+        status: 'SHIPPED',
+        trackingNumber: { not: null },
+      },
+      select: { id: true, trackingNumber: true, carrier: true },
+    });
+
+    if (shippedOrders.length > 0) {
+      // Check tracking in batches of 10 to avoid rate limits
+      for (let i = 0; i < shippedOrders.length; i += 10) {
+        const batch = shippedOrders.slice(i, i + 10);
+
+        for (const order of batch) {
+          if (!order.trackingNumber) continue;
+
+          const tracking = await getTrackingStatus(
+            order.trackingNumber,
+            order.carrier
+          );
+
+          if (tracking?.status === 'delivered') {
+            await db.websiteOrder.update({
+              where: { id: order.id },
+              data: {
+                status: 'DELIVERED' as OrderStatus,
+              },
+            });
+            updated++;
+          }
+          found++;
+        }
+      }
+    }
+  } catch (err: any) {
+    errors.push(`Tracking: ${err.message}`);
   }
 
   revalidatePath('/dashboard/orders');
