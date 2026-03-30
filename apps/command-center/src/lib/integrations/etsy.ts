@@ -89,8 +89,11 @@ async function refreshAccessToken(): Promise<string> {
  */
 async function etsyFetch(url: string): Promise<Response> {
   const config = getEtsyConfig();
-  // Etsy v3 uses just the API keystring for x-api-key header
-  const xApiKey = config.apiKey;
+  // Etsy v3 requires "keystring:sharedsecret" format in x-api-key header.
+  // Trim both values to prevent whitespace from corrupting the header.
+  const apiKey = config.apiKey.trim();
+  const sharedSecret = config.sharedSecret.trim();
+  const xApiKey = sharedSecret ? `${apiKey}:${sharedSecret}` : apiKey;
   // Always try refreshing first since tokens expire in 1 hour
   let token = cachedAccessToken ?? config.accessToken;
 

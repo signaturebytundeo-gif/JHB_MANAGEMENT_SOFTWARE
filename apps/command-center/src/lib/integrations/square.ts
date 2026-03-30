@@ -35,7 +35,19 @@ export async function getRecentSquarePayments(
   }
 
   const config = getSquareConfig();
-  const baseUrl = SQUARE_BASE_URLS[config.environment];
+  const env = config.environment;
+  const baseUrl = SQUARE_BASE_URLS[env];
+
+  if (!baseUrl) {
+    throw new Error(
+      `Square: invalid environment "${env}". SQUARE_ENVIRONMENT must be "sandbox" or "production". ` +
+      `Current value: "${process.env.SQUARE_ENVIRONMENT}"`
+    );
+  }
+
+  if (!config.accessToken) {
+    throw new Error('Square: SQUARE_ACCESS_TOKEN is empty');
+  }
 
   const beginTime = sinceDate
     ? sinceDate.toISOString()

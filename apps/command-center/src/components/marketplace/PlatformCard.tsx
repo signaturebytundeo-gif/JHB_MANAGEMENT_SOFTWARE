@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,11 @@ export function PlatformCard({
   isSyncing,
   onSync,
 }: PlatformCardProps) {
+  // Avoid React hydration mismatch (#418) — formatDistanceToNow produces
+  // different text on server vs client due to timing differences.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -85,7 +91,7 @@ export function PlatformCard({
                   </Badge>
                 </div>
                 <div>
-                  {formatDistanceToNow(new Date(lastSync.startedAt), { addSuffix: true })}
+                  {mounted ? formatDistanceToNow(new Date(lastSync.startedAt), { addSuffix: true }) : '—'}
                 </div>
                 <div>
                   {lastSync.recordsCreated} imported, {lastSync.recordsSkipped} skipped
