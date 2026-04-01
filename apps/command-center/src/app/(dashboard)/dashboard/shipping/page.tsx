@@ -1,17 +1,66 @@
 import { Suspense } from 'react';
 import { getRecentStripeOrders, getShipments, getShippingLocations } from '@/app/actions/shipping';
+import { db } from '@/lib/db';
 import { ShippingPageClient } from './client';
+import type { StripeOrderData } from '@/app/actions/shipping';
+
+async function getUnshippedMarketplaceOrders(): Promise<StripeOrderData[]> {
+  try {
+    const orders = await db.websiteOrder.findMany({
+      where: {
+        status: { in: ['NEW', 'PROCESSING'] },
+        source: { in: ['AMAZON', 'ETSY', 'WEBSITE'] },
+      },
+      include: { customer: { select: { firstName: true, lastName: true, email: true, phone: true } } },
+      orderBy: { orderDate: 'desc' },
+      take: 50,
+    });
+
+    return orders.map((o) => ({
+      paymentIntentId: o.orderId,
+      customerName: `${o.customer?.firstName || ''} ${o.customer?.lastName || ''}`.trim() || 'Customer',
+      customerEmail: o.customer?.email || null,
+      amount: Number(o.orderTotal),
+      shippingAddress: o.shippingAddressLine1 ? {
+        line1: o.shippingAddressLine1,
+        line2: o.shippingAddressLine2 || undefined,
+        city: o.shippingCity || '',
+        state: o.shippingState || '',
+        zip: o.shippingZip || '',
+        country: o.shippingCountry || 'US',
+      } : null,
+      items: (() => {
+        try {
+          const parsed = JSON.parse(o.items as string);
+          return parsed.map((i: any) => `${i.name || i.title} ×${i.qty || i.quantity}`).join(', ');
+        } catch { return null; }
+      })(),
+      createdAt: o.orderDate.toISOString(),
+      source: o.source || 'WEBSITE',
+    }));
+  } catch {
+    return [];
+  }
+}
 
 async function ShippingContent() {
-  const [stripeOrders, shipmentsData, locations] = await Promise.all([
+  const [stripeOrders, marketplaceOrders, shipmentsData, locations] = await Promise.all([
     getRecentStripeOrders(),
+    getUnshippedMarketplaceOrders(),
     getShipments({ page: 1, limit: 25 }),
     getShippingLocations(),
   ]);
 
+  // Merge Stripe + marketplace orders, dedup by ID
+  const seenIds = new Set(stripeOrders.map((o) => o.paymentIntentId));
+  const allPending = [
+    ...stripeOrders,
+    ...marketplaceOrders.filter((o) => !seenIds.has(o.paymentIntentId)),
+  ];
+
   return (
     <ShippingPageClient
-      stripeOrders={stripeOrders}
+      stripeOrders={allPending}
       locations={locations}
       shipments={shipmentsData.shipments as any}
       shipmentsTotal={shipmentsData.total}

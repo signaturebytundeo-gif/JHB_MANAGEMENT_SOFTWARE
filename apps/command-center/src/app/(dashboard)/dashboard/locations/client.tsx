@@ -34,6 +34,8 @@ const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
   FULFILLMENT: 'Fulfillment',
   MARKET: 'Farmers Market',
   EVENT: 'Pop-Up / Event',
+  DIRECT_SHIP: 'Direct Ship',
+  OTHER: 'Other',
 };
 
 const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?: string }>> = {
@@ -43,6 +45,8 @@ const LOCATION_TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?
   FULFILLMENT: ShoppingBag,
   MARKET: Building2,
   EVENT: CalendarDays,
+  DIRECT_SHIP: ShoppingBag,
+  OTHER: Building2,
 };
 
 export function LocationsClient({ locations }: { locations: Location[] }) {

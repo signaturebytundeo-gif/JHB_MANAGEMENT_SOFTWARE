@@ -17,7 +17,7 @@ import Stripe from 'stripe';
 export type StripeOrderData = {
   paymentIntentId: string;
   customerName: string;
-  customerEmail: string;
+  customerEmail: string | null;
   shippingAddress: {
     line1: string;
     line2?: string;
@@ -26,9 +26,10 @@ export type StripeOrderData = {
     zip: string;
     country: string;
   } | null;
-  items: string;
+  items: string | null;
   amount: number;
-  createdAt: Date;
+  createdAt: Date | string;
+  source?: string; // WEBSITE, AMAZON, ETSY, etc.
 };
 
 export async function getRecentStripeOrders(): Promise<StripeOrderData[]> {

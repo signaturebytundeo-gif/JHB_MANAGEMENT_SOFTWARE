@@ -172,17 +172,25 @@ export function ShipmentList({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {shipment.trackingNumber ? (
-                        <a
-                          href={`https://www.ups.com/track?tracknum=${shipment.trackingNumber}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-caribbean-gold hover:underline inline-flex items-center gap-1"
-                        >
-                          {shipment.trackingNumber}
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      ) : (
+                      {shipment.trackingNumber ? (() => {
+                        const tn = shipment.trackingNumber!;
+                        // USPS tracking numbers start with 9 and are 20-34 digits
+                        const isUSPS = /^9\d{19,33}$/.test(tn);
+                        const trackUrl = isUSPS
+                          ? `https://tools.usps.com/go/TrackConfirmAction?tLabels=${tn}`
+                          : `https://www.ups.com/track?tracknum=${tn}`;
+                        return (
+                          <a
+                            href={trackUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-caribbean-gold hover:underline inline-flex items-center gap-1"
+                          >
+                            {tn}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        );
+                      })() : (
                         <span className="text-sm text-muted-foreground">—</span>
                       )}
                     </TableCell>

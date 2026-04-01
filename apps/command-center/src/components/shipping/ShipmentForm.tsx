@@ -122,7 +122,7 @@ export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess 
       {prefillOrder && (
         <>
           <input type="hidden" name="stripePaymentIntentId" value={prefillOrder.paymentIntentId} />
-          <input type="hidden" name="items" value={prefillOrder.items} />
+          <input type="hidden" name="items" value={prefillOrder.items || ''} />
           <div className="bg-caribbean-green/10 border border-caribbean-green/30 px-4 py-3 rounded-md text-sm text-caribbean-gold">
             Pre-filled from Stripe order — ${prefillOrder.amount.toFixed(2)}
             {prefillOrder.items && (
