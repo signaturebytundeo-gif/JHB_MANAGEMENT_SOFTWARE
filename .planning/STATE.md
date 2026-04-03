@@ -28,6 +28,9 @@ Progress: [████░░░░░░] 40%
 - **14-01:** getTrackingUrl helper copied into DeliveryConfirmation.tsx (not imported) to keep each template file self-contained
 - **14-02:** Delivery email block placed after status update write — status persisted even if email fails
 - **14-02:** Idempotency guard via !order.deliveryEmailSentAt prevents duplicate delivery emails on repeated "Mark as Delivered" clicks
+- **23-01:** WebsiteOrder source enum (WEBSITE/AMAZON/ETSY) mapped to display names in sourceNames constant in channel-stats.ts
+- **23-01:** Channel Performance (MTD) section gated to ADMIN/MANAGER via role check in dashboard page
+- **23-01:** statMap upsert pattern merges Sale + Order + WebsiteOrder rows by display name key
 - **23-02:** Amazon cron uses cursor-based micro-batching — one SP-API page per invocation, NextToken stored in MarketplaceSync.cursorData
 - **23-02:** Cron routes return HTTP 200 on errors (never 5xx) — Vercel doesn't retry failed cron invocations
 - **23-02:** Sale.createdById FK resolved via admin user lookup when cron runs with userId=null (Square sync only)
@@ -45,5 +48,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-02
-Stopped at: 23-02-PLAN.md checkpoint:human-verify (Tasks 1+2 complete, awaiting local verification)
+Stopped at: Completed 23-01-PLAN.md (23-02 still at checkpoint:human-verify)
 Resume file: 23-02-PLAN.md — continue from checkpoint after user verifies cron endpoints
