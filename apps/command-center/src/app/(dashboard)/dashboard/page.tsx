@@ -11,6 +11,8 @@ import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 import { getDashboardKPIs } from '@/app/actions/dashboard-kpis';
 import { getInventoryAggregation } from '@/app/actions/inventory';
 import { InventoryStatusSummary } from '@/components/dashboard/InventoryStatusSummary';
+import { getUnifiedChannelStats } from '@/app/actions/channel-stats';
+import { ChannelComparisonWidget } from '@/components/dashboard/ChannelComparisonWidget';
 import {
   DollarSign,
   Package,
@@ -146,6 +148,11 @@ async function InventorySummary() {
   return <InventoryStatusSummary data={data} />;
 }
 
+async function ChannelStats() {
+  const stats = await getUnifiedChannelStats();
+  return <ChannelComparisonWidget data={stats} />;
+}
+
 export default async function DashboardPage() {
   const user = await getUser();
 
@@ -233,6 +240,16 @@ export default async function DashboardPage() {
           <h2 className="text-lg font-semibold mb-4">Inventory Status</h2>
           <Suspense fallback={<DashboardSkeleton />}>
             <InventorySummary />
+          </Suspense>
+        </div>
+      )}
+
+      {/* Channel Performance (MTD) — DASH-05 */}
+      {(user.role === 'ADMIN' || user.role === 'MANAGER') && (
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Channel Performance (MTD)</h2>
+          <Suspense fallback={<DashboardSkeleton />}>
+            <ChannelStats />
           </Suspense>
         </div>
       )}
