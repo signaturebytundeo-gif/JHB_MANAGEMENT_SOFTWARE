@@ -52,6 +52,8 @@ enum LocationType {
   FULFILLMENT
   MARKET
   EVENT
+  DIRECT_SHIP
+  OTHER
 }
 
 enum ChannelType {
@@ -866,6 +868,7 @@ model MarketplaceSync {
   recordsSkipped Int          @default(0)
   errorMessage   String?
   errorDetails   String? // JSON string of detailed errors
+  cursorData     String? // JSON: pagination cursor for resumable sync (e.g. Amazon NextToken)
   triggeredById  String?
 
   // Relations
