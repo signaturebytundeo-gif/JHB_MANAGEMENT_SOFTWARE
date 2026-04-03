@@ -39,6 +39,16 @@ Plans:
 - [ ] 14-01-PLAN.md — Create delivery email template, send function, schema field, and Slack notification
 - [ ] 14-02-PLAN.md — Wire delivery email into updateOrderStatus + verify all three triggers end-to-end
 
+### Phase 23: Unified Dashboard + Automation
+
+**Goal:** Dashboard shows the full business picture across all channels and sync runs automatically without operator intervention
+**Depends on:** Phase 20 (Amazon SP-API), Phase 19 (Square sync), Phase 21/22 (Etsy sync)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 23-01-PLAN.md — Unified multi-channel dashboard KPIs + channel comparison widget
+- [ ] 23-02-PLAN.md — Vercel Cron automated sync with micro-batch cursor pattern (SYNC-01)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -53,3 +63,4 @@ Plans:
 | 8. Document Management | v1.0 | 3/3 | Complete | 2026-03-12 |
 | 13. Fulfillment Tracking | v1.2 | 0/1 | Planning | — |
 | 14. Notification Triggers | v1.2 | 0/2 | Planning | — |
+| 23. Unified Dashboard + Automation | v2.0 | 0/2 | Planning | — |
