@@ -104,17 +104,20 @@ export async function getSyncHistory(platform?: SyncPlatform) {
 // ============================================================================
 
 async function getLastSuccessfulSyncDate(platform: SyncPlatform): Promise<Date> {
+  // FIX: Only count SUCCESS (not PARTIAL) and use completedAt (not startedAt).
+  // PARTIAL syncs from failed runs set a bad cursor that skips real orders.
+  // 10-minute safety buffer catches orders in-flight during last sync.
   const lastSync = await db.marketplaceSync.findFirst({
-    where: { platform, status: { in: ['SUCCESS', 'PARTIAL'] } },
-    orderBy: { startedAt: 'desc' },
+    where: { platform, status: 'SUCCESS' },
+    orderBy: { completedAt: 'desc' },
   });
 
-  if (lastSync?.startedAt) {
-    return lastSync.startedAt;
+  if (lastSync?.completedAt) {
+    return new Date(lastSync.completedAt.getTime() - 10 * 60 * 1000);
   }
 
   // First sync: pull ALL historical orders
-  return new Date('2010-01-01');
+  return new Date('2020-01-01');
 }
 
 async function createSyncRecord(platform: SyncPlatform, userId: string) {
@@ -387,11 +390,17 @@ export async function syncEtsyOrders(): Promise<SyncResult> {
     let skipped = 0;
 
     for (const order of etsyOrders) {
-      // Upsert customer
+      // FIX (Bug 6): Etsy masks buyer emails as {id}@marketplace.etsy.com.
+      // Use synthetic email for masked addresses to avoid bad customer dedup.
+      const isRealEmail = order.customerEmail && !order.customerEmail.includes('@marketplace.etsy.com');
+      const emailKey = isRealEmail
+        ? order.customerEmail
+        : `etsy-buyer-${order.orderId}@noreply.jhb.internal`;
+
       const customer = await db.customer.upsert({
-        where: { email: order.customerEmail },
+        where: { email: emailKey },
         create: {
-          email: order.customerEmail,
+          email: emailKey,
           firstName: order.firstName,
           lastName: order.lastName,
         },

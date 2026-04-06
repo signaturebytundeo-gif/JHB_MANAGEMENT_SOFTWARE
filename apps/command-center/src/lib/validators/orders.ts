@@ -14,6 +14,12 @@ export const incomingOrderSchema = z.object({
   orderDate: z.coerce.date(),
   promoCode: z.string().optional(),
   promoDiscount: z.coerce.number().optional(),
+  shippingAddressLine1: z.string().optional(),
+  shippingAddressLine2: z.string().optional(),
+  shippingCity: z.string().optional(),
+  shippingState: z.string().optional(),
+  shippingZip: z.string().optional(),
+  shippingCountry: z.string().optional(),
 });
 
 export type IncomingOrderInput = z.infer<typeof incomingOrderSchema>;

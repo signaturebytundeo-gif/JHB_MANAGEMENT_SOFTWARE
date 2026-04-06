@@ -70,9 +70,16 @@ export async function POST(request: NextRequest) {
         shippingCost: data.shippingCost,
         orderTotal,
         status: 'NEW',
+        source: 'WEBSITE',
         orderDate: data.orderDate,
         promoCode: data.promoCode || null,
         promoDiscount: data.promoDiscount || null,
+        shippingAddressLine1: data.shippingAddressLine1 || null,
+        shippingAddressLine2: data.shippingAddressLine2 || null,
+        shippingCity: data.shippingCity || null,
+        shippingState: data.shippingState || null,
+        shippingZip: data.shippingZip || null,
+        shippingCountry: data.shippingCountry || null,
       },
     });
 

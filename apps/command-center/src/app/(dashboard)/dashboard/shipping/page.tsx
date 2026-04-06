@@ -32,8 +32,20 @@ async function getUnshippedMarketplaceOrders(): Promise<StripeOrderData[]> {
       items: (() => {
         try {
           const parsed = JSON.parse(o.items as string);
-          return parsed.map((i: any) => `${i.name || i.title} ×${i.qty || i.quantity}`).join(', ');
-        } catch { return null; }
+          return parsed
+            .map((i: any) => {
+              const name = i.name || i.title || i.description || 'Item';
+              const qty = i.qty ?? i.quantity ?? 1;
+              return `${name} ×${qty}`;
+            })
+            .filter(Boolean)
+            .join(', ');
+        } catch {
+          // If it starts with [ or { it's unparseable JSON — hide it
+          const raw = o.items as string;
+          if (typeof raw === 'string' && (raw.startsWith('[') || raw.startsWith('{'))) return null;
+          return raw || null;
+        }
       })(),
       createdAt: o.orderDate.toISOString(),
       source: o.source || 'WEBSITE',
