@@ -4,6 +4,8 @@ export interface SquareLineItem {
   name: string;
   quantity: number;
   amount: number; // cents
+  sku?: string;
+  variationName?: string;
 }
 
 export interface SquarePaymentData {
@@ -111,6 +113,10 @@ export async function getRecentSquarePayments(
                 name: item.name || 'Unknown Item',
                 quantity: parseInt(item.quantity || '1', 10),
                 amount: Number(item.total_money?.amount ?? 0),
+                // Square catalog SKU is nested in the catalog object reference
+                // or in item-level sku field depending on how the line item was created
+                sku: item.sku || item.variation_name || undefined,
+                variationName: item.variation_name || undefined,
               });
             }
           }

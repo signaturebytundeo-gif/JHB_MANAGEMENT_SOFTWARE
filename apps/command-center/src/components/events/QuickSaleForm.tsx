@@ -8,6 +8,8 @@ import { Plus } from 'lucide-react';
 interface Product {
   id: string;
   name: string;
+  size?: string;
+  sku?: string;
 }
 
 interface QuickSaleFormProps {
@@ -62,7 +64,7 @@ export function QuickSaleForm({ eventId, products }: QuickSaleFormProps) {
           <option value="">Select item</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name}
+              {p.name}{p.size ? ` — ${p.size}` : ''}{p.sku ? ` (${p.sku})` : ''}
             </option>
           ))}
         </select>

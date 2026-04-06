@@ -203,12 +203,42 @@ export async function syncSquarePayments(): Promise<SyncResult> {
       }
 
       for (const lineItem of payment.lineItems) {
-        // Try to match product by name (case-insensitive partial match)
-        const matchedProduct = products.find(
-          (p) =>
-            p.name.toLowerCase().includes(lineItem.name.toLowerCase()) ||
-            lineItem.name.toLowerCase().includes(p.name.toLowerCase())
-        );
+        // Matching strategy (in priority order):
+        // 1. SKU exact match (best — unambiguous)
+        // 2. Name + size combined match (e.g., "Original Jerk Sauce 2oz")
+        // 3. Name + variation name (e.g., "Original Jerk Sauce" variation "2oz")
+        // 4. Fallback to legacy name substring match
+        const liName = lineItem.name.toLowerCase();
+        const liSku = lineItem.sku?.toLowerCase();
+        const liVariation = lineItem.variationName?.toLowerCase();
+
+        let matchedProduct = liSku
+          ? products.find((p) => p.sku.toLowerCase() === liSku)
+          : undefined;
+
+        if (!matchedProduct) {
+          // Try matching with size/variation to disambiguate "Original Jerk Sauce 2oz" etc.
+          matchedProduct = products.find((p) => {
+            const pName = p.name.toLowerCase();
+            const pSize = (p.size || '').toLowerCase();
+            const combined = `${pName} ${pSize}`.trim();
+            return (
+              liName.includes(combined) ||
+              combined.includes(liName) ||
+              (liVariation && pSize && liVariation.includes(pSize)) ||
+              (liName.includes(pName) && pSize && liName.includes(pSize))
+            );
+          });
+        }
+
+        if (!matchedProduct) {
+          // Last resort: name substring match (original behavior)
+          matchedProduct = products.find(
+            (p) =>
+              p.name.toLowerCase().includes(liName) ||
+              liName.includes(p.name.toLowerCase())
+          );
+        }
 
         if (!matchedProduct) {
           unmatchedItems.push(`${lineItem.name} (payment ${payment.paymentId})`);

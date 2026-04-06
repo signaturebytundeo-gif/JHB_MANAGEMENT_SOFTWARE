@@ -51,6 +51,8 @@ const PAYMENT_LABELS: Record<string, string> = {
 export function SaleList({ sales, channels, products }: SaleListProps) {
   const [channelFilter, setChannelFilter] = useState<string>('all');
   const [productFilter, setProductFilter] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
   const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
@@ -59,9 +61,19 @@ export function SaleList({ sales, channels, products }: SaleListProps) {
     return sales.filter((sale) => {
       if (channelFilter !== 'all' && sale.channel.id !== channelFilter) return false;
       if (productFilter !== 'all' && sale.product.id !== productFilter) return false;
+      if (dateFrom) {
+        const saleDate = new Date(sale.saleDate);
+        if (saleDate < new Date(dateFrom)) return false;
+      }
+      if (dateTo) {
+        const saleDate = new Date(sale.saleDate);
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        if (saleDate > end) return false;
+      }
       return true;
     });
-  }, [sales, channelFilter, productFilter]);
+  }, [sales, channelFilter, productFilter, dateFrom, dateTo]);
 
   const totalRevenue = filteredSales.reduce(
     (sum, sale) => sum + Number(sale.totalAmount),
@@ -204,6 +216,32 @@ export function SaleList({ sales, channels, products }: SaleListProps) {
             ))}
           </SelectContent>
         </Select>
+
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          placeholder="From"
+          className="h-10 px-3 rounded-md border bg-background text-sm"
+          aria-label="Date from"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          placeholder="To"
+          className="h-10 px-3 rounded-md border bg-background text-sm"
+          aria-label="Date to"
+        />
+        {(dateFrom || dateTo) && (
+          <Button
+            variant="ghost"
+            onClick={() => { setDateFrom(''); setDateTo(''); }}
+            className="h-10"
+          >
+            Clear dates
+          </Button>
+        )}
 
         <Button variant="outline" onClick={exportCSV} className="h-10">
           <Download className="h-4 w-4 mr-2" />
