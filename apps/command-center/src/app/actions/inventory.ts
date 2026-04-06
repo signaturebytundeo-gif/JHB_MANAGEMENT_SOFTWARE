@@ -913,7 +913,10 @@ function resolveItemToProduct<T extends { size: string }>(
  */
 export async function getInventoryAggregation(): Promise<InventoryAggregationRow[]> {
   try {
-    const [products, batchTotals, orders] = await Promise.all([
+    // FIX: Previously this used batches - websiteOrder items, which missed
+    // manual sales, transfers, adjustments, and bundle decomposition.
+    // Now uses InventoryTransaction sum (same source as /dashboard/inventory page).
+    const [products, batchTotals, transactions] = await Promise.all([
       db.product.findMany({
         where: { isActive: true },
         orderBy: { name: 'asc' },
@@ -924,49 +927,29 @@ export async function getInventoryAggregation(): Promise<InventoryAggregationRow
         where: { status: 'RELEASED', isActive: true },
         _sum: { totalUnits: true },
       }),
-      db.websiteOrder.findMany({
-        where: { status: { not: 'CANCELLED' } },
-        select: { items: true },
+      db.inventoryTransaction.groupBy({
+        by: ['productId'],
+        _sum: { quantityChange: true },
       }),
     ]);
 
-    // Build supply map: productId -> totalProduced
+    // Build supply map: productId -> totalProduced (all-time)
     const producedMap = new Map<string, number>();
     for (const row of batchTotals) {
       producedMap.set(row.productId, row._sum.totalUnits ?? 0);
     }
 
-    // Build size lookup: size.toLowerCase() -> product
-    const sizeToProduct = new Map<string, (typeof products)[number]>();
-    for (const product of products) {
-      sizeToProduct.set(product.size.toLowerCase(), product);
-    }
-
-    // Build demand map: productId -> allocated (non-cancelled orders)
-    const allocatedMap = new Map<string, number>();
-    for (const order of orders) {
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(order.items);
-      } catch {
-        continue;
-      }
-      if (!Array.isArray(parsed)) continue;
-
-      for (const item of parsed as Record<string, unknown>[]) {
-        const itemName = String(item.name ?? item.product ?? '');
-        const quantity = Number(item.quantity ?? item.qty ?? 1);
-        const product = resolveItemToProduct(itemName, sizeToProduct);
-        if (!product) continue;
-
-        allocatedMap.set(product.id, (allocatedMap.get(product.id) ?? 0) + quantity);
-      }
+    // Build available map: productId -> net inventory from transactions
+    // (production + transfers in - sales - transfers out - adjustments)
+    const availableMap = new Map<string, number>();
+    for (const row of transactions) {
+      availableMap.set(row.productId, row._sum.quantityChange ?? 0);
     }
 
     return products.map((product) => {
       const totalProduced = producedMap.get(product.id) ?? 0;
-      const allocated = allocatedMap.get(product.id) ?? 0;
-      const available = Math.max(0, totalProduced - allocated);
+      const available = Math.max(0, availableMap.get(product.id) ?? 0);
+      const allocated = Math.max(0, totalProduced - available);
       return {
         productId: product.id,
         productName: product.name,

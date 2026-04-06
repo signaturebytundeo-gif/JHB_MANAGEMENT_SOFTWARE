@@ -9,14 +9,16 @@ import {
 } from '@/components/ui/chart';
 import type { ChannelStatItem } from '@/app/actions/channel-stats';
 
+// Use explicit brand colors — CSS vars --chart-1/--chart-2 aren't defined
+// and resulted in black/transparent bars
 const chartConfig: ChartConfig = {
   revenue: {
     label: 'Revenue',
-    color: 'hsl(var(--chart-1))',
+    color: '#CB7E29', // brand-gold
   },
   orders: {
     label: 'Orders',
-    color: 'hsl(var(--chart-2))',
+    color: '#33803F', // brand-green
   },
 };
 
@@ -71,8 +73,8 @@ export function ChannelComparisonWidget({ data }: Props) {
               />
             }
           />
-          <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="orderCount" fill="var(--color-orders)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="revenue" fill="#CB7E29" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="orderCount" fill="#33803F" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ChartContainer>
 
