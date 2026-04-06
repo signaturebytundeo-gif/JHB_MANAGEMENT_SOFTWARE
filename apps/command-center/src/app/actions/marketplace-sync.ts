@@ -8,6 +8,7 @@ import { getRecentSquarePayments } from '@/lib/integrations/square';
 import { getRecentAmazonOrders, getAmazonOrderStatuses } from '@/lib/integrations/amazon';
 import { getRecentEtsyOrders, getEtsyFulfillmentData } from '@/lib/integrations/etsy';
 import { getTrackingStatus } from '@/lib/easypost';
+import { decomposeBundleInventory } from '@/lib/utils/bundle-decompose';
 import type { SyncPlatform, SyncStatus, OrderStatus } from '@prisma/client';
 
 // ============================================================================
@@ -188,6 +189,11 @@ export async function syncSquarePayments(): Promise<SyncResult> {
     // Load products for name matching
     const products = await db.product.findMany({ where: { isActive: true } });
 
+    // Find Farmers Markets location for bundle component deduction
+    const farmersLocation = await db.location.findFirst({
+      where: { name: { contains: 'Farmers Market', mode: 'insensitive' }, isActive: true },
+    });
+
     let created = 0;
     let skipped = 0;
     const unmatchedItems: string[] = [];
@@ -262,6 +268,17 @@ export async function syncSquarePayments(): Promise<SyncResult> {
             createdById: session.userId,
           },
         });
+
+        // If product is a bundle, decompose inventory into components
+        if (farmersLocation) {
+          await decomposeBundleInventory(
+            matchedProduct.id,
+            farmersLocation.id,
+            lineItem.quantity,
+            session.userId,
+            `Square ${payment.paymentId}`
+          );
+        }
 
         created++;
       }

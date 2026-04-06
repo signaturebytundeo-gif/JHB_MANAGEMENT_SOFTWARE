@@ -10,6 +10,7 @@ import {
   type UpdateSaleFormState,
 } from '@/lib/validators/sales';
 import { verifyManagerOrAbove } from '@/lib/dal';
+import { decomposeBundleInventory } from '@/lib/utils/bundle-decompose';
 
 export async function createSale(
   prevState: SaleFormState,
@@ -84,16 +85,29 @@ export async function createSale(
 
     // Deduct inventory from the selected location
     if (data.locationId) {
-      await db.inventoryTransaction.create({
-        data: {
-          productId: data.productId,
-          locationId: data.locationId,
-          quantityChange: -data.quantity,
-          type: 'SALE_DEDUCTION',
-          notes: `Sale: ${data.quantity} units via ${data.newChannelName || 'manual sale'}`,
-          createdById: session.userId,
-        },
-      });
+      // If this product is a bundle, decompose into component deductions.
+      // Otherwise do a normal single-product deduction.
+      const bundleResults = await decomposeBundleInventory(
+        data.productId,
+        data.locationId,
+        data.quantity,
+        session.userId,
+        data.referenceNumber || 'manual sale'
+      );
+
+      if (bundleResults.length === 0) {
+        // Not a bundle — normal single-product deduction
+        await db.inventoryTransaction.create({
+          data: {
+            productId: data.productId,
+            locationId: data.locationId,
+            quantityChange: -data.quantity,
+            type: 'SALE_DEDUCTION',
+            notes: `Sale: ${data.quantity} units via ${data.newChannelName || 'manual sale'}`,
+            createdById: session.userId,
+          },
+        });
+      }
     }
 
     revalidatePath('/dashboard/orders');

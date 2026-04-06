@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home, permission: 'dashboard' },
   { label: 'Production', href: '/dashboard/production', icon: Factory, permission: 'production' },
   { label: 'Inventory', href: '/dashboard/inventory', icon: Package, permission: 'inventory' },
+  { label: 'Bundles', href: '/dashboard/products/bundles', icon: Package, permission: 'inventory' },
   { label: 'Locations', href: '/dashboard/locations', icon: MapPin, permission: 'locations' },
   { label: 'Orders', href: '/dashboard/orders', icon: ShoppingCart, permission: 'orders' },
   { label: 'Events', href: '/dashboard/events', icon: Calendar, permission: 'events' },

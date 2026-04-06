@@ -283,9 +283,47 @@ model Product {
   orderLineItems        OrderLineItem[]
   invoiceLineItems      InvoiceLineItem[]
   promotionalPricings   PromotionalPricing[]
+  bundlesAsParent       ProductBundle[]          @relation("BundleParent")
+  bundleComponents      ProductBundleComponent[] @relation("BundleComponent")
 
   @@index([sku])
   @@index([isActive])
+}
+
+/**
+ * ProductBundle: a sellable SKU that decomposes into multiple component products
+ * on sale. E.g. "3-Pack Sampler" (1x 2oz + 1x 5oz + 1x 10oz).
+ * The parent product is a real Product record — the bundle adds recipe info.
+ */
+model ProductBundle {
+  id             String                   @id @default(cuid())
+  parentProductId String                  @unique
+  name           String
+  description    String?
+  isActive       Boolean                  @default(true)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  parentProduct Product                   @relation("BundleParent", fields: [parentProductId], references: [id], onDelete: Cascade)
+  components    ProductBundleComponent[]
+
+  @@index([parentProductId])
+  @@index([isActive])
+}
+
+model ProductBundleComponent {
+  id          String   @id @default(cuid())
+  bundleId    String
+  productId   String
+  quantity    Int
+  createdAt   DateTime @default(now())
+
+  bundle  ProductBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product Product       @relation("BundleComponent", fields: [productId], references: [id])
+
+  @@unique([bundleId, productId])
+  @@index([bundleId])
+  @@index([productId])
 }
 
 model PricingTier {
