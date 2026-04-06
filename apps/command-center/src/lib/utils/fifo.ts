@@ -30,22 +30,26 @@ export async function allocateInventoryFIFO(
   tx: PrismaClient = db
 ): Promise<FIFOAllocation[]> {
   // 1. Get all RELEASED batches for this product that have stock at this location
-  //    via initial allocation OR via inbound movements (transfers/adjustments)
+  //    via initial allocation, inbound movements, OR legacy inventory transactions
   const batches = await tx.batch.findMany({
     where: {
       productId,
       status: 'RELEASED',
       isActive: true,
-      OR: [
-        { allocations: { some: { locationId } } },
-        { inventoryMovements: { some: { toLocationId: locationId, approvedAt: { not: null } } } },
-      ],
     },
     include: {
       allocations: { where: { locationId } },
     },
     orderBy: { productionDate: 'asc' },
   });
+
+  // Get total InventoryTransaction pool for this product+location
+  // (legacy stock from adjustments/manual entries not tied to specific batches)
+  const txPool = await tx.inventoryTransaction.aggregate({
+    where: { productId, locationId },
+    _sum: { quantityChange: true },
+  });
+  let legacyPoolRemaining = Math.max(0, txPool._sum.quantityChange ?? 0);
 
   // 2. For each batch, calculate available = initial allocation + approved inbound - approved outbound
   const batchesWithAvailable = await Promise.all(
@@ -77,6 +81,18 @@ export async function allocateInventoryFIFO(
       };
     })
   );
+
+  // 3. Distribute legacy transaction pool to oldest batches first (if any has batches)
+  // This handles stock that came in via adjustments/sync without proper batch allocation
+  if (legacyPoolRemaining > 0 && batchesWithAvailable.length > 0) {
+    for (const batch of batchesWithAvailable) {
+      if (legacyPoolRemaining <= 0) break;
+      // Add some of the legacy pool to this batch
+      const addToBatch = legacyPoolRemaining;
+      batch.available += addToBatch;
+      legacyPoolRemaining = 0;
+    }
+  }
 
   // 3. Allocate from oldest first (FIFO)
   const allocations: FIFOAllocation[] = [];
