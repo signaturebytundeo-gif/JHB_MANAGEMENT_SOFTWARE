@@ -67,34 +67,58 @@ export async function createBundle(
     }
 
     const validated = createBundleSchema.safeParse({
-      parentProductId: formData.get('parentProductId'),
+      parentProductId: (formData.get('parentProductId') as string) || undefined,
+      newProductSku: (formData.get('newProductSku') as string) || undefined,
+      newProductSize: (formData.get('newProductSize') as string) || undefined,
       name: formData.get('name'),
       description: formData.get('description') || undefined,
       components,
     });
 
     if (!validated.success) {
-      return { errors: validated.error.flatten().fieldErrors };
+      return { errors: validated.error.flatten().fieldErrors as Record<string, string[]> };
     }
 
     const data = validated.data;
 
-    // Check: parent must not be a component of itself
-    if (data.components.some((c) => c.productId === data.parentProductId)) {
-      return { message: 'Bundle parent cannot be one of its own components' };
-    }
+    // Resolve or create parent product
+    let parentProductId = data.parentProductId;
 
-    // Check: no existing bundle for this parent product
-    const existing = await db.productBundle.findUnique({
-      where: { parentProductId: data.parentProductId },
-    });
-    if (existing) {
-      return { message: 'This product is already a bundle. Edit the existing bundle instead.' };
+    if (!parentProductId) {
+      // Create a new Product record for this bundle
+      const sku = data.newProductSku!.trim().toUpperCase();
+
+      // Check for duplicate SKU
+      const dupSku = await db.product.findUnique({ where: { sku } });
+      if (dupSku) {
+        return { message: `SKU "${sku}" already exists. Use a different SKU or select the existing product.` };
+      }
+
+      const newProduct = await db.product.create({
+        data: {
+          name: data.name,
+          sku,
+          size: data.newProductSize?.trim() || 'Bundle',
+          description: data.description,
+        },
+      });
+      parentProductId = newProduct.id;
+    } else {
+      // Using existing product — check for self-reference + existing bundle
+      if (data.components.some((c) => c.productId === parentProductId)) {
+        return { message: 'Bundle parent cannot be one of its own components' };
+      }
+      const existing = await db.productBundle.findUnique({
+        where: { parentProductId },
+      });
+      if (existing) {
+        return { message: 'This product is already a bundle. Edit the existing bundle instead.' };
+      }
     }
 
     await db.productBundle.create({
       data: {
-        parentProductId: data.parentProductId,
+        parentProductId,
         name: data.name,
         description: data.description,
         components: {

@@ -202,7 +202,10 @@ function BundleFormModal({
   onSaved: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [mode, setMode] = useState<'new' | 'existing'>(bundle ? 'existing' : 'new');
   const [parentProductId, setParentProductId] = useState(bundle?.parentProduct.id || '');
+  const [newSku, setNewSku] = useState('');
+  const [newSize, setNewSize] = useState('Bundle');
   const [name, setName] = useState(bundle?.name || '');
   const [description, setDescription] = useState(bundle?.description || '');
   const [components, setComponents] = useState<
@@ -245,8 +248,16 @@ function BundleFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!parentProductId || !name.trim() || components.length === 0) {
+    if (!name.trim() || components.length === 0) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+    if (mode === 'existing' && !parentProductId) {
+      toast.error('Select a parent product');
+      return;
+    }
+    if (mode === 'new' && !newSku.trim()) {
+      toast.error('Enter a SKU for the new bundle');
       return;
     }
     if (components.some((c) => !c.productId || c.quantity <= 0)) {
@@ -257,7 +268,12 @@ function BundleFormModal({
     startTransition(async () => {
       const formData = new FormData();
       if (bundle) formData.append('bundleId', bundle.id);
-      formData.append('parentProductId', parentProductId);
+      if (mode === 'existing') {
+        formData.append('parentProductId', parentProductId);
+      } else {
+        formData.append('newProductSku', newSku.trim().toUpperCase());
+        formData.append('newProductSize', newSize.trim());
+      }
       formData.append('name', name.trim());
       formData.append('description', description.trim());
       formData.append('components', JSON.stringify(components));
@@ -289,29 +305,88 @@ function BundleFormModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Parent Product (the bundle SKU) <span className="text-red-400">*</span>
-            </label>
-            <select
-              value={parentProductId}
-              onChange={(e) => setParentProductId(e.target.value)}
-              required
-              disabled={!!bundle}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-60"
-            >
-              <option value="">Select parent product...</option>
-              {eligibleParents.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                  {p.size ? ` — ${p.size}` : ''} ({p.sku})
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-muted-foreground mt-1">
-              This is the product customers see. Must match the SKU in Square/Amazon/Etsy.
-            </p>
-          </div>
+          {/* Mode toggle */}
+          {!bundle && (
+            <div className="flex gap-2 p-1 bg-muted rounded-md">
+              <button
+                type="button"
+                onClick={() => setMode('new')}
+                className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                  mode === 'new' ? 'bg-caribbean-green text-white' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Create New Bundle SKU
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('existing')}
+                className={`flex-1 px-3 py-2 text-sm rounded transition-colors ${
+                  mode === 'existing' ? 'bg-caribbean-green text-white' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Use Existing Product
+              </button>
+            </div>
+          )}
+
+          {/* New bundle SKU fields */}
+          {mode === 'new' && !bundle && (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Bundle SKU <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newSku}
+                  onChange={(e) => setNewSku(e.target.value.toUpperCase())}
+                  placeholder="e.g., JHB-BUNDLE-3PK"
+                  required
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This SKU must match what you set in Square/Amazon/Etsy for the bundle item.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Size/Label</label>
+                <input
+                  type="text"
+                  value={newSize}
+                  onChange={(e) => setNewSize(e.target.value)}
+                  placeholder="e.g., 3-pack, Gift Set"
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+                />
+              </div>
+            </>
+          )}
+
+          {/* Existing product selector */}
+          {(mode === 'existing' || bundle) && (
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Parent Product <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={parentProductId}
+                onChange={(e) => setParentProductId(e.target.value)}
+                required
+                disabled={!!bundle}
+                className="w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-60"
+              >
+                <option value="">Select parent product...</option>
+                {eligibleParents.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                    {p.size ? ` — ${p.size}` : ''} ({p.sku})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Select an existing product to turn into a bundle.
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-1">
