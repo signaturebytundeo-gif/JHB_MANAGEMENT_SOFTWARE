@@ -326,6 +326,41 @@ model ProductBundleComponent {
   @@index([productId])
 }
 
+/**
+ * RestaurantLead: wholesale leads from jamaicahousebrand.com/restaurant-partners.
+ * Incoming webhook from the ecommerce form creates these; operators work them
+ * through the sales pipeline on /dashboard/restaurant-leads.
+ */
+model RestaurantLead {
+  id               String    @id @default(cuid())
+  businessName     String
+  contactName      String
+  phone            String
+  email            String
+  deliveryAddress  String?
+  requestedDate    String?
+  qtyGallon        Int       @default(0)
+  qtyCase          Int       @default(0)
+  qtyEscovitch     Int       @default(0)
+  orderTotal       Decimal   @default(0)
+  paymentMethod    String?
+  notes            String?
+  taxCertFileName  String?
+  status           String    @default("NEW") // NEW, CONTACTED, QUOTED, CLOSED_WON, CLOSED_LOST
+  assignedTo       String?
+  followUpAt       DateTime?
+  convertedValue   Decimal?
+  lostReason       String?
+  internalNotes    String?
+  source           String    @default("restaurant-partners-form")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([email])
+}
+
 model PricingTier {
   id        String   @id @default(cuid())
   productId String
