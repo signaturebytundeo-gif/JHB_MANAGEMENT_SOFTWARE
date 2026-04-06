@@ -2,5 +2,19 @@
   "installCommand": "npm install --install-strategy=nested",
   "buildCommand": "npx prisma generate && npx next build",
   "outputDirectory": ".next",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/sync-square",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/sync-amazon",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/sync-etsy",
+      "schedule": "0 4 * * *"
+    }
+  ]
 }

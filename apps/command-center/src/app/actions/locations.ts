@@ -135,6 +135,63 @@ export async function deleteLocation(
   }
 }
 
+/**
+ * Quick-create a location from inline forms (e.g., transfer page).
+ * Returns the new location or throws on error.
+ */
+export async function addLocationQuick(
+  name: string,
+  type: string
+): Promise<{ id: string; name: string; type: string }> {
+  await verifyManagerOrAbove();
+
+  const validated = createLocationSchema.safeParse({ name, type, isActive: true });
+  if (!validated.success) {
+    const msgs = Object.values(validated.error.flatten().fieldErrors).flat();
+    throw new Error(msgs[0] || 'Validation failed.');
+  }
+
+  try {
+    const loc = await db.location.create({
+      data: {
+        name: validated.data.name,
+        type: validated.data.type,
+        isActive: true,
+      },
+      select: { id: true, name: true, type: true },
+    });
+
+    revalidatePath('/dashboard/inventory/transfers');
+    revalidatePath('/dashboard/inventory/adjustments');
+    revalidatePath('/dashboard/locations');
+
+    return loc;
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code: string }).code === 'P2002'
+    ) {
+      throw new Error('A location with this name already exists.');
+    }
+    throw new Error('Failed to create location.');
+  }
+}
+
+/**
+ * Fetch active locations for transfer/adjustment dropdowns (client-callable).
+ */
+export async function getActiveLocations(): Promise<
+  Array<{ id: string; name: string; type: string }>
+> {
+  return await db.location.findMany({
+    where: { isActive: true },
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true, type: true },
+  });
+}
+
 export async function reactivateLocation(
   locationId: string
 ): Promise<{ success: boolean; message: string }> {
