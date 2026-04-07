@@ -904,6 +904,7 @@ model WebsiteOrder {
   confirmationEmailSentAt DateTime?
   shippingEmailSentAt     DateTime?
   deliveryEmailSentAt     DateTime?
+  reorderReminderSentAt   DateTime?
 
   // Shipping address fields (extracted from marketplace orders or entered manually)
   shippingAddressLine1 String?

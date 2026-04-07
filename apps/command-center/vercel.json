@@ -19,6 +19,14 @@
     {
       "path": "/api/cron/stale-leads",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/reorder-reminders",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/low-stock-check",
+      "schedule": "0 13 * * *"
     }
   ]
 }
