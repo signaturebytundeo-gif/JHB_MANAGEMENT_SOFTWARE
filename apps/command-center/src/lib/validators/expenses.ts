@@ -8,6 +8,11 @@ export const logExpenseSchema = z.object({
   expenseDate: z.coerce.date({ error: 'Invalid date' }),
   vendorName: z.string().optional(),
   notes: z.string().max(500, { error: 'Notes must be 500 characters or less' }).optional(),
+  // Receipt scanner fields — populated by /api/scan-receipt before form submit
+  prefilledReceiptUrl: z.string().url().optional(),
+  lineItems: z.string().optional(), // JSON-stringified array of { name, qty, unit_price }
+  scanConfidence: z.enum(['high', 'medium', 'low']).optional(),
+  documentType: z.enum(['receipt', 'invoice', 'packing_slip', 'other']).optional(),
 });
 
 export const approveExpenseSchema = z.object({

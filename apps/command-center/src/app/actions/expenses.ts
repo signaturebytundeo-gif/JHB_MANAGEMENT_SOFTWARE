@@ -28,6 +28,10 @@ export async function logExpense(
       expenseDate: formData.get('expenseDate'),
       vendorName: formData.get('vendorName') || undefined,
       notes: formData.get('notes') || undefined,
+      prefilledReceiptUrl: formData.get('prefilledReceiptUrl') || undefined,
+      lineItems: formData.get('lineItems') || undefined,
+      scanConfidence: formData.get('scanConfidence') || undefined,
+      documentType: formData.get('documentType') || undefined,
     });
 
     if (!validatedFields.success) {
@@ -38,17 +42,31 @@ export async function logExpense(
 
     const data = validatedFields.data;
 
-    // Handle receipt upload — skip gracefully if BLOB_READ_WRITE_TOKEN is not set
-    let receiptUrl: string | null = null;
-    const receiptFile = formData.get('receipt') as File | null;
-    if (receiptFile && receiptFile.size > 0) {
-      if (!process.env.BLOB_READ_WRITE_TOKEN) {
-        console.warn('[expenses] BLOB_READ_WRITE_TOKEN not set — skipping receipt upload in development');
-      } else {
-        const blob = await put(`receipts/${Date.now()}-${receiptFile.name}`, receiptFile, {
-          access: 'public',
-        });
-        receiptUrl = blob.url;
+    // Handle receipt:
+    //   1. If the scanner already uploaded the file (prefilledReceiptUrl), reuse it.
+    //   2. Otherwise upload the manual file picker's file via Vercel Blob.
+    let receiptUrl: string | null = data.prefilledReceiptUrl ?? null;
+    if (!receiptUrl) {
+      const receiptFile = formData.get('receipt') as File | null;
+      if (receiptFile && receiptFile.size > 0) {
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+          console.warn('[expenses] BLOB_READ_WRITE_TOKEN not set — skipping receipt upload in development');
+        } else {
+          const blob = await put(`receipts/${Date.now()}-${receiptFile.name}`, receiptFile, {
+            access: 'public',
+          });
+          receiptUrl = blob.url;
+        }
+      }
+    }
+
+    // Parse line items JSON if provided by scanner
+    let lineItemsJson: unknown = undefined;
+    if (data.lineItems) {
+      try {
+        lineItemsJson = JSON.parse(data.lineItems);
+      } catch {
+        // ignore malformed payload from client
       }
     }
 
@@ -101,6 +119,9 @@ export async function logExpense(
         vendorName: data.vendorName ?? null,
         notes: data.notes ?? null,
         receiptUrl,
+        lineItems: lineItemsJson as never,
+        scanConfidence: data.scanConfidence ?? null,
+        documentType: data.documentType ?? null,
         approvalStatus,
         approvedAt,
         createdById: session.userId,

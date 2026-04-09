@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,8 +19,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { LogExpenseForm } from './LogExpenseForm';
+import { LogExpenseForm, type ScannerPrefill } from './LogExpenseForm';
 import { ExpenseApprovalCard } from './ExpenseApprovalCard';
+import { ReceiptScanner } from './ReceiptScanner';
+import { COGSSummaryWidget } from './COGSSummaryWidget';
 import type { ExpenseListItem } from '@/app/actions/expenses';
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -50,10 +52,13 @@ export function ExpensesDashboardClient({
   approvalThresholds,
   currentUserId,
 }: ExpensesDashboardClientProps) {
-  const [showForm, setShowForm] = useState(false);
+  // Scanner extraction populates this; the form watches it via prop.
+  const [prefill, setPrefill] = useState<ScannerPrefill | null>(null);
+  // Manual edit toggle when no scan has happened yet.
+  const [showManualForm, setShowManualForm] = useState(false);
 
-  // Pending expenses where the current user can act
-  // (not created by them, and pending some form of approval)
+  const formVisible = prefill !== null || showManualForm;
+
   const pendingExpenses = expenses.filter((e) => {
     const isPending = e.approvalStatus?.startsWith('pending_');
     const notOwnExpense = e.createdById !== currentUserId;
@@ -62,35 +67,40 @@ export function ExpensesDashboardClient({
 
   return (
     <div className="space-y-6">
-      {/* Log Expense Form Toggle */}
-      <div className="flex justify-end">
-        <Button
-          onClick={() => setShowForm((prev) => !prev)}
-          className="bg-caribbean-green hover:bg-caribbean-green/90 text-white gap-2"
-        >
-          {showForm ? (
-            <>
-              <X className="h-4 w-4" />
-              Cancel
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              Log Expense
-            </>
-          )}
-        </Button>
-      </div>
+      {/* COGS at-a-glance */}
+      <COGSSummaryWidget expenses={expenses} />
 
-      {/* Log Expense Form */}
-      {showForm && (
+      {/* PRIMARY ACTION: Scan Receipt */}
+      <ReceiptScanner onExtracted={setPrefill} />
+
+      {/* Manual entry fallback toggle (only when scanner hasn't run) */}
+      {!prefill && (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setShowManualForm((prev) => !prev)}
+            className="text-sm text-muted-foreground gap-2"
+          >
+            <Pencil className="h-4 w-4" />
+            {showManualForm ? 'Hide manual entry' : 'Or enter expense manually'}
+          </Button>
+        </div>
+      )}
+
+      {/* Form — appears after a scan OR when user clicks the manual link */}
+      {formVisible && (
         <Card>
           <CardHeader>
-            <CardTitle>Log New Expense</CardTitle>
-            <CardDescription>Record a business expense with receipt and details.</CardDescription>
+            <CardTitle>{prefill ? 'Review & Save Expense' : 'Log New Expense'}</CardTitle>
+            <CardDescription>
+              {prefill
+                ? 'Auto-filled from your receipt. Edit any field before saving.'
+                : 'Record a business expense with receipt and details.'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <LogExpenseForm approvalThresholds={approvalThresholds} />
+            <LogExpenseForm approvalThresholds={approvalThresholds} prefill={prefill} />
           </CardContent>
         </Card>
       )}
@@ -117,7 +127,7 @@ export function ExpensesDashboardClient({
         {expenses.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
-              No expenses logged yet. Click &ldquo;Log Expense&rdquo; to add one.
+              No expenses logged yet. Tap &ldquo;Take Photo&rdquo; above to scan your first receipt.
             </CardContent>
           </Card>
         ) : (

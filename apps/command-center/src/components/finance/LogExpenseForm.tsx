@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { logExpense } from '@/app/actions/expenses';
 import type { LogExpenseFormState } from '@/lib/validators/expenses';
 import { Button } from '@/components/ui/button';
@@ -39,14 +39,49 @@ type ApprovalThreshold = {
   description: string;
 };
 
+export type ScannerPrefill = {
+  description?: string;
+  amount?: string;
+  category?: ExpenseCategory;
+  expenseDate?: string;
+  vendorName?: string;
+  notes?: string;
+  receiptUrl?: string;
+  lineItems?: Array<{ name: string; qty: number; unit_price: number }>;
+  scanConfidence?: 'high' | 'medium' | 'low';
+  documentType?: 'receipt' | 'invoice' | 'packing_slip' | 'other';
+};
+
 interface LogExpenseFormProps {
   approvalThresholds: ApprovalThreshold[];
+  prefill?: ScannerPrefill | null;
 }
 
 const initialState: LogExpenseFormState = {};
 
-export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
+const todayISO = () => new Date().toISOString().split('T')[0];
+
+export function LogExpenseForm({ approvalThresholds, prefill }: LogExpenseFormProps) {
   const [state, formAction, isPending] = useActionState(logExpense, initialState);
+
+  // Controlled fields — so the scanner can populate them programmatically.
+  const [description, setDescription] = useState(prefill?.description ?? '');
+  const [amount, setAmount] = useState(prefill?.amount ?? '');
+  const [category, setCategory] = useState<ExpenseCategory | ''>(prefill?.category ?? '');
+  const [expenseDate, setExpenseDate] = useState(prefill?.expenseDate ?? todayISO());
+  const [vendorName, setVendorName] = useState(prefill?.vendorName ?? '');
+  const [notes, setNotes] = useState(prefill?.notes ?? '');
+
+  // When a new prefill arrives (user just scanned a receipt), refresh the controlled state.
+  useEffect(() => {
+    if (!prefill) return;
+    if (prefill.description !== undefined) setDescription(prefill.description);
+    if (prefill.amount !== undefined) setAmount(prefill.amount);
+    if (prefill.category !== undefined) setCategory(prefill.category);
+    if (prefill.expenseDate !== undefined) setExpenseDate(prefill.expenseDate);
+    if (prefill.vendorName !== undefined) setVendorName(prefill.vendorName);
+    if (prefill.notes !== undefined) setNotes(prefill.notes);
+  }, [prefill]);
 
   useEffect(() => {
     if (state.success) {
@@ -56,10 +91,15 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
     }
   }, [state]);
 
-  const today = new Date().toISOString().split('T')[0];
-
   return (
     <form action={formAction} className="space-y-4">
+      {prefill?.receiptUrl && (
+        <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Auto-filled from receipt{prefill.scanConfidence ? ` · ${prefill.scanConfidence} confidence` : ''}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Description */}
         <div className="md:col-span-2 space-y-1.5">
@@ -67,6 +107,8 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
           <Input
             id="description"
             name="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder="e.g., Scotch bonnet peppers from Walmart"
             required
           />
@@ -84,6 +126,8 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
             type="number"
             step="0.01"
             min="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
             required
           />
@@ -95,7 +139,12 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
         {/* Category */}
         <div className="space-y-1.5">
           <Label htmlFor="category">Category *</Label>
-          <Select name="category" required>
+          <Select
+            name="category"
+            required
+            value={category || undefined}
+            onValueChange={(v) => setCategory(v as ExpenseCategory)}
+          >
             <SelectTrigger id="category">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -119,7 +168,8 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
             id="expenseDate"
             name="expenseDate"
             type="date"
-            defaultValue={today}
+            value={expenseDate}
+            onChange={(e) => setExpenseDate(e.target.value)}
             required
           />
           {state.errors?.expenseDate && (
@@ -133,23 +183,27 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
           <Input
             id="vendorName"
             name="vendorName"
+            value={vendorName}
+            onChange={(e) => setVendorName(e.target.value)}
             placeholder="Optional"
           />
         </div>
 
-        {/* Receipt Upload */}
-        <div className="md:col-span-2 space-y-1.5">
-          <Label htmlFor="receipt">Receipt (optional)</Label>
-          <Input
-            id="receipt"
-            name="receipt"
-            type="file"
-            accept="image/*,.pdf"
-          />
-          <p className="text-xs text-muted-foreground">
-            Accepted formats: JPG, PNG, PDF
-          </p>
-        </div>
+        {/* Receipt Upload — only shown when the scanner did NOT already provide a receipt */}
+        {!prefill?.receiptUrl && (
+          <div className="md:col-span-2 space-y-1.5">
+            <Label htmlFor="receipt">Receipt (optional)</Label>
+            <Input
+              id="receipt"
+              name="receipt"
+              type="file"
+              accept="image/*,.pdf"
+            />
+            <p className="text-xs text-muted-foreground">
+              Accepted formats: JPG, PNG, PDF — or use the Scan Receipt button above for auto-fill.
+            </p>
+          </div>
+        )}
 
         {/* Notes */}
         <div className="md:col-span-2 space-y-1.5">
@@ -157,6 +211,8 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
           <Textarea
             id="notes"
             name="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
             placeholder="Optional notes (max 500 characters)"
             rows={3}
           />
@@ -165,6 +221,20 @@ export function LogExpenseForm({ approvalThresholds }: LogExpenseFormProps) {
           )}
         </div>
       </div>
+
+      {/* Hidden scanner-provided fields */}
+      {prefill?.receiptUrl && (
+        <input type="hidden" name="prefilledReceiptUrl" value={prefill.receiptUrl} />
+      )}
+      {prefill?.lineItems && prefill.lineItems.length > 0 && (
+        <input type="hidden" name="lineItems" value={JSON.stringify(prefill.lineItems)} />
+      )}
+      {prefill?.scanConfidence && (
+        <input type="hidden" name="scanConfidence" value={prefill.scanConfidence} />
+      )}
+      {prefill?.documentType && (
+        <input type="hidden" name="documentType" value={prefill.documentType} />
+      )}
 
       {/* Approval Threshold Info */}
       {approvalThresholds.length > 0 && (

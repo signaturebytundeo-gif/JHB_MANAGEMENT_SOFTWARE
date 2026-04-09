@@ -1139,6 +1139,10 @@ model Expense {
   secondApprovedById   String?
   approvedAt           DateTime?
   bankAuthorizationRef String?
+  // Receipt scanner fields (populated by /api/scan-receipt + Claude vision)
+  lineItems            Json? // [{ name, qty, unit_price }]
+  scanConfidence       String? // "high" | "medium" | "low"
+  documentType         String? // "receipt" | "invoice" | "packing_slip" | "other"
   createdById          String
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
