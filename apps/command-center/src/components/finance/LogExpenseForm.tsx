@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ExpenseCategory } from '@prisma/client';
+import { useVoiceFill } from '@/lib/voice/use-voice-fill';
 
 const CATEGORY_LABELS: Record<ExpenseCategory, string> = {
   INGREDIENTS: 'Ingredients',
@@ -83,6 +84,19 @@ export function LogExpenseForm({ approvalThresholds, prefill }: LogExpenseFormPr
     if (prefill.notes !== undefined) setNotes(prefill.notes);
   }, [prefill]);
 
+  // Voice fill — uses the same controlled state setters
+  const { voiceFields, consumeVoice } = useVoiceFill('finance');
+  useEffect(() => {
+    if (!voiceFields) return;
+    if (voiceFields.description) setDescription(String(voiceFields.description));
+    if (voiceFields.amount) setAmount(String(voiceFields.amount));
+    if (voiceFields.category) setCategory(voiceFields.category as ExpenseCategory);
+    if (voiceFields.expenseDate) setExpenseDate(String(voiceFields.expenseDate));
+    if (voiceFields.vendorName) setVendorName(String(voiceFields.vendorName));
+    if (voiceFields.notes) setNotes(String(voiceFields.notes));
+    consumeVoice();
+  }, [voiceFields, consumeVoice]);
+
   useEffect(() => {
     if (state.success) {
       toast.success(state.message ?? 'Expense logged');
@@ -92,7 +106,7 @@ export function LogExpenseForm({ approvalThresholds, prefill }: LogExpenseFormPr
   }, [state]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form data-voice-page="finance" action={formAction} className="space-y-4">
       {prefill?.receiptUrl && (
         <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
           <CheckCircle2 className="h-4 w-4" />

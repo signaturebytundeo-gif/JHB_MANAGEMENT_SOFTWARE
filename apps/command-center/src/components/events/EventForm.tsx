@@ -1,10 +1,12 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { createEvent, updateEvent } from '@/app/actions/events';
 import type { EventFormState } from '@/lib/validators/events';
 import { LocationAutocomplete } from './LocationAutocomplete';
+import { useVoiceFill } from '@/lib/voice/use-voice-fill';
+import { applyToNativeInputs } from '@/lib/voice/apply-to-inputs';
 
 interface Channel {
   id: string;
@@ -35,6 +37,14 @@ export function EventForm({ channels, defaultValues }: EventFormProps) {
     action,
     undefined
   );
+  const formRef = useRef<HTMLFormElement>(null);
+  const { voiceFields, consumeVoice } = useVoiceFill('events');
+
+  useEffect(() => {
+    if (!voiceFields) return;
+    applyToNativeInputs(formRef.current, voiceFields);
+    consumeVoice();
+  }, [voiceFields, consumeVoice]);
 
   useEffect(() => {
     if (state?.success) {
@@ -54,7 +64,7 @@ export function EventForm({ channels, defaultValues }: EventFormProps) {
   };
 
   return (
-    <form action={formAction} className="space-y-6 max-w-2xl">
+    <form ref={formRef} data-voice-page="events" action={formAction} className="space-y-6 max-w-2xl">
       {isEdit && <input type="hidden" name="eventId" value={defaultValues.id} />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

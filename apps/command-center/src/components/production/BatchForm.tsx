@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useEffect } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
 import { createBatch } from '@/app/actions/production';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ import {
 import { Card } from '@/components/ui/card';
 import { AllocationFields } from './AllocationFields';
 import { ProductionSource } from '@prisma/client';
+import { useVoiceFill } from '@/lib/voice/use-voice-fill';
+import { applyToNativeInputs } from '@/lib/voice/apply-to-inputs';
 
 interface BatchFormProps {
   products: { id: string; name: string; sku: string }[];
@@ -47,12 +49,26 @@ export function BatchForm({
   );
   const [showAllocations, setShowAllocations] = useState(false);
   const [totalUnits, setTotalUnits] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
+  const { voiceFields, consumeVoice } = useVoiceFill('production');
 
   // Get today's date in YYYY-MM-DD format for default value
   const today = new Date().toISOString().split('T')[0];
 
+  // Voice fill
+  useEffect(() => {
+    if (!voiceFields) return;
+    if (voiceFields.productId) setSelectedProduct(String(voiceFields.productId));
+    if (voiceFields.productionSource) setProductionSource(voiceFields.productionSource as ProductionSource);
+    if (voiceFields.totalUnits) setTotalUnits(Number(voiceFields.totalUnits));
+    // Native inputs (productionDate, notes, totalUnits input value)
+    applyToNativeInputs(formRef.current, voiceFields);
+    consumeVoice();
+  }, [voiceFields, consumeVoice]);
+
   return (
-    <form action={formAction} className="space-y-4">
+    <form ref={formRef} data-voice-page="production" action={formAction} className="space-y-4">
       {/* General error message */}
       {state?.message && (
         <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-md text-sm">
@@ -79,7 +95,7 @@ export function BatchForm({
       {/* Product */}
       <div className="space-y-2">
         <Label htmlFor="productId">Product</Label>
-        <Select name="productId" required>
+        <Select name="productId" required value={selectedProduct || undefined} onValueChange={setSelectedProduct}>
           <SelectTrigger id="productId" className="h-11 text-base">
             <SelectValue placeholder="Select product" />
           </SelectTrigger>

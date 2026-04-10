@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select';
 import { PaymentMethod } from '@prisma/client';
 import { toast } from 'sonner';
+import { useVoiceFill } from '@/lib/voice/use-voice-fill';
+import { applyToNativeInputs } from '@/lib/voice/apply-to-inputs';
 
 interface SaleFormProps {
   channels: { id: string; name: string }[];
@@ -55,11 +57,27 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
   const [quantity, setQuantity] = useState(0);
   const [unitPrice, setUnitPrice] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState('');
   const [newChannelName, setNewChannelName] = useState('');
   const [isPromo, setIsPromo] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const { voiceFields, consumeVoice } = useVoiceFill('sales');
 
   const today = new Date().toISOString().split('T')[0];
+
+  // Voice fill
+  useEffect(() => {
+    if (!voiceFields) return;
+    if (voiceFields.channelId) setSelectedChannel(String(voiceFields.channelId));
+    if (voiceFields.productId) setSelectedProduct(String(voiceFields.productId));
+    if (voiceFields.paymentMethod) setPaymentMethod(voiceFields.paymentMethod as PaymentMethod);
+    if (voiceFields.quantity) setQuantity(Number(voiceFields.quantity));
+    if (voiceFields.unitPrice) setUnitPrice(Number(voiceFields.unitPrice));
+    if (voiceFields.isPromo !== undefined) setIsPromo(Boolean(voiceFields.isPromo));
+    // Native inputs (saleDate, referenceNumber, notes)
+    applyToNativeInputs(formRef.current, voiceFields);
+    consumeVoice();
+  }, [voiceFields, consumeVoice]);
 
   useEffect(() => {
     if (state?.success) {
@@ -79,7 +97,7 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
   const isNewChannel = selectedChannel === '__new__';
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-4">
+    <form ref={formRef} data-voice-page="sales" action={formAction} className="space-y-4">
       {state?.message && !state?.success && (
         <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-md text-sm">
           {state.message}
@@ -145,7 +163,7 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
       {/* Product */}
       <div className="space-y-2">
         <Label htmlFor="productId">Product</Label>
-        <Select name="productId" required>
+        <Select name="productId" required value={selectedProduct || undefined} onValueChange={setSelectedProduct}>
           <SelectTrigger id="productId" className="h-11 text-base">
             <SelectValue placeholder="Select product" />
           </SelectTrigger>
