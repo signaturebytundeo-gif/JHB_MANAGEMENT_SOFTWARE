@@ -89,7 +89,12 @@ export function EventSquareSyncPanel({
           <div className="text-sm text-gray-300 space-y-1">
             {result.salesCreated > 0 && (
               <p className="text-green-400">
-                + {result.salesCreated} new sale{result.salesCreated !== 1 ? 's' : ''} created from Square
+                + {result.salesCreated} sale{result.salesCreated !== 1 ? 's' : ''} synced from Square
+                {result.salesNeedReview > 0 && (
+                  <span className="text-amber-400">
+                    {' '}({result.salesNeedReview} auto-matched — check ⚠ items below)
+                  </span>
+                )}
               </p>
             )}
             {result.duplicatesSkipped > 0 && (
@@ -99,8 +104,8 @@ export function EventSquareSyncPanel({
             )}
             {result.unmatchedItems.length > 0 && (
               <div>
-                <p className="text-amber-400 font-medium">
-                  {result.unmatchedItems.length} item{result.unmatchedItems.length !== 1 ? 's' : ''} couldn't be matched to products:
+                <p className="text-red-400 font-medium">
+                  {result.unmatchedItems.length} item{result.unmatchedItems.length !== 1 ? 's' : ''} not in your product list — add these products or log manually:
                 </p>
                 <ul className="mt-1 text-xs text-gray-500 space-y-0.5">
                   {result.unmatchedItems.map((item, i) => (

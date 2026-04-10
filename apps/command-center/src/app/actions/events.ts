@@ -11,6 +11,7 @@ import {
 import { getRecentSquarePayments } from '@/lib/integrations/square';
 import { isPlatformConfigured } from '@/lib/integrations/config';
 import { decomposeBundleInventory } from '@/lib/utils/bundle-decompose';
+import { matchSquareItem } from '@/lib/utils/square-match';
 
 export async function createEvent(
   prevState: EventFormState,
@@ -380,6 +381,7 @@ export interface EventSquareSyncResult {
   message: string;
   squarePayments: number;
   salesCreated: number;
+  salesNeedReview: number;
   duplicatesSkipped: number;
   unmatchedItems: string[];
   squareTotal: number; // dollars
@@ -398,7 +400,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
       return {
         success: false,
         message: 'Square is not configured — add SQUARE_ACCESS_TOKEN to env',
-        squarePayments: 0, salesCreated: 0, duplicatesSkipped: 0,
+        squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0,
         unmatchedItems: [], squareTotal: 0, eventTotal: 0,
       };
     }
@@ -410,7 +412,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
         sales: { select: { totalAmount: true } },
       },
     });
-    if (!event) return { success: false, message: 'Event not found', squarePayments: 0, salesCreated: 0, duplicatesSkipped: 0, unmatchedItems: [], squareTotal: 0, eventTotal: 0 };
+    if (!event) return { success: false, message: 'Event not found', squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0, unmatchedItems: [], squareTotal: 0, eventTotal: 0 };
 
     // Fetch Square payments for the event date (start of day → end of day UTC).
     // Event dates are stored as midnight UTC (e.g., 2026-04-04T00:00:00Z).
@@ -433,6 +435,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
     });
 
     let salesCreated = 0;
+    let salesNeedReview = 0;
     let duplicatesSkipped = 0;
     const unmatchedItems: string[] = [];
 
@@ -454,40 +457,14 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
       }
 
       for (const lineItem of payment.lineItems) {
-        const liName = lineItem.name.toLowerCase();
-        const liSku = lineItem.sku?.toLowerCase();
-        const liVariation = lineItem.variationName?.toLowerCase();
+        const match = matchSquareItem(
+          lineItem.name,
+          lineItem.sku,
+          lineItem.variationName,
+          products
+        );
 
-        // 1. SKU exact match
-        let matched = liSku
-          ? products.find((p) => p.sku.toLowerCase() === liSku)
-          : undefined;
-
-        // 2. Name + size combined
-        if (!matched) {
-          matched = products.find((p) => {
-            const pName = p.name.toLowerCase();
-            const pSize = (p.size || '').toLowerCase();
-            const combined = `${pName} ${pSize}`.trim();
-            return (
-              liName.includes(combined) ||
-              combined.includes(liName) ||
-              (liVariation && pSize && liVariation.includes(pSize)) ||
-              (liName.includes(pName) && pSize && liName.includes(pSize))
-            );
-          });
-        }
-
-        // 3. Name substring
-        if (!matched) {
-          matched = products.find(
-            (p) =>
-              p.name.toLowerCase().includes(liName) ||
-              liName.includes(p.name.toLowerCase())
-          );
-        }
-
-        if (!matched) {
+        if (!match) {
           const noteHint = payment.note ? ` — note: "${payment.note}"` : '';
           unmatchedItems.push(`${lineItem.name} ($${(lineItem.amount / 100).toFixed(2)})${noteHint}`);
           continue;
@@ -495,19 +472,33 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
 
         const unitPrice = lineItem.amount / 100 / lineItem.quantity;
         const totalAmount = lineItem.amount / 100;
+        const needsReview = match.confidence === 'medium';
+
+        // Build note: include Square note + review flag if needed
+        let saleNote = '';
+        if (needsReview) {
+          saleNote = `⚠ Review: "${lineItem.name}" auto-matched to ${match.product.name}`;
+          salesNeedReview++;
+        }
+        if (payment.note) {
+          saleNote = saleNote ? `${saleNote} | Square: ${payment.note}` : `Square: ${payment.note}`;
+        }
+        if (!saleNote) {
+          saleNote = 'Synced from Square';
+        }
 
         await db.sale.create({
           data: {
             saleDate: payment.saleDate,
             channelId: event.channelId,
-            productId: matched.id,
+            productId: match.product.id,
             eventId,
             quantity: lineItem.quantity,
             unitPrice,
             totalAmount,
             paymentMethod: 'SQUARE',
             referenceNumber: payment.paymentId,
-            notes: payment.note ? `Square: ${payment.note}` : 'Synced from Square for event',
+            notes: saleNote,
             createdById: session.userId,
           },
         });
@@ -515,7 +506,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
         // Bundle inventory decomposition
         if (farmersLocation) {
           await decomposeBundleInventory(
-            matched.id,
+            match.product.id,
             farmersLocation.id,
             lineItem.quantity,
             session.userId,
@@ -541,10 +532,12 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
     return {
       success: true,
       message: `Synced ${salesCreated} sales from ${payments.length} Square payments for ${event.name}` +
+        (salesNeedReview > 0 ? ` (${salesNeedReview} need review)` : '') +
         (duplicatesSkipped > 0 ? ` (${duplicatesSkipped} already synced)` : '') +
-        (unmatchedItems.length > 0 ? ` — ${unmatchedItems.length} items unmatched` : ''),
+        (unmatchedItems.length > 0 ? ` — ${unmatchedItems.length} truly unmatched` : ''),
       squarePayments: payments.length,
       salesCreated,
+      salesNeedReview,
       duplicatesSkipped,
       unmatchedItems,
       squareTotal,
@@ -555,7 +548,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
     return {
       success: false,
       message: `Sync failed: ${error.message}`,
-      squarePayments: 0, salesCreated: 0, duplicatesSkipped: 0,
+      squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0,
       unmatchedItems: [], squareTotal: 0, eventTotal: 0,
     };
   }

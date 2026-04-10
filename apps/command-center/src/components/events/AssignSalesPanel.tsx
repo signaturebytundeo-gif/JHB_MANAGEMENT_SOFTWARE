@@ -95,13 +95,18 @@ export function AssignSalesPanel({
                 </tr>
               </thead>
               <tbody>
-                {assignedSales.map((sale) => (
-                  <tr key={sale.id} className="border-b border-caribbean-gold/10">
-                    <td className="py-2 text-gray-300">{fmtDate(sale.saleDate)}</td>
+                {assignedSales.map((sale) => {
+                  const needsReview = sale.notes?.startsWith('⚠ Review');
+                  return (
+                  <tr key={sale.id} className={`border-b ${needsReview ? 'border-amber-500/30 bg-amber-500/5' : 'border-caribbean-gold/10'}`}>
+                    <td className="py-2 text-gray-300">
+                      {needsReview && <span className="text-amber-400 mr-1" title="Auto-matched — please verify">⚠</span>}
+                      {fmtDate(sale.saleDate)}
+                    </td>
                     <td className="py-2">
                       <span className="text-white">{sale.product.name}</span>
                       {sale.notes && (
-                        <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[200px]">{sale.notes}</p>
+                        <p className={`text-xs mt-0.5 truncate max-w-[250px] ${needsReview ? 'text-amber-400/70' : 'text-gray-500'}`}>{sale.notes}</p>
                       )}
                     </td>
                     <td className="py-2">
@@ -125,7 +130,8 @@ export function AssignSalesPanel({
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
