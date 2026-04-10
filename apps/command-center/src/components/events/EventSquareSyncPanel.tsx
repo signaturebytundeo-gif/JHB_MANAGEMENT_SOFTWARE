@@ -58,18 +58,26 @@ export function EventSquareSyncPanel({
       {result && (
         <div className="space-y-3">
           {/* Summary cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="p-3 bg-caribbean-black-light rounded-md">
-              <p className="text-xs text-gray-400">Square Payments</p>
-              <p className="text-lg font-bold text-white">{result.squarePayments}</p>
-            </div>
-            <div className="p-3 bg-caribbean-black-light rounded-md">
-              <p className="text-xs text-gray-400">Square Total</p>
+              <p className="text-xs text-gray-400">Square Gross (inc. tax)</p>
               <p className="text-lg font-bold text-caribbean-gold">{fmt(result.squareTotal)}</p>
             </div>
             <div className="p-3 bg-caribbean-black-light rounded-md">
-              <p className="text-xs text-gray-400">Event Total</p>
-              <p className="text-lg font-bold text-green-400">{fmt(result.eventTotal)}</p>
+              <p className="text-xs text-gray-400">Sales Tax Collected</p>
+              <p className="text-lg font-bold text-amber-400">{fmt(result.squareTax)}</p>
+            </div>
+            <div className="p-3 bg-caribbean-black-light rounded-md">
+              <p className="text-xs text-gray-400">Net Sales (pre-tax)</p>
+              <p className="text-lg font-bold text-green-400">{fmt(result.squareNetSales)}</p>
+            </div>
+          </div>
+
+          {/* Reconciliation row */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="p-3 bg-caribbean-black-light rounded-md">
+              <p className="text-xs text-gray-400">Event Revenue</p>
+              <p className="text-lg font-bold text-white">{fmt(result.eventTotal)}</p>
             </div>
             <div className="p-3 bg-caribbean-black-light rounded-md">
               <p className="text-xs text-gray-400">Difference</p>
@@ -82,6 +90,10 @@ export function EventSquareSyncPanel({
               >
                 {fmt(result.eventTotal - result.squareTotal)}
               </p>
+            </div>
+            <div className="p-3 bg-caribbean-black-light rounded-md">
+              <p className="text-xs text-gray-400">Payments</p>
+              <p className="text-lg font-bold text-white">{result.squarePayments}</p>
             </div>
           </div>
 

@@ -384,8 +384,10 @@ export interface EventSquareSyncResult {
   salesNeedReview: number;
   duplicatesSkipped: number;
   unmatchedItems: string[];
-  squareTotal: number; // dollars
-  eventTotal: number;  // dollars
+  squareTotal: number;    // dollars (gross, tax-inclusive)
+  squareTax: number;      // dollars (tax collected)
+  squareNetSales: number; // dollars (gross - tax)
+  eventTotal: number;     // dollars
 }
 
 /**
@@ -400,8 +402,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
       return {
         success: false,
         message: 'Square is not configured — add SQUARE_ACCESS_TOKEN to env',
-        squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0,
-        unmatchedItems: [], squareTotal: 0, eventTotal: 0,
+        squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0, unmatchedItems: [], squareTotal: 0, squareTax: 0, squareNetSales: 0, eventTotal: 0,
       };
     }
 
@@ -412,7 +413,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
         sales: { select: { totalAmount: true } },
       },
     });
-    if (!event) return { success: false, message: 'Event not found', squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0, unmatchedItems: [], squareTotal: 0, eventTotal: 0 };
+    if (!event) return { success: false, message: 'Event not found', squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0, unmatchedItems: [], squareTotal: 0, squareTax: 0, squareNetSales: 0, eventTotal: 0 };
 
     // Fetch Square payments for the event date (start of day → end of day UTC).
     // Event dates are stored as midnight UTC (e.g., 2026-04-04T00:00:00Z).
@@ -425,6 +426,8 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
 
     const payments = await getRecentSquarePayments(dayStart, dayEnd);
     const squareTotal = payments.reduce((s, p) => s + p.amount, 0) / 100;
+    const squareTax = payments.reduce((s, p) => s + p.taxAmount, 0) / 100;
+    const squareNetSales = squareTotal - squareTax;
 
     // Load products for name matching
     const products = await db.product.findMany({ where: { isActive: true } });
@@ -563,6 +566,8 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
       duplicatesSkipped,
       unmatchedItems,
       squareTotal,
+      squareTax,
+      squareNetSales,
       eventTotal,
     };
   } catch (error: any) {
@@ -571,7 +576,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
       success: false,
       message: `Sync failed: ${error.message}`,
       squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0,
-      unmatchedItems: [], squareTotal: 0, eventTotal: 0,
+      unmatchedItems: [], squareTotal: 0, squareTax: 0, squareNetSales: 0, eventTotal: 0,
     };
   }
 }

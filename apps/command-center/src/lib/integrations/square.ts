@@ -3,14 +3,16 @@ import { getSquareConfig, isPlatformConfigured } from './config';
 export interface SquareLineItem {
   name: string;
   quantity: number;
-  amount: number; // cents
+  amount: number; // cents (tax-inclusive)
+  taxAmount: number; // cents
   sku?: string;
   variationName?: string;
 }
 
 export interface SquarePaymentData {
   paymentId: string;
-  amount: number; // cents
+  amount: number; // cents (tax-inclusive)
+  taxAmount: number; // cents
   saleDate: Date;
   lineItems: SquareLineItem[];
   note?: string;
@@ -92,6 +94,7 @@ export async function getRecentSquarePayments(
       if (payment.status !== 'COMPLETED') continue;
 
       const lineItems: SquareLineItem[] = [];
+      let orderTax = 0;
 
       // If there's an associated order with line items, use those
       if (payment.order_id) {
@@ -115,12 +118,13 @@ export async function getRecentSquarePayments(
                 name: item.name || 'Unknown Item',
                 quantity: parseInt(item.quantity || '1', 10),
                 amount: Number(item.total_money?.amount ?? 0),
-                // Square catalog SKU is nested in the catalog object reference
-                // or in item-level sku field depending on how the line item was created
+                taxAmount: Number(item.total_tax_money?.amount ?? 0),
                 sku: item.sku || item.variation_name || undefined,
                 variationName: item.variation_name || undefined,
               });
             }
+            // Also capture order-level tax for the payment
+            orderTax = Number(orderData.order?.total_tax_money?.amount ?? 0);
           }
         } catch {
           // Fall through to use payment-level data
@@ -133,12 +137,14 @@ export async function getRecentSquarePayments(
           name: payment.note || 'Square Payment',
           quantity: 1,
           amount: Number(payment.amount_money?.amount ?? 0),
+          taxAmount: 0,
         });
       }
 
       payments.push({
         paymentId: payment.id,
         amount: Number(payment.amount_money?.amount ?? 0),
+        taxAmount: orderTax || lineItems.reduce((s, li) => s + li.taxAmount, 0),
         saleDate: new Date(payment.created_at),
         lineItems,
         note: payment.note,
