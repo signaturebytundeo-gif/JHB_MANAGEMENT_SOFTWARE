@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Voice input animations */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.voice-flash {
+  animation: voice-flash 0.8s ease-in-out 1;
+}
+
+@keyframes voice-flash {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.5); }
+}
+
 @theme {
   --color-caribbean-green: #2D5016;
   --color-caribbean-green-light: #3D6B1E;

@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { FloatingMicButton } from '@/components/voice/FloatingMicButton';
 
 type User = {
   name: string;
@@ -33,6 +34,8 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         />
         <main className="p-3 sm:p-4 lg:p-6">{children}</main>
       </div>
+
+      <FloatingMicButton />
     </div>
   );
 }
