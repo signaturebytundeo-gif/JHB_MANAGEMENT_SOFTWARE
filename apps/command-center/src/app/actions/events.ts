@@ -412,11 +412,14 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
     });
     if (!event) return { success: false, message: 'Event not found', squarePayments: 0, salesCreated: 0, duplicatesSkipped: 0, unmatchedItems: [], squareTotal: 0, eventTotal: 0 };
 
-    // Fetch Square payments for the event date (start of day → end of day)
+    // Fetch Square payments for the event date (start of day → end of day UTC).
+    // Event dates are stored as midnight UTC (e.g., 2026-04-04T00:00:00Z).
+    // Use UTC methods so local timezone doesn't shift the date window.
     const dayStart = new Date(event.eventDate);
-    dayStart.setHours(0, 0, 0, 0);
+    dayStart.setUTCHours(0, 0, 0, 0);
     const dayEnd = new Date(event.eventDate);
-    dayEnd.setHours(23, 59, 59, 999);
+    dayEnd.setUTCHours(23, 59, 59, 999);
+    console.log(`[event-sync] ${event.name}: querying Square ${dayStart.toISOString()} → ${dayEnd.toISOString()}`);
 
     const payments = await getRecentSquarePayments(dayStart, dayEnd);
     const squareTotal = payments.reduce((s, p) => s + p.amount, 0) / 100;

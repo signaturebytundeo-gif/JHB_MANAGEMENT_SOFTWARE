@@ -22,12 +22,13 @@ export default async function EventDetailPage({
 
   if (!event) return notFound();
 
-  // Filter unassigned Square sales to just the event date (±1 day for timezone slack)
-  const eventDateStr = new Date(event.eventDate).toISOString().split('T')[0];
+  // Filter unassigned Square sales to just the event date (��1 day for timezone slack).
+  // Use UTC to avoid local timezone shifting the date.
+  const eventDateStr = event.eventDate.toISOString().split('T')[0];
   const dayBefore = new Date(event.eventDate);
-  dayBefore.setDate(dayBefore.getDate() - 1);
+  dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
   const dayAfter = new Date(event.eventDate);
-  dayAfter.setDate(dayAfter.getDate() + 1);
+  dayAfter.setUTCDate(dayAfter.getUTCDate() + 1);
   const unassignedSales = await getUnassignedSquareSales(
     dayBefore.toISOString().split('T')[0],
     dayAfter.toISOString().split('T')[0]
