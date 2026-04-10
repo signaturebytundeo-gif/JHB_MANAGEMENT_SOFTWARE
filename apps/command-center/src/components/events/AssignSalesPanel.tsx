@@ -10,6 +10,7 @@ interface SaleItem {
   quantity: number;
   totalAmount: number;
   product: { id: string; name: string };
+  paymentMethod?: string;
   notes: string | null;
 }
 
@@ -87,6 +88,7 @@ export function AssignSalesPanel({
                 <tr className="border-b border-caribbean-gold/20 text-left text-gray-400">
                   <th className="pb-2 font-medium">Date</th>
                   <th className="pb-2 font-medium">Product</th>
+                  <th className="pb-2 font-medium">Payment</th>
                   <th className="pb-2 font-medium text-right">Qty</th>
                   <th className="pb-2 font-medium text-right">Amount</th>
                   <th className="pb-2 font-medium text-right">Action</th>
@@ -96,7 +98,21 @@ export function AssignSalesPanel({
                 {assignedSales.map((sale) => (
                   <tr key={sale.id} className="border-b border-caribbean-gold/10">
                     <td className="py-2 text-gray-300">{fmtDate(sale.saleDate)}</td>
-                    <td className="py-2 text-white">{sale.product.name}</td>
+                    <td className="py-2">
+                      <span className="text-white">{sale.product.name}</span>
+                      {sale.notes && (
+                        <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[200px]">{sale.notes}</p>
+                      )}
+                    </td>
+                    <td className="py-2">
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        sale.paymentMethod === 'SQUARE' ? 'bg-blue-500/20 text-blue-400' :
+                        sale.paymentMethod === 'CASH' ? 'bg-green-500/20 text-green-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {sale.paymentMethod ?? 'CASH'}
+                      </span>
+                    </td>
                     <td className="py-2 text-right text-gray-300">{sale.quantity}</td>
                     <td className="py-2 text-right text-green-400">{fmt(sale.totalAmount)}</td>
                     <td className="py-2 text-right">
@@ -166,7 +182,12 @@ export function AssignSalesPanel({
                       />
                     </td>
                     <td className="py-2 text-gray-300">{fmtDate(sale.saleDate)}</td>
-                    <td className="py-2 text-white">{sale.product.name}</td>
+                    <td className="py-2">
+                      <span className="text-white">{sale.product.name}</span>
+                      {sale.notes && (
+                        <p className="text-xs text-gray-500 mt-0.5 truncate max-w-[200px]">{sale.notes}</p>
+                      )}
+                    </td>
                     <td className="py-2 text-right text-gray-300">{sale.quantity}</td>
                     <td className="py-2 text-right text-green-400">{fmt(sale.totalAmount)}</td>
                   </tr>

@@ -488,7 +488,8 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
         }
 
         if (!matched) {
-          unmatchedItems.push(`${lineItem.name} ($${(lineItem.amount / 100).toFixed(2)})`);
+          const noteHint = payment.note ? ` — note: "${payment.note}"` : '';
+          unmatchedItems.push(`${lineItem.name} ($${(lineItem.amount / 100).toFixed(2)})${noteHint}`);
           continue;
         }
 
