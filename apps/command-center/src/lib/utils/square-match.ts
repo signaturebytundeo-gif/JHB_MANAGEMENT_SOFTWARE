@@ -45,7 +45,7 @@ export function matchSquareItem(
   const liSku = itemSku?.toLowerCase();
   const liVariation = itemVariation?.toLowerCase();
 
-  // Skip truly unknowable items
+  // These will fall through to the catch-all "Custom Sale" product at the sync level
   if (liName === 'unknown item' || liName === 'custom amount') return null;
 
   // ── 1. SKU exact match ──

@@ -426,8 +426,26 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
     const payments = await getRecentSquarePayments(dayStart, dayEnd);
     const squareTotal = payments.reduce((s, p) => s + p.amount, 0) / 100;
 
-    // Load products for name matching (same 4-strategy matching as main sync)
+    // Load products for name matching
     const products = await db.product.findMany({ where: { isActive: true } });
+
+    // Catch-all product for unknown/custom amounts — ensures totals always reconcile
+    let customProduct = products.find((p) => p.sku === 'JHB-CUSTOM');
+    if (!customProduct) {
+      customProduct = await db.product.upsert({
+        where: { sku: 'JHB-CUSTOM' },
+        update: {},
+        create: {
+          name: 'Custom Sale',
+          sku: 'JHB-CUSTOM',
+          size: 'misc',
+          description: 'Catch-all for custom amounts',
+          reorderPoint: 0,
+          leadTimeDays: 0,
+          isActive: true,
+        },
+      });
+    }
 
     // Find Farmers Markets location for bundle decomposition
     const farmersLocation = await db.location.findFirst({
@@ -464,22 +482,27 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
           products
         );
 
-        if (!match) {
-          const noteHint = payment.note ? ` — note: "${payment.note}"` : '';
-          unmatchedItems.push(`${lineItem.name} ($${(lineItem.amount / 100).toFixed(2)})${noteHint}`);
-          continue;
-        }
-
         const unitPrice = lineItem.amount / 100 / lineItem.quantity;
         const totalAmount = lineItem.amount / 100;
-        const needsReview = match.confidence === 'medium';
 
-        // Build note: include Square note + review flag if needed
+        // Determine product + note based on match result
+        let productId: string;
         let saleNote = '';
-        if (needsReview) {
-          saleNote = `⚠ Review: "${lineItem.name}" auto-matched to ${match.product.name}`;
+
+        if (match) {
+          productId = match.product.id;
+          if (match.confidence === 'medium') {
+            saleNote = `⚠ Review: "${lineItem.name}" auto-matched to ${match.product.name}`;
+            salesNeedReview++;
+          }
+        } else {
+          // No match — log under "Custom Sale" so dollar totals always reconcile.
+          // This covers "Unknown Item", custom amounts, and truly new products.
+          productId = customProduct.id;
+          saleNote = `⚠ Custom: "${lineItem.name}" ($${totalAmount.toFixed(2)}) — no product match`;
           salesNeedReview++;
         }
+
         if (payment.note) {
           saleNote = saleNote ? `${saleNote} | Square: ${payment.note}` : `Square: ${payment.note}`;
         }
@@ -491,7 +514,7 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
           data: {
             saleDate: payment.saleDate,
             channelId: event.channelId,
-            productId: match.product.id,
+            productId,
             eventId,
             quantity: lineItem.quantity,
             unitPrice,
@@ -503,8 +526,8 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
           },
         });
 
-        // Bundle inventory decomposition
-        if (farmersLocation) {
+        // Bundle inventory decomposition (skip for custom sales)
+        if (match && farmersLocation) {
           await decomposeBundleInventory(
             match.product.id,
             farmersLocation.id,
@@ -532,9 +555,8 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
     return {
       success: true,
       message: `Synced ${salesCreated} sales from ${payments.length} Square payments for ${event.name}` +
-        (salesNeedReview > 0 ? ` (${salesNeedReview} need review)` : '') +
-        (duplicatesSkipped > 0 ? ` (${duplicatesSkipped} already synced)` : '') +
-        (unmatchedItems.length > 0 ? ` — ${unmatchedItems.length} truly unmatched` : ''),
+        (salesNeedReview > 0 ? ` — ${salesNeedReview} need review (⚠ items)` : '') +
+        (duplicatesSkipped > 0 ? ` (${duplicatesSkipped} already synced)` : ''),
       squarePayments: payments.length,
       salesCreated,
       salesNeedReview,

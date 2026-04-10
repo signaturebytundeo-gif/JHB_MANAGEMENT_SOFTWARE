@@ -102,26 +102,18 @@ export function EventSquareSyncPanel({
                 {result.duplicatesSkipped} already synced (skipped)
               </p>
             )}
-            {result.unmatchedItems.length > 0 && (
-              <div>
-                <p className="text-red-400 font-medium">
-                  {result.unmatchedItems.length} item{result.unmatchedItems.length !== 1 ? 's' : ''} not in your product list — add these products or log manually:
-                </p>
-                <ul className="mt-1 text-xs text-gray-500 space-y-0.5">
-                  {result.unmatchedItems.map((item, i) => (
-                    <li key={i}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
             {result.success &&
-              result.unmatchedItems.length === 0 &&
               result.salesCreated === 0 &&
               result.duplicatesSkipped > 0 && (
                 <p className="text-green-400">
                   All Square payments already synced — event is up to date
                 </p>
               )}
+            {result.success && result.salesCreated > 0 && result.salesNeedReview === 0 && (
+              <p className="text-green-400">
+                All items matched perfectly — no review needed
+              </p>
+            )}
           </div>
         </div>
       )}
