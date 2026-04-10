@@ -29,7 +29,8 @@ function delay(ms: number) {
 }
 
 export async function getRecentSquarePayments(
-  sinceDate?: Date
+  sinceDate?: Date,
+  endDate?: Date
 ): Promise<SquarePaymentData[]> {
   if (!isPlatformConfigured('SQUARE')) {
     console.warn('Square: not configured, skipping sync');
@@ -62,6 +63,7 @@ export async function getRecentSquarePayments(
     // Use GET /v2/payments with query params (search POST returns 404 on some accounts)
     const url = new URL(`${baseUrl}/v2/payments`);
     url.searchParams.set('begin_time', beginTime);
+    if (endDate) url.searchParams.set('end_time', endDate.toISOString());
     url.searchParams.set('sort_order', 'DESC');
     url.searchParams.set('limit', '100');
     if (cursor) {

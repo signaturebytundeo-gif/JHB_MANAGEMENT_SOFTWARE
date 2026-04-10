@@ -4,6 +4,7 @@ import { getEventById, getUnassignedSquareSales } from '@/app/actions/events';
 import { getChannels, getProducts } from '@/app/actions/sales';
 import { EventForm } from '@/components/events/EventForm';
 import { AssignSalesPanel } from '@/components/events/AssignSalesPanel';
+import { EventSquareSyncPanel } from '@/components/events/EventSquareSyncPanel';
 import { QuickSaleForm } from '@/components/events/QuickSaleForm';
 import { ChevronLeft, Package } from 'lucide-react';
 
@@ -13,14 +14,24 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [event, unassignedSales, channels, products] = await Promise.all([
+  const [event, channels, products] = await Promise.all([
     getEventById(id),
-    getUnassignedSquareSales(),
     getChannels(),
     getProducts(),
   ]);
 
   if (!event) return notFound();
+
+  // Filter unassigned Square sales to just the event date (±1 day for timezone slack)
+  const eventDateStr = new Date(event.eventDate).toISOString().split('T')[0];
+  const dayBefore = new Date(event.eventDate);
+  dayBefore.setDate(dayBefore.getDate() - 1);
+  const dayAfter = new Date(event.eventDate);
+  dayAfter.setDate(dayAfter.getDate() + 1);
+  const unassignedSales = await getUnassignedSquareSales(
+    dayBefore.toISOString().split('T')[0],
+    dayAfter.toISOString().split('T')[0]
+  );
 
   const fmt = (n: number) =>
     n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -94,6 +105,16 @@ export default async function EventDetailPage({
             {event.itemsSold.length} product{event.itemsSold.length !== 1 ? 's' : ''}
           </p>
         </div>
+      </div>
+
+      {/* Square Reconciliation */}
+      <div className="p-4 bg-caribbean-black border border-caribbean-gold/20 rounded-lg">
+        <EventSquareSyncPanel
+          eventId={event.id}
+          eventName={event.name}
+          eventDate={eventDateStr}
+          currentRevenue={event.revenue}
+        />
       </div>
 
       {/* Items Sold Breakdown */}

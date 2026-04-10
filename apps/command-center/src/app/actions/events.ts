@@ -8,6 +8,9 @@ import {
   updateEventSchema,
   type EventFormState,
 } from '@/lib/validators/events';
+import { getRecentSquarePayments } from '@/lib/integrations/square';
+import { isPlatformConfigured } from '@/lib/integrations/config';
+import { decomposeBundleInventory } from '@/lib/utils/bundle-decompose';
 
 export async function createEvent(
   prevState: EventFormState,
@@ -365,5 +368,191 @@ export async function unassignSalesFromEvent(saleIds: string[]) {
   } catch (error) {
     console.error('Error unassigning sales:', error);
     return { message: 'Failed to unassign sales' };
+  }
+}
+
+// ============================================================================
+// Square ↔ Event Reconciliation
+// ============================================================================
+
+export interface EventSquareSyncResult {
+  success: boolean;
+  message: string;
+  squarePayments: number;
+  salesCreated: number;
+  duplicatesSkipped: number;
+  unmatchedItems: string[];
+  squareTotal: number; // dollars
+  eventTotal: number;  // dollars
+}
+
+/**
+ * Pull Square payments for a specific event date, match to products,
+ * and create Sale records linked directly to the event.
+ */
+export async function syncSquareForEvent(eventId: string): Promise<EventSquareSyncResult> {
+  try {
+    const session = await verifyManagerOrAbove();
+
+    if (!isPlatformConfigured('SQUARE')) {
+      return {
+        success: false,
+        message: 'Square is not configured — add SQUARE_ACCESS_TOKEN to env',
+        squarePayments: 0, salesCreated: 0, duplicatesSkipped: 0,
+        unmatchedItems: [], squareTotal: 0, eventTotal: 0,
+      };
+    }
+
+    const event = await db.marketEvent.findUnique({
+      where: { id: eventId },
+      include: {
+        channel: true,
+        sales: { select: { totalAmount: true } },
+      },
+    });
+    if (!event) return { success: false, message: 'Event not found', squarePayments: 0, salesCreated: 0, duplicatesSkipped: 0, unmatchedItems: [], squareTotal: 0, eventTotal: 0 };
+
+    // Fetch Square payments for the event date (start of day → end of day)
+    const dayStart = new Date(event.eventDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(event.eventDate);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const payments = await getRecentSquarePayments(dayStart, dayEnd);
+    const squareTotal = payments.reduce((s, p) => s + p.amount, 0) / 100;
+
+    // Load products for name matching (same 4-strategy matching as main sync)
+    const products = await db.product.findMany({ where: { isActive: true } });
+
+    // Find Farmers Markets location for bundle decomposition
+    const farmersLocation = await db.location.findFirst({
+      where: { name: { contains: 'Farmers Market', mode: 'insensitive' }, isActive: true },
+    });
+
+    let salesCreated = 0;
+    let duplicatesSkipped = 0;
+    const unmatchedItems: string[] = [];
+
+    for (const payment of payments) {
+      // Dedup by Square payment ID
+      const existing = await db.sale.findFirst({
+        where: { referenceNumber: payment.paymentId },
+      });
+      if (existing) {
+        // If already exists but not assigned to this event, assign it
+        if (!existing.eventId || existing.eventId !== eventId) {
+          await db.sale.update({
+            where: { id: existing.id },
+            data: { eventId },
+          });
+        }
+        duplicatesSkipped++;
+        continue;
+      }
+
+      for (const lineItem of payment.lineItems) {
+        const liName = lineItem.name.toLowerCase();
+        const liSku = lineItem.sku?.toLowerCase();
+        const liVariation = lineItem.variationName?.toLowerCase();
+
+        // 1. SKU exact match
+        let matched = liSku
+          ? products.find((p) => p.sku.toLowerCase() === liSku)
+          : undefined;
+
+        // 2. Name + size combined
+        if (!matched) {
+          matched = products.find((p) => {
+            const pName = p.name.toLowerCase();
+            const pSize = (p.size || '').toLowerCase();
+            const combined = `${pName} ${pSize}`.trim();
+            return (
+              liName.includes(combined) ||
+              combined.includes(liName) ||
+              (liVariation && pSize && liVariation.includes(pSize)) ||
+              (liName.includes(pName) && pSize && liName.includes(pSize))
+            );
+          });
+        }
+
+        // 3. Name substring
+        if (!matched) {
+          matched = products.find(
+            (p) =>
+              p.name.toLowerCase().includes(liName) ||
+              liName.includes(p.name.toLowerCase())
+          );
+        }
+
+        if (!matched) {
+          unmatchedItems.push(`${lineItem.name} ($${(lineItem.amount / 100).toFixed(2)})`);
+          continue;
+        }
+
+        const unitPrice = lineItem.amount / 100 / lineItem.quantity;
+        const totalAmount = lineItem.amount / 100;
+
+        await db.sale.create({
+          data: {
+            saleDate: payment.saleDate,
+            channelId: event.channelId,
+            productId: matched.id,
+            eventId,
+            quantity: lineItem.quantity,
+            unitPrice,
+            totalAmount,
+            paymentMethod: 'SQUARE',
+            referenceNumber: payment.paymentId,
+            notes: payment.note ? `Square: ${payment.note}` : 'Synced from Square for event',
+            createdById: session.userId,
+          },
+        });
+
+        // Bundle inventory decomposition
+        if (farmersLocation) {
+          await decomposeBundleInventory(
+            matched.id,
+            farmersLocation.id,
+            lineItem.quantity,
+            session.userId,
+            `Square event sync: ${payment.paymentId}`
+          );
+        }
+
+        salesCreated++;
+      }
+    }
+
+    // Compute post-sync event total
+    const updatedSales = await db.sale.findMany({
+      where: { eventId },
+      select: { totalAmount: true },
+    });
+    const eventTotal = updatedSales.reduce((s, sale) => s + Number(sale.totalAmount), 0);
+
+    revalidatePath(`/dashboard/events/${eventId}`);
+    revalidatePath('/dashboard/events');
+    revalidatePath('/dashboard/orders');
+
+    return {
+      success: true,
+      message: `Synced ${salesCreated} sales from ${payments.length} Square payments for ${event.name}` +
+        (duplicatesSkipped > 0 ? ` (${duplicatesSkipped} already synced)` : '') +
+        (unmatchedItems.length > 0 ? ` — ${unmatchedItems.length} items unmatched` : ''),
+      squarePayments: payments.length,
+      salesCreated,
+      duplicatesSkipped,
+      unmatchedItems,
+      squareTotal,
+      eventTotal,
+    };
+  } catch (error: any) {
+    console.error('Error syncing Square for event:', error);
+    return {
+      success: false,
+      message: `Sync failed: ${error.message}`,
+      squarePayments: 0, salesCreated: 0, duplicatesSkipped: 0,
+      unmatchedItems: [], squareTotal: 0, eventTotal: 0,
+    };
   }
 }
