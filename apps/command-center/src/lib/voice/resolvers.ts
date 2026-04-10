@@ -3,8 +3,8 @@ import { db } from '@/lib/db';
 
 /**
  * Server-side resolvers that fuzzy-match spoken names to Prisma record IDs.
- * Used by /api/voice-input to convert "jerk sauce" → product cuid,
- * "Las Olas" → channel/event cuid, etc.
+ * Each resolver is individually try/catch wrapped so a single DB failure
+ * doesn't prevent scalar fields from being returned.
  */
 
 function fuzzyMatch(
@@ -40,63 +40,50 @@ function fuzzyMatch(
   return best?.id ?? null;
 }
 
-export async function resolveProductByName(
-  name: string
-): Promise<string | null> {
-  const products = await db.product.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true },
-  });
-  return fuzzyMatch(products, name);
-}
-
-export async function resolveChannelByName(
-  name: string
-): Promise<string | null> {
-  const channels = await db.salesChannel.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true },
-  });
-  return fuzzyMatch(channels, name);
-}
-
-export async function resolveLocationByName(
-  name: string
-): Promise<string | null> {
-  const locations = await db.location.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true },
-  });
-  return fuzzyMatch(locations, name);
-}
-
-/** Resolve an event by name or closest date match */
-export async function resolveEventByNameOrDate(
-  name?: string,
-  date?: string
-): Promise<string | null> {
-  const where: any = {};
-  if (date) {
-    // Look ±3 days around the given date
-    const d = new Date(date);
-    where.eventDate = {
-      gte: new Date(d.getTime() - 3 * 86400000),
-      lte: new Date(d.getTime() + 3 * 86400000),
-    };
+async function resolveProductByName(name: string): Promise<string | null> {
+  try {
+    const products = await db.product.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+    });
+    return fuzzyMatch(products, name);
+  } catch (err) {
+    console.error('voice resolver: product lookup failed', err);
+    return null;
   }
-  const events = await db.marketEvent.findMany({
-    where,
-    select: { id: true, name: true },
-    orderBy: { eventDate: 'desc' },
-    take: 50,
-  });
-  if (name) return fuzzyMatch(events, name);
-  return events[0]?.id ?? null;
+}
+
+async function resolveChannelByName(name: string): Promise<string | null> {
+  try {
+    const channels = await db.salesChannel.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+    });
+    return fuzzyMatch(channels, name);
+  } catch (err) {
+    console.error('voice resolver: channel lookup failed', err);
+    return null;
+  }
+}
+
+async function resolveLocationByName(name: string): Promise<string | null> {
+  try {
+    const locations = await db.location.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+    });
+    return fuzzyMatch(locations, name);
+  } catch (err) {
+    console.error('voice resolver: location lookup failed', err);
+    return null;
+  }
 }
 
 /**
  * Given the AI's raw output, resolve any name-based fields to real Prisma IDs.
- * Returns the fields with names replaced by IDs where possible.
+ * Scalar fields always pass through. FK resolution is best-effort — if a
+ * lookup fails, the original name field is kept so the user can see what
+ * was heard and manually pick the right option.
  */
 export async function resolveFields(
   page: string,
@@ -113,6 +100,7 @@ export async function resolveFields(
       delete resolved.product_name;
       delete resolved.product;
     }
+    // If no match, keep the name field — form won't auto-select but user sees intent
   }
 
   // Channel name → channelId
@@ -135,8 +123,6 @@ export async function resolveFields(
       delete resolved.location_name;
     }
   }
-
-  // Market location → for events, keep as string (location field on MarketEvent is a string)
 
   // Compute totalAmount for sales
   if (page === 'sales' && raw.quantity && raw.unitPrice) {

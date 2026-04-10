@@ -54,6 +54,10 @@ const NAV_ROUTES: Record<string, string> = {
   orders: '/dashboard/orders',
   events: '/dashboard/events',
   inventory: '/dashboard/inventory',
+  'add product': '/dashboard/inventory/new',
+  'new product': '/dashboard/inventory/new',
+  'add event': '/dashboard/events/new',
+  'new event': '/dashboard/events/new',
   dashboard: '/dashboard',
   home: '/dashboard',
 };
@@ -133,6 +137,15 @@ export function FloatingMicButton() {
         return;
       }
       const data = await res.json();
+      console.log('[voice] page:', page, 'response:', JSON.stringify(data));
+
+      // Server-side error — show it
+      if (data._error) {
+        console.warn('[voice] server error:', data._error);
+        toast.error(`Voice error: ${data._error}`);
+        setStatus('idle');
+        return;
+      }
 
       // Dispatch action commands
       if (data.action === 'submit' || data.action === 'clear') {
@@ -144,11 +157,14 @@ export function FloatingMicButton() {
       }
 
       // Dispatch fill event — forms listen via useVoiceFill()
-      const filledCount = Object.keys(data.filledFields ?? {}).length;
+      const filledFields = data.filledFields ?? {};
+      const filledCount = Object.keys(filledFields).length;
+      console.log('[voice] dispatching voiceFill:', page, filledFields);
+
       if (filledCount > 0) {
         window.dispatchEvent(
           new CustomEvent('voiceFill', {
-            detail: { page, fields: data.filledFields },
+            detail: { page, fields: filledFields },
           })
         );
       }
@@ -162,9 +178,15 @@ export function FloatingMicButton() {
         return;
       }
 
+      if (filledCount === 0) {
+        toast.warning('No fields matched — try being more specific', { duration: 3000 });
+        setStatus('idle');
+        return;
+      }
+
       if (data.confidence === 'low') {
         toast.warning('Please review — voice wasn\'t sure', { duration: 3000 });
-      } else if (filledCount > 0) {
+      } else {
         toast.success(`Filled ${filledCount} field${filledCount === 1 ? '' : 's'}`);
       }
 

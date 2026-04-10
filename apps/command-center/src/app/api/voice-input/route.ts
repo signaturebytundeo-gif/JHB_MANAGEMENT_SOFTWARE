@@ -45,6 +45,17 @@ finance (Expense):
   category (enum: INGREDIENTS, PACKAGING, LABOR, EQUIPMENT, MARKETING, SHIPPING, UTILITIES, RENT, INSURANCE, OVERHEAD, OTHER),
   expenseDate (YYYY-MM-DD, required), vendorName (string), notes (string)
 
+inventory (New Product):
+  name (string, required — product name like "Mango Lime"),
+  sku (string, required — format JHB-XX-ABBREV, e.g. JHB-JC-MAN-LIM for juice, JHB-OJS-5OZ for sauce),
+  size (string, required — e.g. "bottle", "5oz", "10oz"),
+  retailPrice (number, required — default 7.99 for juices, varies for sauces),
+  unitsPerCase (integer, optional),
+  startingStock (integer, optional — number of units to add),
+  description (string, optional)
+  When user says "juice" or mentions a juice flavor, use JHB-JC- prefix for SKU.
+  When user says "sauce", use JHB-OJS- or JHB-EP- prefix.
+
 Rules:
 - Numbers must be actual numbers, not strings.
 - Dates: convert "today", "yesterday", "last Friday", "this Saturday" etc. to ISO YYYY-MM-DD.
@@ -153,10 +164,13 @@ export async function POST(req: Request) {
 
   try {
     const raw = await callGroq(SYSTEM_PROMPT, userMessage);
+    console.log('[voice-input] groq raw:', raw);
     const parsed = safeParse(raw);
     if (!parsed || typeof parsed !== 'object') {
+      console.error('[voice-input] parse failed, raw:', raw);
       return NextResponse.json(fallback('parse_failed'));
     }
+    console.log('[voice-input] parsed filledFields:', JSON.stringify(parsed.filledFields));
 
     // Resolve names → Prisma IDs
     const filledFields = await resolveFields(

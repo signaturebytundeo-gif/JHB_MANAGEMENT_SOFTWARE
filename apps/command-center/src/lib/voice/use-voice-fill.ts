@@ -21,7 +21,9 @@ export function useVoiceFill(page: string) {
   useEffect(() => {
     function handler(e: Event) {
       const detail = (e as CustomEvent).detail;
+      console.log('[useVoiceFill] event received:', detail?.page, 'listening for:', page);
       if (detail?.page === page && detail.fields) {
+        console.log('[useVoiceFill] applying fields:', detail.fields);
         setFields({ ...detail.fields });
       }
     }
