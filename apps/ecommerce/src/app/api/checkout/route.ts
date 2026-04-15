@@ -102,11 +102,15 @@ export async function POST(request: NextRequest) {
     // PROMO CODE VALIDATION (server-side re-validation)
     // The client may have validated via /api/validate-promo, but we re-check here
     // to prevent replay attacks or race conditions with usage limits.
+    //
+    // SPECIAL LOGIC: Orders $50+ (which get free shipping) should save the promo
+    // code for the customer's next order instead of applying it to this order.
     // =========================================================================
     let promoDiscount = 0
     let validatedPromoCode: string | null = null
     let promoDiscountType: string | null = null
     let promoDiscountValue: number | null = null
+    let savedPromoForNextOrder: string | null = null
 
     if (promoCode) {
       const normalizedCode = promoCode.trim().toUpperCase()
@@ -123,26 +127,36 @@ export async function POST(request: NextRequest) {
         (!promo.expires_at || new Date(promo.expires_at) >= new Date()) &&
         (promo.max_uses === null || promo.usage_count < promo.max_uses)
       ) {
-        validatedPromoCode = normalizedCode
-        promoDiscountType = promo.discount_type
-        promoDiscountValue = Number(promo.discount_value)
-
         // Calculate paid items subtotal (after 2oz enforcement, before bundle discount)
         const paidSubtotal = normalizedItems.reduce(
           (sum, item) => sum + (item.isFreeSample ? 0 : item.price * item.quantity),
           0
         )
 
-        if (promo.discount_type === 'percentage') {
-          promoDiscount = Math.round((paidSubtotal * promoDiscountValue) / 100)
-        } else {
-          // Fixed amount discount (stored as dollars, convert to cents)
-          promoDiscount = Math.round(promoDiscountValue * 100)
-        }
+        // Check if this order qualifies for free shipping ($50+)
+        const qualifiesForFreeShipping = paidSubtotal >= 5000
 
-        // Clamp: discount cannot exceed the paid subtotal
-        if (promoDiscount > paidSubtotal) {
-          promoDiscount = paidSubtotal
+        if (qualifiesForFreeShipping) {
+          // Save promo code for next order instead of applying to this order
+          savedPromoForNextOrder = normalizedCode
+          console.log(`Order $${paidSubtotal / 100} qualifies for free shipping. Saving promo code "${normalizedCode}" for customer's next order.`)
+        } else {
+          // Apply discount to this order as normal
+          validatedPromoCode = normalizedCode
+          promoDiscountType = promo.discount_type
+          promoDiscountValue = Number(promo.discount_value)
+
+          if (promo.discount_type === 'percentage') {
+            promoDiscount = Math.round((paidSubtotal * promoDiscountValue) / 100)
+          } else {
+            // Fixed amount discount (stored as dollars, convert to cents)
+            promoDiscount = Math.round(promoDiscountValue * 100)
+          }
+
+          // Clamp: discount cannot exceed the paid subtotal
+          if (promoDiscount > paidSubtotal) {
+            promoDiscount = paidSubtotal
+          }
         }
       }
       // If promo is invalid at checkout time, silently skip (don't block the order)
@@ -253,6 +267,7 @@ export async function POST(request: NextRequest) {
         bundleDiscount: serverBundleDiscount > 0 ? serverBundleDiscount.toString() : '0',
         promoCode: validatedPromoCode || '',
         promoDiscount: promoDiscount > 0 ? promoDiscount.toString() : '0',
+        savedPromoForNextOrder: savedPromoForNextOrder || '',
         items_json: JSON.stringify(itemsSummary),
       },
     })

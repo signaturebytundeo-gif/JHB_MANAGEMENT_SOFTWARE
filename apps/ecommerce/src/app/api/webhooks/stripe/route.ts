@@ -3,6 +3,43 @@ import { stripe } from '@/lib/stripe'
 import { getSupabase } from '@/lib/supabase'
 import Stripe from 'stripe'
 import { handleOrderComplete, type OrderItem } from '@/lib/order-handler'
+import { Resend } from 'resend'
+
+// Initialize Resend for sending follow-up emails
+const resend = new Resend(process.env.RESEND_API_KEY!)
+
+// Send follow-up email for saved promo codes
+async function sendSavedPromoEmail(email: string, name: string, promoCode: string) {
+  const firstName = name.split(' ')[0] || 'Valued Customer'
+
+  await resend.emails.send({
+    from: 'Jamaica House Brand <noreply@jamaicahousebrand.com>',
+    to: email,
+    subject: `Your promo code "${promoCode}" is saved for your next order! 🌶️`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #d97706;">Thanks for your order, ${firstName}! 🎉</h2>
+
+        <p>Your order qualified for <strong>FREE SHIPPING</strong> (orders $50+), so we've saved your promo code for your next Jamaica House Brand purchase:</p>
+
+        <div style="background: #fef3c7; border: 2px solid #d97706; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+          <h3 style="margin: 0; color: #92400e;">Your Saved Promo Code</h3>
+          <p style="font-size: 24px; font-weight: bold; color: #92400e; letter-spacing: 2px; margin: 10px 0;">${promoCode}</p>
+          <p style="margin: 0; color: #92400e; font-size: 14px;">Save this for your next order!</p>
+        </div>
+
+        <p>This code will be automatically applied to your next qualifying order, or you can enter it manually at checkout.</p>
+
+        <p>Keep enjoying that authentic Jamaican flavor! 🇯🇲</p>
+
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+          With love from the islands,<br>
+          <strong>The Jamaica House Brand Family</strong>
+        </p>
+      </div>
+    `
+  })
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text() // CRITICAL: Use raw body text for signature verification
@@ -77,6 +114,23 @@ export async function POST(request: NextRequest) {
         } catch (promoErr) {
           // Non-fatal — log but don't fail the webhook
           console.error('Failed to increment promo usage:', promoErr)
+        }
+      }
+
+      // Handle saved promo code for next order
+      const savedPromoForNextOrder = session.metadata?.savedPromoForNextOrder
+      if (savedPromoForNextOrder && session.customer_details?.email) {
+        try {
+          // Send follow-up email with saved promo code
+          await sendSavedPromoEmail(
+            session.customer_details.email,
+            session.customer_details.name || '',
+            savedPromoForNextOrder
+          )
+          console.log(`Sent saved promo code email for "${savedPromoForNextOrder}" to ${session.customer_details.email}`)
+        } catch (emailErr) {
+          // Non-fatal — log but don't fail the webhook
+          console.error('Failed to send saved promo email:', emailErr)
         }
       }
 
