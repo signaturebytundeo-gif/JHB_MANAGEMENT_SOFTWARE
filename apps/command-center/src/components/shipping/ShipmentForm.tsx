@@ -65,7 +65,7 @@ export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess 
   // Address state for autocomplete
   const [city, setCity] = useState(websiteOrder?.shippingCity || prefillOrder?.shippingAddress?.city || '');
   const [addressState, setAddressState] = useState(websiteOrder?.shippingState || prefillOrder?.shippingAddress?.state || '');
-  const [zip, setZip] = useState(websiteOrder?.shippingZip || prefillOrder?.shippingAddress?.postal_code || '');
+  const [zip, setZip] = useState(websiteOrder?.shippingZip || prefillOrder?.shippingAddress?.zip || '');
 
   useEffect(() => {
     if (state?.success) {

@@ -23,6 +23,18 @@ interface OrderEmailFailedData {
   errorMessage: string;
 }
 
+interface NewOrderData {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  orderId: string;
+  items: Array<{ name: string; quantity: number; price: number }>;
+  shippingCost: number;
+  orderTotal: number;
+  promoCode?: string;
+  savedPromoForNextOrder?: string;
+}
+
 async function postToSlack(blocks: unknown[]): Promise<void> {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
@@ -131,5 +143,56 @@ export async function notifyOrderEmailFailed(data: OrderEmailFailedData): Promis
     ]);
   } catch (error) {
     console.error('[Slack] Failed to send order email failure notification:', error);
+  }
+}
+
+export async function notifyNewOrder(data: NewOrderData): Promise<void> {
+  try {
+    // Format items list
+    const itemsList = data.items.map(item =>
+      `• ${item.name} (${item.quantity}x) - $${(item.price / 100).toFixed(2)}`
+    ).join('\n');
+
+    // Shipping info
+    const shippingText = data.shippingCost === 0 ? 'FREE' : `$${(data.shippingCost / 100).toFixed(2)}`;
+
+    // Promo info
+    let promoText = '';
+    if (data.promoCode) {
+      promoText = `\n*Promo Applied:* ${data.promoCode}`;
+    }
+    if (data.savedPromoForNextOrder) {
+      promoText += `\n*Saved for Next Order:* ${data.savedPromoForNextOrder}`;
+    }
+
+    await postToSlack([
+      {
+        type: 'header',
+        text: { type: 'plain_text', text: '🛒 NEW ORDER - Ready to Ship!' },
+      },
+      {
+        type: 'section',
+        fields: [
+          { type: 'mrkdwn', text: `*Customer:*\n${data.customerName}` },
+          { type: 'mrkdwn', text: `*Email:*\n${data.customerEmail}` },
+          { type: 'mrkdwn', text: `*Phone:*\n${data.customerPhone || 'Not provided'}` },
+          { type: 'mrkdwn', text: `*Order ID:*\n${data.orderId}` },
+          { type: 'mrkdwn', text: `*Order Total:*\n$${(data.orderTotal / 100).toFixed(2)}` },
+          { type: 'mrkdwn', text: `*Shipping:*\n${shippingText}` },
+        ],
+      },
+      {
+        type: 'section',
+        text: { type: 'mrkdwn', text: `*Items Ordered:*\n${itemsList}${promoText}` },
+      },
+      {
+        type: 'context',
+        elements: [
+          { type: 'mrkdwn', text: `🕒 ${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET` },
+        ],
+      },
+    ]);
+  } catch (error) {
+    console.error('[Slack] Failed to send new order notification:', error);
   }
 }

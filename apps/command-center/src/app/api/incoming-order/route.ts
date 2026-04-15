@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { incomingOrderSchema } from '@/lib/validators/orders';
+import { notifyNewOrder } from '@/lib/integrations/slack';
 
 export async function POST(request: NextRequest) {
   try {
@@ -91,6 +92,38 @@ export async function POST(request: NextRequest) {
         totalSpent: { increment: orderTotal },
       },
     });
+
+    // Send Slack notification for new order
+    try {
+      let items = [];
+      try {
+        items = JSON.parse(data.items);
+        if (!Array.isArray(items)) {
+          items = [];
+        }
+      } catch {
+        items = [];
+      }
+
+      await notifyNewOrder({
+        customerName: `${data.firstName} ${data.lastName}`.trim(),
+        customerEmail: data.customerEmail,
+        customerPhone: data.phone || undefined,
+        orderId: data.orderId,
+        items: items.map((item: any) => ({
+          name: item.name || 'Unknown Item',
+          quantity: Number(item.quantity) || 1,
+          price: Number(item.price) || 0,
+        })),
+        shippingCost: data.shippingCost,
+        orderTotal,
+        promoCode: data.promoCode || undefined,
+        savedPromoForNextOrder: data.savedPromoForNextOrder || undefined,
+      });
+    } catch (slackError) {
+      // Don't fail the order if Slack notification fails
+      console.error('Failed to send Slack notification:', slackError);
+    }
 
     return NextResponse.json({
       success: true,
