@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { createAndShipLabel } from '@/app/actions/shipping';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { UPS_SERVICES } from '@/lib/ups';
 import type { StripeOrderData } from '@/app/actions/shipping';
 import { Download } from 'lucide-react';
+import { AddressAutocomplete } from './AddressAutocomplete';
 
 interface WebsiteOrderPreFill {
   id: string;
@@ -60,6 +61,11 @@ interface ShipmentFormProps {
 export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess }: ShipmentFormProps) {
   const [state, formAction] = useActionState(createAndShipLabel, undefined);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Address state for autocomplete
+  const [city, setCity] = useState(websiteOrder?.shippingCity || prefillOrder?.shippingAddress?.city || '');
+  const [addressState, setAddressState] = useState(websiteOrder?.shippingState || prefillOrder?.shippingAddress?.state || '');
+  const [zip, setZip] = useState(websiteOrder?.shippingZip || prefillOrder?.shippingAddress?.postal_code || '');
 
   useEffect(() => {
     if (state?.success) {
@@ -190,11 +196,16 @@ export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="addressLine1">Address Line 1 *</Label>
-            <Input
+            <AddressAutocomplete
               id="addressLine1"
               name="addressLine1"
               required
               defaultValue={websiteOrder?.shippingAddressLine1 || prefillOrder?.shippingAddress?.line1 || ''}
+              onAddressSelect={(address) => {
+                setCity(address.city);
+                setAddressState(address.state);
+                setZip(address.zip);
+              }}
               className="h-11"
             />
             {state?.errors?.addressLine1 && (
@@ -216,7 +227,8 @@ export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess 
               id="city"
               name="city"
               required
-              defaultValue={websiteOrder?.shippingCity || prefillOrder?.shippingAddress?.city || ''}
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
               className="h-11"
             />
             {state?.errors?.city && (
@@ -225,7 +237,7 @@ export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess 
           </div>
           <div className="space-y-2">
             <Label htmlFor="state">State *</Label>
-            <Select name="state" defaultValue={websiteOrder?.shippingState || prefillOrder?.shippingAddress?.state || ''} required>
+            <Select name="state" value={addressState} onValueChange={setAddressState} required>
               <SelectTrigger id="state" className="h-11">
                 <SelectValue placeholder="Select state" />
               </SelectTrigger>
@@ -247,7 +259,8 @@ export function ShipmentForm({ locations, prefillOrder, websiteOrder, onSuccess 
               id="zip"
               name="zip"
               required
-              defaultValue={websiteOrder?.shippingZip || prefillOrder?.shippingAddress?.zip || ''}
+              value={zip}
+              onChange={(e) => setZip(e.target.value)}
               className="h-11"
             />
             {state?.errors?.zip && (
