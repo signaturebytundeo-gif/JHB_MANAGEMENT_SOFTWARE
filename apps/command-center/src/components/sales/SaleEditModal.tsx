@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PaymentMethod } from '@prisma/client';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
@@ -127,18 +128,21 @@ export function SaleEditModal({ sale, channels, products, onClose }: SaleEditMod
 
           <div className="space-y-2">
             <Label htmlFor="edit-productId">Product</Label>
-            <Select name="productId" defaultValue={sale.product.id}>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="Select product" />
-              </SelectTrigger>
-              <SelectContent>
-                {products.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              id="edit-productId"
+              name="productId"
+              value={sale.product.id}
+              onValueChange={() => {}}
+              placeholder="Select product"
+              searchPlaceholder="Search catalog..."
+              emptyMessage="No products found"
+              options={products.map(p => ({
+                value: p.id,
+                label: p.name,
+                keywords: [].filter(Boolean) as string[],
+              }))}
+              className="h-11"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

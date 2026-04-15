@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { toast } from 'sonner';
 
 interface InventoryTransferFormProps {
@@ -52,18 +53,22 @@ export function InventoryTransferForm({ products, locations }: InventoryTransfer
 
       <div className="space-y-2">
         <Label htmlFor="xfer-productId">Product</Label>
-        <Select key={`p-${formKey}`} name="productId" required onValueChange={clearError}>
-          <SelectTrigger id="xfer-productId" className="h-11">
-            <SelectValue placeholder="Select product" />
-          </SelectTrigger>
-          <SelectContent>
-            {products.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name} ({p.sku}) — {p.size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          key={`p-${formKey}`}
+          id="xfer-productId"
+          name="productId"
+          value={undefined}
+          onValueChange={(v) => clearError()}
+          placeholder="Select product"
+          searchPlaceholder="Search catalog..."
+          emptyMessage="No products found"
+          options={products.map(p => ({
+            value: p.id,
+            label: `${p.name} (${p.sku}) — ${p.size}`,
+            keywords: [p.sku, p.size].filter(Boolean) as string[],
+          }))}
+          className="h-11"
+        />
         {showError && state?.errors?.productId && (
           <p className="text-sm text-red-500">{state.errors.productId[0]}</p>
         )}

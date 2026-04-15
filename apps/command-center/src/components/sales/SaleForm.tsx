@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PaymentMethod } from '@prisma/client';
 import { toast } from 'sonner';
 import { useVoiceFill } from '@/lib/voice/use-voice-fill';
@@ -163,18 +164,21 @@ export function SaleForm({ channels, products, locations }: SaleFormProps) {
       {/* Product */}
       <div className="space-y-2">
         <Label htmlFor="productId">Product</Label>
-        <Select name="productId" required value={selectedProduct || undefined} onValueChange={setSelectedProduct}>
-          <SelectTrigger id="productId" className="h-11 text-base">
-            <SelectValue placeholder="Select product" />
-          </SelectTrigger>
-          <SelectContent>
-            {products.map((product) => (
-              <SelectItem key={product.id} value={product.id}>
-                {product.name} ({product.sku})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          id="productId"
+          name="productId"
+          value={selectedProduct || undefined}
+          onValueChange={setSelectedProduct}
+          placeholder="Select product"
+          searchPlaceholder="Search catalog..."
+          emptyMessage="No products found"
+          options={products.map(p => ({
+            value: p.id,
+            label: `${p.name} (${p.sku})`,
+            keywords: [p.sku].filter(Boolean) as string[],
+          }))}
+          className="h-11 text-base"
+        />
         {state?.errors?.productId && (
           <p className="text-sm text-red-500">{state.errors.productId[0]}</p>
         )}

@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   X,
 } from 'lucide-react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -498,18 +499,19 @@ export function StandaloneInvoiceForm() {
                 )}
               </div>
               <div className="col-span-6 sm:col-span-2">
-                <select
-                  value={item.productId}
-                  onChange={(e) => updateLineItem(item.id, 'productId', e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">None</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.size})
-                    </option>
-                  ))}
-                </select>
+                <SearchableSelect
+                  value={item.productId || undefined}
+                  onValueChange={(value) => updateLineItem(item.id, 'productId', value)}
+                  placeholder="None"
+                  searchPlaceholder="Search catalog..."
+                  emptyMessage="No products found"
+                  options={products.map(p => ({
+                    value: p.id,
+                    label: `${p.name} (${p.size})`,
+                    keywords: [p.size].filter(Boolean) as string[],
+                  }))}
+                  className="h-9 text-sm"
+                />
               </div>
               <div className="col-span-3 sm:col-span-1">
                 <Input

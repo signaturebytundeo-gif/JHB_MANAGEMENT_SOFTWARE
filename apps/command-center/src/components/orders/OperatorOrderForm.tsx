@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { PaymentMethod } from '@prisma/client';
 
 interface PricingTier {
@@ -291,21 +292,19 @@ export function OperatorOrderForm({
             {/* Product */}
             <div className="space-y-1 col-span-4 sm:col-span-1">
               <Label className="text-xs">Product</Label>
-              <Select
-                value={item.productId}
+              <SearchableSelect
+                value={item.productId || undefined}
                 onValueChange={(val) => updateLineItem(index, 'productId', val)}
-              >
-                <SelectTrigger className="h-11 text-base">
-                  <SelectValue placeholder="Select product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} ({p.sku})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select product"
+                searchPlaceholder="Search catalog..."
+                emptyMessage="No products found"
+                options={products.map(p => ({
+                  value: p.id,
+                  label: `${p.name} (${p.sku})`,
+                  keywords: [p.sku].filter(Boolean) as string[],
+                }))}
+                className="h-11 text-base"
+              />
             </div>
 
             {/* Quantity */}

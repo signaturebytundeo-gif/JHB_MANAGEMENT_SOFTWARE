@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
@@ -313,26 +314,25 @@ export function TransferForm({ products, locations: initialLocations }: Transfer
       {/* Product */}
       <div className="space-y-2">
         <Label htmlFor="tf-productId">Product *</Label>
-        <Select
+        <SearchableSelect
           key={`product-${formKey}`}
+          id="tf-productId"
           name="productId"
-          required
+          value={undefined}
           onValueChange={(v) => {
             formValuesRef.current.productId = v;
             clearSuccess();
           }}
-        >
-          <SelectTrigger id="tf-productId" className="text-base h-11">
-            <SelectValue placeholder="Select product" />
-          </SelectTrigger>
-          <SelectContent>
-            {products.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name} ({p.sku}) — {p.size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Select product"
+          searchPlaceholder="Search catalog..."
+          emptyMessage="No products found"
+          options={products.map(p => ({
+            value: p.id,
+            label: `${p.name} (${p.sku}) — ${p.size}`,
+            keywords: [p.sku, p.size].filter(Boolean) as string[],
+          }))}
+          className="text-base h-11"
+        />
         {state?.errors?.productId && !state.success && (
           <p className="text-sm text-destructive">{state.errors.productId[0]}</p>
         )}

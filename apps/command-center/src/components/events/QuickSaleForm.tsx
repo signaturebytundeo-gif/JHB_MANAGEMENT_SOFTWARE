@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { addManualSaleToEvent } from '@/app/actions/events';
 import { Plus } from 'lucide-react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 interface Product {
   id: string;
@@ -55,19 +56,19 @@ export function QuickSaleForm({ eventId, products }: QuickSaleFormProps) {
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
       <div className="flex-1 min-w-[160px]">
         <label className="block text-xs text-gray-400 mb-1">Product</label>
-        <select
-          value={productId}
-          onChange={(e) => setProductId(e.target.value)}
-          required
-          className={inputClass + ' w-full'}
-        >
-          <option value="">Select item</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}{p.size ? ` — ${p.size}` : ''}{p.sku ? ` (${p.sku})` : ''}
-            </option>
-          ))}
-        </select>
+        <SearchableSelect
+          value={productId || undefined}
+          onValueChange={setProductId}
+          placeholder="Select item"
+          searchPlaceholder="Search catalog..."
+          emptyMessage="No products found"
+          options={products.map(p => ({
+            value: p.id,
+            label: `${p.name}${p.size ? ` — ${p.size}` : ''}${p.sku ? ` (${p.sku})` : ''}`,
+            keywords: [p.sku, p.size].filter(Boolean) as string[],
+          }))}
+          className="text-sm text-white bg-caribbean-black border border-caribbean-gold/20 focus:border-caribbean-gold/50"
+        />
       </div>
       <div className="w-20">
         <label className="block text-xs text-gray-400 mb-1">Qty</label>
