@@ -1,0 +1,232 @@
+{
+  "timestamp": "2026-04-16T06:21:52.288Z",
+  "baseUrl": "http://localhost:3001",
+  "totals": {
+    "pass": 17,
+    "fail": 4,
+    "warn": 1,
+    "critical": 0
+  },
+  "results": [
+    {
+      "name": "Homepage",
+      "method": "GET",
+      "path": "/",
+      "status": 200,
+      "durationMs": 69,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Shop page",
+      "method": "GET",
+      "path": "/shop",
+      "status": 200,
+      "durationMs": 386,
+      "passed": false,
+      "reason": "Content check failed - expected one of: $3.99, $7.99, $14.99",
+      "critical": false
+    },
+    {
+      "name": "Product: Original Jerk Sauce 2oz",
+      "method": "GET",
+      "path": "/products/original-jerk-sauce-2oz",
+      "status": 404,
+      "durationMs": 597,
+      "passed": false,
+      "reason": "Expected status 200 but got 404",
+      "critical": false
+    },
+    {
+      "name": "Product: Original Jerk Sauce 5oz",
+      "method": "GET",
+      "path": "/products/original-jerk-sauce-5oz",
+      "status": 404,
+      "durationMs": 38,
+      "passed": false,
+      "reason": "Expected status 200 but got 404",
+      "critical": false
+    },
+    {
+      "name": "Product: Original Jerk Sauce 10oz",
+      "method": "GET",
+      "path": "/products/original-jerk-sauce-10oz",
+      "status": 404,
+      "durationMs": 40,
+      "passed": false,
+      "reason": "Expected status 200 but got 404",
+      "critical": false
+    },
+    {
+      "name": "Product: Escovitch Pikliz 12oz",
+      "method": "GET",
+      "path": "/products/escovitch-pikliz-12oz",
+      "status": 200,
+      "durationMs": 59,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Recipes page",
+      "method": "GET",
+      "path": "/recipes",
+      "status": 200,
+      "durationMs": 333,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Our Story page",
+      "method": "GET",
+      "path": "/our-story",
+      "status": 200,
+      "durationMs": 267,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Community page",
+      "method": "GET",
+      "path": "/community",
+      "status": 200,
+      "durationMs": 303,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Restaurant Partners page",
+      "method": "GET",
+      "path": "/restaurant-partners",
+      "status": 200,
+      "durationMs": 272,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Success page",
+      "method": "GET",
+      "path": "/success",
+      "status": 200,
+      "durationMs": 534,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Sitemap XML",
+      "method": "GET",
+      "path": "/sitemap.xml",
+      "status": 200,
+      "durationMs": 177,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Robots.txt",
+      "method": "GET",
+      "path": "/robots.txt",
+      "status": 200,
+      "durationMs": 87,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Checkout API - Valid Cart",
+      "method": "POST",
+      "path": "/api/checkout",
+      "status": 500,
+      "durationMs": 415,
+      "passed": "WARN",
+      "reason": "Expected 200 but got 500 (acceptable for missing env config)",
+      "critical": false
+    },
+    {
+      "name": "Checkout API - Empty Cart",
+      "method": "POST",
+      "path": "/api/checkout",
+      "status": 400,
+      "durationMs": 9,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Subscribe API - Valid Email",
+      "method": "POST",
+      "path": "/api/subscribe",
+      "status": 200,
+      "durationMs": 848,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Subscribe API - Invalid Email",
+      "method": "POST",
+      "path": "/api/subscribe",
+      "status": 400,
+      "durationMs": 4,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Promo Validation - Valid Code",
+      "method": "POST",
+      "path": "/api/validate-promo",
+      "status": 200,
+      "durationMs": 1123,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Promo Validation - Invalid Code",
+      "method": "POST",
+      "path": "/api/validate-promo",
+      "status": 200,
+      "durationMs": 112,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Stripe Webhook - Unsigned Request (Security Test)",
+      "method": "POST",
+      "path": "/api/webhooks/stripe",
+      "status": 400,
+      "durationMs": 213,
+      "passed": true,
+      "reason": null,
+      "critical": true
+    },
+    {
+      "name": "Shipping Assistant API",
+      "method": "POST",
+      "path": "/api/shipping-assistant",
+      "status": 200,
+      "durationMs": 66,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    },
+    {
+      "name": "Restaurant Order API - Valid Payload",
+      "method": "POST",
+      "path": "/api/restaurant-order",
+      "status": 400,
+      "durationMs": 118,
+      "passed": true,
+      "reason": null,
+      "critical": false
+    }
+  ]
+}
