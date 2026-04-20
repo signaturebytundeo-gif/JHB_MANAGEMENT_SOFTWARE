@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getEvents, getUnassignedSalesCount } from '@/app/actions/events';
 import { Plus, AlertTriangle } from 'lucide-react';
+import { GlobalSquareSyncPanel } from '@/components/events/GlobalSquareSyncPanel';
 
 export default async function EventsPage({
   searchParams,
@@ -78,6 +79,9 @@ export default async function EventsPage({
           Filter
         </button>
       </form>
+
+      {/* Global Square Sync */}
+      <GlobalSquareSyncPanel />
 
       {events.length === 0 ? (
         <div className="text-center py-12 text-gray-500">

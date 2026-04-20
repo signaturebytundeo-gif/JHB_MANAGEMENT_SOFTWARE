@@ -390,6 +390,24 @@ export interface EventSquareSyncResult {
   eventTotal: number;     // dollars
 }
 
+export interface GlobalSquareSyncResult {
+  success: boolean;
+  message: string;
+  totalPayments: number;
+  eventsMatched: number;
+  salesCreated: number;
+  duplicatesSkipped: number;
+  unmatchedPayments: number;
+  totalSquareAmount: number;
+  dateRange: string;
+  eventDetails: Array<{
+    eventName: string;
+    eventDate: string;
+    salesCreated: number;
+    squareAmount: number;
+  }>;
+}
+
 /**
  * Pull Square payments for a specific event date, match to products,
  * and create Sale records linked directly to the event.
@@ -577,6 +595,159 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
       message: `Sync failed: ${error.message}`,
       squarePayments: 0, salesCreated: 0, salesNeedReview: 0, duplicatesSkipped: 0,
       unmatchedItems: [], squareTotal: 0, squareTax: 0, squareNetSales: 0, eventTotal: 0,
+    };
+  }
+}
+
+/**
+ * Global Square sync - automatically matches Square transactions to events by date
+ */
+export async function globalSquareSync(
+  dateFrom?: string, // YYYY-MM-DD
+  dateTo?: string    // YYYY-MM-DD
+): Promise<GlobalSquareSyncResult> {
+  try {
+    const session = await verifyManagerOrAbove();
+
+    if (!isPlatformConfigured('SQUARE')) {
+      return {
+        success: false,
+        message: 'Square is not configured — add SQUARE_ACCESS_TOKEN to env',
+        totalPayments: 0,
+        eventsMatched: 0,
+        salesCreated: 0,
+        duplicatesSkipped: 0,
+        unmatchedPayments: 0,
+        totalSquareAmount: 0,
+        dateRange: '',
+        eventDetails: [],
+      };
+    }
+
+    // Default to last 30 days if no date range provided
+    const endDate = dateTo ? new Date(`${dateTo}T23:59:59.999Z`) : new Date();
+    const startDate = dateFrom
+      ? new Date(`${dateFrom}T00:00:00.000Z`)
+      : new Date(endDate.getTime() - (30 * 24 * 60 * 60 * 1000)); // 30 days ago
+
+    console.log(`[global-square-sync] Syncing ${startDate.toISOString()} → ${endDate.toISOString()}`);
+
+    // Get all Square payments in date range
+    const payments = await getRecentSquarePayments(startDate, endDate);
+
+    if (payments.length === 0) {
+      return {
+        success: true,
+        message: 'No Square payments found in date range',
+        totalPayments: 0,
+        eventsMatched: 0,
+        salesCreated: 0,
+        duplicatesSkipped: 0,
+        unmatchedPayments: 0,
+        totalSquareAmount: 0,
+        dateRange: `${startDate.toDateString()} to ${endDate.toDateString()}`,
+        eventDetails: [],
+      };
+    }
+
+    // Get all events in the same date range
+    const events = await db.marketEvent.findMany({
+      where: {
+        eventDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        channel: true,
+        sales: { select: { totalAmount: true } },
+      },
+      orderBy: { eventDate: 'asc' },
+    });
+
+    // Group payments by date (YYYY-MM-DD)
+    const paymentsByDate = new Map<string, typeof payments>();
+    for (const payment of payments) {
+      const dateKey = payment.saleDate.toISOString().split('T')[0];
+      if (!paymentsByDate.has(dateKey)) {
+        paymentsByDate.set(dateKey, []);
+      }
+      paymentsByDate.get(dateKey)!.push(payment);
+    }
+
+    // Group events by date
+    const eventsByDate = new Map<string, typeof events[0]>();
+    for (const event of events) {
+      const dateKey = event.eventDate.toISOString().split('T')[0];
+      eventsByDate.set(dateKey, event);
+    }
+
+    let totalSalesCreated = 0;
+    let totalDuplicatesSkipped = 0;
+    let eventsMatched = 0;
+    let unmatchedPayments = 0;
+    const eventDetails: GlobalSquareSyncResult['eventDetails'] = [];
+
+    // Process each date
+    for (const [dateKey, datePayments] of paymentsByDate) {
+      const event = eventsByDate.get(dateKey);
+
+      if (!event) {
+        console.log(`[global-sync] No event found for date ${dateKey}, skipping ${datePayments.length} payments`);
+        unmatchedPayments += datePayments.length;
+        continue;
+      }
+
+      console.log(`[global-sync] Processing ${datePayments.length} payments for event "${event.name}" on ${dateKey}`);
+
+      // Use the existing sync logic for this event
+      const result = await syncSquareForEvent(event.id);
+
+      if (result.success) {
+        eventsMatched++;
+        totalSalesCreated += result.salesCreated;
+        totalDuplicatesSkipped += result.duplicatesSkipped;
+
+        eventDetails.push({
+          eventName: event.name,
+          eventDate: event.eventDate.toISOString().split('T')[0],
+          salesCreated: result.salesCreated,
+          squareAmount: result.squareTotal,
+        });
+      } else {
+        console.error(`[global-sync] Failed to sync event ${event.name}: ${result.message}`);
+        unmatchedPayments += datePayments.length;
+      }
+    }
+
+    const totalSquareAmount = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+
+    return {
+      success: true,
+      message: `Synced ${totalSalesCreated} sales across ${eventsMatched} events`,
+      totalPayments: payments.length,
+      eventsMatched,
+      salesCreated: totalSalesCreated,
+      duplicatesSkipped: totalDuplicatesSkipped,
+      unmatchedPayments,
+      totalSquareAmount,
+      dateRange: `${startDate.toDateString()} to ${endDate.toDateString()}`,
+      eventDetails,
+    };
+
+  } catch (error: any) {
+    console.error('Error in global Square sync:', error);
+    return {
+      success: false,
+      message: `Global sync failed: ${error.message}`,
+      totalPayments: 0,
+      eventsMatched: 0,
+      salesCreated: 0,
+      duplicatesSkipped: 0,
+      unmatchedPayments: 0,
+      totalSquareAmount: 0,
+      dateRange: '',
+      eventDetails: [],
     };
   }
 }
