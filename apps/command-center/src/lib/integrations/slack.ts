@@ -148,13 +148,13 @@ export async function notifyOrderEmailFailed(data: OrderEmailFailedData): Promis
 
 export async function notifyNewOrder(data: NewOrderData): Promise<void> {
   try {
-    // Format items list
+    // Format items list (prices are already in dollars, not cents)
     const itemsList = data.items.map(item =>
-      `• ${item.name} (${item.quantity}x) - $${(item.price / 100).toFixed(2)}`
+      `• ${item.name} (${item.quantity}x) - $${item.price.toFixed(2)}`
     ).join('\n');
 
-    // Shipping info
-    const shippingText = data.shippingCost === 0 ? 'FREE' : `$${(data.shippingCost / 100).toFixed(2)}`;
+    // Shipping info (already in dollars, not cents)
+    const shippingText = data.shippingCost === 0 ? 'FREE' : `$${data.shippingCost.toFixed(2)}`;
 
     // Promo info
     let promoText = '';
@@ -177,7 +177,7 @@ export async function notifyNewOrder(data: NewOrderData): Promise<void> {
           { type: 'mrkdwn', text: `*Email:*\n${data.customerEmail}` },
           { type: 'mrkdwn', text: `*Phone:*\n${data.customerPhone || 'Not provided'}` },
           { type: 'mrkdwn', text: `*Order ID:*\n${data.orderId}` },
-          { type: 'mrkdwn', text: `*Order Total:*\n$${(data.orderTotal / 100).toFixed(2)}` },
+          { type: 'mrkdwn', text: `*Order Total:*\n$${data.orderTotal.toFixed(2)}` },
           { type: 'mrkdwn', text: `*Shipping:*\n${shippingText}` },
         ],
       },
