@@ -88,6 +88,8 @@ enum PaymentMethod {
   NET_30
   AMAZON_PAY
   OTHER
+  MASTERCARD_6842
+  BUSINESS_CARD
 }
 
 enum AdjustmentReason {
@@ -468,6 +470,7 @@ model MarketEvent {
   channel   SalesChannel @relation(fields: [channelId], references: [id])
   createdBy User         @relation(fields: [createdById], references: [id])
   sales     Sale[]
+  expenses  Expense[]
 
   @@index([eventDate])
   @@index([channelId])
@@ -1113,6 +1116,12 @@ enum ExpenseCategory {
   INSURANCE
   OVERHEAD
   OTHER
+  COGS_INGREDIENTS
+  COGS_PACKAGING
+  MARKET_FEES_OVERHEAD
+  TRAVEL_TRANSPORT
+  MARKETING_PROMO
+  STORAGE_RENT
 }
 
 enum DocumentCategory {
@@ -1134,6 +1143,9 @@ model Expense {
   receiptUrl           String?
   vendorName           String?
   notes                String?
+  paymentMethod        PaymentMethod?
+  source               String          @default("manual") // "manual" or "auto-event"
+  eventId              String?         // Foreign key to MarketEvent
   approvalStatus       String? // "auto_approved", "pending_single", "pending_dual", "pending_bank", "approved", "rejected"
   approvedById         String?
   secondApprovedById   String?
@@ -1143,19 +1155,31 @@ model Expense {
   lineItems            Json? // [{ name, qty, unit_price }]
   scanConfidence       String? // "high" | "medium" | "low"
   documentType         String? // "receipt" | "invoice" | "packing_slip" | "other"
+  // Recurring expense fields
+  subcategory          String?
+  isRecurring          Boolean         @default(false)
+  recurrenceFrequency  String? // "Weekly", "Monthly", "Quarterly", "Annually"
+  nextDueDate          DateTime?
+  approvalToken        String? // HMAC token for email approval
+  editHistory          Json? // Audit trail for edits
   createdById          String
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 
   // Relations
-  createdBy        User  @relation("ExpenseCreator", fields: [createdById], references: [id])
-  approvedBy       User? @relation("ExpenseApprover", fields: [approvedById], references: [id])
-  secondApprovedBy User? @relation("ExpenseSecondApprover", fields: [secondApprovedById], references: [id])
+  createdBy        User         @relation("ExpenseCreator", fields: [createdById], references: [id])
+  approvedBy       User?        @relation("ExpenseApprover", fields: [approvedById], references: [id])
+  secondApprovedBy User?        @relation("ExpenseSecondApprover", fields: [secondApprovedById], references: [id])
+  event            MarketEvent? @relation(fields: [eventId], references: [id])
 
   @@index([expenseDate])
   @@index([category])
   @@index([approvalStatus])
   @@index([createdById])
+  @@index([source])
+  @@index([eventId])
+  @@index([isRecurring])
+  @@index([nextDueDate])
 }
 
 model Budget {
@@ -1168,6 +1192,22 @@ model Budget {
 
   @@unique([period, category])
   @@index([period])
+}
+
+model ExpenseTemplate {
+  id                   String         @id @default(cuid())
+  vendor               String
+  category             ExpenseCategory
+  subcategory          String?
+  description          String         // e.g. "Storage Unit Rent"
+  paymentMethod        PaymentMethod?
+  isRecurring          Boolean        @default(false)
+  recurrenceFrequency  String?
+  createdAt            DateTime       @default(now())
+
+  @@unique([vendor, category, description])
+  @@index([vendor])
+  @@index([category])
 }
 
 // ============================================================================

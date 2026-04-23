@@ -1,13 +1,14 @@
-import { getExpenses } from '@/app/actions/expenses';
+import { getExpenses, getExpenseTemplates } from '@/app/actions/expenses';
 import { verifySession } from '@/lib/dal';
 import { db } from '@/lib/db';
 import { ExpensesDashboardClient } from '@/components/finance/ExpensesDashboardClient';
 
 export default async function ExpensesPage() {
-  const [session, expenses, thresholds] = await Promise.all([
+  const [session, expenses, thresholds, templates] = await Promise.all([
     verifySession(),
     getExpenses(),
     db.approvalThreshold.findMany({ orderBy: { minAmount: 'asc' } }),
+    getExpenseTemplates(),
   ]);
 
   const approvalThresholds = thresholds.map((t) => ({
@@ -28,6 +29,7 @@ export default async function ExpensesPage() {
       <ExpensesDashboardClient
         expenses={expenses}
         approvalThresholds={approvalThresholds}
+        templates={templates}
         currentUserId={session.userId}
       />
     </div>

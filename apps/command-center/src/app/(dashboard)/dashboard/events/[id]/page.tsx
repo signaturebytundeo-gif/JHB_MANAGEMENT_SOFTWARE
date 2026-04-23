@@ -203,6 +203,7 @@ export default async function EventDetailPage({
           eventId={event.id}
           assignedSales={event.sales}
           unassignedSales={unassignedSales}
+          eventDate={event.eventDate}
         />
       </div>
 

@@ -27,6 +27,10 @@ export function COGSSummaryWidget({ expenses }: COGSSummaryWidgetProps) {
       if (e.approvalStatus === 'rejected') continue;
 
       total += e.amount;
+      // New category values
+      if (e.category === 'COGS_INGREDIENTS' || e.category === 'COGS_PACKAGING') cogs += e.amount;
+      if (e.category === 'MARKET_FEES_OVERHEAD') marketFees += e.amount;
+      // Legacy category values for backwards compatibility
       if (e.category === 'INGREDIENTS' || e.category === 'PACKAGING') cogs += e.amount;
       if (e.category === 'OVERHEAD') marketFees += e.amount;
     }

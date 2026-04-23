@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Calendar, RotateCcw, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,10 +19,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { LogExpenseForm, type ScannerPrefill } from './LogExpenseForm';
 import { ExpenseApprovalCard } from './ExpenseApprovalCard';
 import { ReceiptScanner } from './ReceiptScanner';
 import { COGSSummaryWidget } from './COGSSummaryWidget';
+import { EditExpenseForm } from './EditExpenseForm';
 import type { ExpenseListItem } from '@/app/actions/expenses';
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -34,6 +41,53 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   rejected: { label: 'Rejected', className: 'bg-red-100 text-red-800 border-red-200' },
 };
 
+// Category labels for display
+const CATEGORY_LABELS: Record<string, string> = {
+  'COGS_INGREDIENTS': 'COGS - Ingredients',
+  'COGS_PACKAGING': 'COGS - Packaging',
+  'MARKET_FEES_OVERHEAD': 'Market Fees & Overhead',
+  'TRAVEL_TRANSPORT': 'Travel & Transport',
+  'MARKETING_PROMO': 'Marketing & Promo',
+  'STORAGE_RENT': 'Storage & Rent',
+  'OTHER': 'Other',
+  // Legacy categories for backwards compatibility
+  'INGREDIENTS': 'Ingredients',
+  'PACKAGING': 'Packaging',
+  'LABOR': 'Labor',
+  'EQUIPMENT': 'Equipment',
+  'MARKETING': 'Marketing',
+  'SHIPPING': 'Shipping',
+  'UTILITIES': 'Utilities',
+  'RENT': 'Rent',
+  'INSURANCE': 'Insurance',
+  'OVERHEAD': 'Overhead',
+};
+
+// Payment method labels for display
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  'CASH': 'Cash',
+  'MASTERCARD_6842': 'Mastercard 6842',
+  'BUSINESS_CARD': 'Business Card',
+  'OTHER': 'Other',
+  // Legacy payment methods for backwards compatibility
+  'CREDIT_CARD': 'Credit Card',
+  'SQUARE': 'Square',
+  'STRIPE': 'Stripe',
+  'ZELLE': 'Zelle',
+  'CHECK': 'Check',
+  'NET_30': 'Net 30',
+  'AMAZON_PAY': 'Amazon Pay',
+};
+
+function getCategoryLabel(category: string): string {
+  return CATEGORY_LABELS[category] || category.charAt(0) + category.slice(1).toLowerCase();
+}
+
+function getPaymentMethodLabel(paymentMethod: string | null): string {
+  if (!paymentMethod) return '—';
+  return PAYMENT_METHOD_LABELS[paymentMethod] || paymentMethod.replace(/_/g, ' ');
+}
+
 type ApprovalThreshold = {
   minAmount: number;
   maxAmount: number | null;
@@ -41,29 +95,59 @@ type ApprovalThreshold = {
   description: string;
 };
 
+type ExpenseTemplate = {
+  id: string;
+  vendor: string;
+  category: string;
+  subcategory: string | null;
+  description: string;
+  paymentMethod: string | null;
+  isRecurring: boolean;
+  recurrenceFrequency: string | null;
+};
+
 interface ExpensesDashboardClientProps {
   expenses: ExpenseListItem[];
   approvalThresholds: ApprovalThreshold[];
+  templates: ExpenseTemplate[];
   currentUserId: string;
 }
 
 export function ExpensesDashboardClient({
   expenses,
   approvalThresholds,
+  templates,
   currentUserId,
 }: ExpensesDashboardClientProps) {
   // Scanner extraction populates this; the form watches it via prop.
   const [prefill, setPrefill] = useState<ScannerPrefill | null>(null);
   // Manual edit toggle when no scan has happened yet.
   const [showManualForm, setShowManualForm] = useState(false);
+  // Edit expense state
+  const [editingExpense, setEditingExpense] = useState<ExpenseListItem | null>(null);
 
   const formVisible = prefill !== null || showManualForm;
 
   const pendingExpenses = expenses.filter((e) => {
     const isPending = e.approvalStatus?.startsWith('pending_');
     const notOwnExpense = e.createdById !== currentUserId;
-    return isPending && notOwnExpense;
+    const notAutoEvent = e.source !== 'auto-event'; // Exclude auto-event expenses from approval flow
+    return isPending && notOwnExpense && notAutoEvent;
   });
+
+  const handleEditExpense = (expense: ExpenseListItem) => {
+    setEditingExpense(expense);
+  };
+
+  const handleEditSuccess = () => {
+    setEditingExpense(null);
+    // Refresh the page to show updated data
+    window.location.reload();
+  };
+
+  const handleEditCancel = () => {
+    setEditingExpense(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -100,7 +184,30 @@ export function ExpensesDashboardClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LogExpenseForm approvalThresholds={approvalThresholds} prefill={prefill} />
+            <LogExpenseForm
+              approvalThresholds={approvalThresholds}
+              templates={templates}
+              prefill={prefill}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Edit Expense Form */}
+      {editingExpense && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit Expense</CardTitle>
+            <CardDescription>
+              Update expense details. Significant changes may require re-approval.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EditExpenseForm
+              expense={editingExpense}
+              onSuccess={handleEditSuccess}
+              onCancel={handleEditCancel}
+            />
           </CardContent>
         </Card>
       )}
@@ -140,8 +247,10 @@ export function ExpensesDashboardClient({
                   <TableHead>Category</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Vendor</TableHead>
+                  <TableHead>Payment Method</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Receipt</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -160,14 +269,49 @@ export function ExpensesDashboardClient({
                         })}
                       </TableCell>
                       <TableCell className="max-w-[200px]">
-                        <p className="truncate text-sm">{expense.description}</p>
-                        {expense.notes && (
-                          <p className="truncate text-xs text-muted-foreground">{expense.notes}</p>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {expense.source === 'auto-event' && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center">
+                                    <Calendar className="h-3 w-3 text-blue-600" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Auto-imported from Events</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          {expense.isRecurring && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-center">
+                                    <RotateCcw className="h-3 w-3 text-green-600" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Recurring expense - {expense.recurrenceFrequency}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate text-sm">{expense.description}</p>
+                            {expense.subcategory && (
+                              <p className="truncate text-xs text-muted-foreground">{expense.subcategory}</p>
+                            )}
+                            {expense.notes && (
+                              <p className="truncate text-xs text-muted-foreground">{expense.notes}</p>
+                            )}
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
-                          {expense.category.charAt(0) + expense.category.slice(1).toLowerCase()}
+                          {getCategoryLabel(expense.category)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium whitespace-nowrap">
@@ -175,6 +319,9 @@ export function ExpensesDashboardClient({
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {expense.vendorName ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {getPaymentMethodLabel(expense.paymentMethod)}
                       </TableCell>
                       <TableCell>
                         {statusConfig ? (
@@ -200,6 +347,19 @@ export function ExpensesDashboardClient({
                           </a>
                         ) : (
                           <span className="text-muted-foreground text-xs">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {(expense.createdById === currentUserId || expense.approvalStatus !== 'rejected') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditExpense(expense)}
+                            className="h-8 w-8 p-0"
+                            title="Edit expense"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>

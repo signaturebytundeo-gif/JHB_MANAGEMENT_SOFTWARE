@@ -18,15 +18,35 @@ interface AssignSalesPanelProps {
   eventId: string;
   unassignedSales: SaleItem[];
   assignedSales: SaleItem[];
+  eventDate?: Date;
 }
 
 export function AssignSalesPanel({
   eventId,
   unassignedSales,
   assignedSales,
+  eventDate,
 }: AssignSalesPanelProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
+  const [dateFilter, setDateFilter] = useState('');
+
+  // Filter unassigned sales based on date filter
+  const filteredSales = dateFilter
+    ? unassignedSales.filter((sale) => {
+        const saleDate = new Date(sale.saleDate).toISOString().split('T')[0];
+        return saleDate === dateFilter;
+      })
+    : unassignedSales;
+
+  // Find sales that match the event date
+  const dateMarchingSales = eventDate
+    ? unassignedSales.filter((sale) => {
+        const saleDate = new Date(sale.saleDate).toISOString().split('T')[0];
+        const eventDateStr = new Date(eventDate).toISOString().split('T')[0];
+        return saleDate === eventDateStr;
+      })
+    : [];
 
   const fmt = (n: number) =>
     n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -44,11 +64,30 @@ export function AssignSalesPanel({
   };
 
   const selectAll = () => {
-    if (selectedIds.size === unassignedSales.length) {
+    if (selectedIds.size === filteredSales.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(unassignedSales.map((s) => s.id)));
+      setSelectedIds(new Set(filteredSales.map((s) => s.id)));
     }
+  };
+
+  const autoAssignByDate = () => {
+    if (dateMarchingSales.length === 0) return;
+    setSelectedIds(new Set(dateMarchingSales.map((s) => s.id)));
+    // Auto-assign immediately
+    startTransition(async () => {
+      const result = await assignSalesToEvent(eventId, dateMarchingSales.map((s) => s.id));
+      if (result.success) {
+        toast.success(`Auto-assigned ${dateMarchingSales.length} sales by date match`);
+        setSelectedIds(new Set());
+      } else {
+        toast.error(result.message);
+      }
+    });
+  };
+
+  const clearDateFilter = () => {
+    setDateFilter('');
   };
 
   const handleAssign = () => {
@@ -143,14 +182,45 @@ export function AssignSalesPanel({
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-white">
-              Unassigned Square Sales ({unassignedSales.length})
+              Unassigned Square Sales ({filteredSales.length}{dateFilter ? ` of ${unassignedSales.length}` : ''})
             </h3>
+          </div>
+
+          {/* Date Filter and Auto-Assign Controls */}
+          <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-caribbean-black/30 rounded-md">
             <div className="flex items-center gap-2">
+              <label className="text-xs text-gray-400">Filter by date:</label>
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="px-2 py-1 bg-caribbean-black border border-caribbean-gold/20 rounded text-xs text-white"
+              />
+              {dateFilter && (
+                <button
+                  onClick={clearDateFilter}
+                  className="text-xs text-gray-400 hover:text-white"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 ml-auto">
+              {dateMarchingSales.length > 0 && (
+                <button
+                  onClick={autoAssignByDate}
+                  disabled={isPending}
+                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Auto-assign {dateMarchingSales.length} by Date
+                </button>
+              )}
               <button
                 onClick={selectAll}
                 className="text-xs text-caribbean-gold hover:underline"
               >
-                {selectedIds.size === unassignedSales.length ? 'Deselect All' : 'Select All'}
+                {selectedIds.size === filteredSales.length ? 'Deselect All' : 'Select All'}
               </button>
               <button
                 onClick={handleAssign}
@@ -173,7 +243,7 @@ export function AssignSalesPanel({
                 </tr>
               </thead>
               <tbody>
-                {unassignedSales.map((sale) => (
+                {filteredSales.map((sale) => (
                   <tr
                     key={sale.id}
                     className="border-b border-caribbean-gold/10 cursor-pointer hover:bg-caribbean-green/5"

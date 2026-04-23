@@ -15,6 +15,7 @@ import { isPlatformConfigured } from './config';
 import { getAmazonConfig } from './config';
 import { getRecentSquarePayments } from './square';
 import { getRecentEtsyOrders } from './etsy';
+import { autoCreateProductFromSquareItem } from '@/lib/utils/auto-create-product';
 import type { SyncStatus } from '@prisma/client';
 
 export type { SyncResult } from '@/app/actions/marketplace-sync';
@@ -221,25 +222,46 @@ export async function runSquareSyncInternal(userId: string | null): Promise<Sync
             lineItem.name.toLowerCase().includes(p.name.toLowerCase())
         );
 
-        if (!matchedProduct) {
-          unmatchedItems.push(`${lineItem.name} (payment ${payment.paymentId})`);
-          continue;
-        }
-
         const unitPrice = lineItem.amount / 100 / lineItem.quantity;
         const totalAmount = lineItem.amount / 100;
+        let productId: string;
+        let saleNote = payment.note ? `Square: ${payment.note}` : 'Synced from Square';
+
+        if (matchedProduct) {
+          productId = matchedProduct.id;
+        } else {
+          // Try to auto-create a new product
+          const newProduct = await autoCreateProductFromSquareItem(
+            {
+              name: lineItem.name,
+              sku: lineItem.sku,
+              variationName: lineItem.variationName,
+              unitPrice,
+            },
+            createdById
+          );
+
+          if (newProduct) {
+            productId = newProduct.id;
+            saleNote = `Auto-created product from Square: ${lineItem.name} → ${newProduct.name}`;
+          } else {
+            // Still couldn't create product - log as unmatched and skip
+            unmatchedItems.push(`${lineItem.name} (payment ${payment.paymentId})`);
+            continue;
+          }
+        }
 
         await db.sale.create({
           data: {
             saleDate: payment.saleDate,
             channelId: farmersChannel.id,
-            productId: matchedProduct.id,
+            productId,
             quantity: lineItem.quantity,
             unitPrice,
             totalAmount,
             paymentMethod: 'SQUARE',
             referenceNumber: payment.paymentId,
-            notes: payment.note ? `Square: ${payment.note}` : 'Synced from Square',
+            notes: saleNote,
             createdById,
           },
         });

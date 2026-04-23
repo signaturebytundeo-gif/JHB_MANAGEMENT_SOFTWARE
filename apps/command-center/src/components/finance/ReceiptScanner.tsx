@@ -14,15 +14,13 @@ interface ReceiptScannerProps {
 type ScanResponse = {
   receiptUrl: string | null;
   extracted: {
-    description: string | null;
-    amount: number | null;
     vendor: string | null;
     date: string | null;
-    category: string;
+    total: number | null;
+    line_items: Array<{ description: string; amount: number }>;
+    category_suggestion: string;
+    payment_method: string;
     notes: string | null;
-    line_items: Array<{ name: string; qty: number; unit_price: number }>;
-    document_type: 'receipt' | 'invoice' | 'packing_slip' | 'other';
-    confidence: 'high' | 'medium' | 'low';
   };
 };
 
@@ -74,17 +72,22 @@ export function ReceiptScanner({ onExtracted }: ReceiptScannerProps) {
       const data = (await res.json()) as ScanResponse;
       const ex = data.extracted;
 
+      // Map Claude response to form format
+      const description = ex.line_items.length > 0
+        ? ex.line_items.map(item => item.description).join(', ')
+        : `Receipt from ${ex.vendor || 'Unknown vendor'}`;
+
       onExtracted({
-        description: ex.description ?? undefined,
-        amount: ex.amount != null ? String(ex.amount) : undefined,
-        category: ex.category as ExpenseCategory,
+        description,
+        amount: ex.total != null ? String(ex.total) : undefined,
+        category: ex.category_suggestion as ExpenseCategory,
         expenseDate: ex.date ?? undefined,
         vendorName: ex.vendor ?? undefined,
         notes: ex.notes ?? undefined,
         receiptUrl: data.receiptUrl ?? undefined,
         lineItems: ex.line_items,
-        scanConfidence: ex.confidence,
-        documentType: ex.document_type,
+        scanConfidence: 'medium', // Claude doesn't return confidence, default to medium
+        documentType: 'receipt', // Default to receipt since Claude doesn't return document type
       });
 
       setScanComplete(true);
@@ -127,7 +130,7 @@ export function ReceiptScanner({ onExtracted }: ReceiptScannerProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*,application/pdf"
+        accept="image/*"
         className="hidden"
         onChange={onInputChange}
       />

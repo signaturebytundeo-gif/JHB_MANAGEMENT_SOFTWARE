@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { globalSquareSync, type GlobalSquareSyncResult } from '@/app/actions/events';
+import { globalSquareSync, autoAssignAllSalesByDate, type GlobalSquareSyncResult } from '@/app/actions/events';
 import { Button } from '@/components/ui/button';
-import { CalendarIcon, DollarSign, CheckCircle, XCircle } from 'lucide-react';
+import { CalendarIcon, DollarSign, CheckCircle, XCircle, Zap } from 'lucide-react';
 
 export function GlobalSquareSyncPanel() {
   const [isPending, startTransition] = useTransition();
@@ -33,21 +33,35 @@ export function GlobalSquareSyncPanel() {
     });
   };
 
+  const handleAutoAssign = () => {
+    startTransition(async () => {
+      const res = await autoAssignAllSalesByDate();
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+    });
+  };
+
   return (
-    <div className="rounded-lg border bg-card p-6 shadow-sm">
+    <div className="rounded-lg border-2 border-caribbean-green bg-gradient-to-r from-caribbean-green/10 to-blue-600/10 p-6 shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-caribbean-green" />
-          <h3 className="font-semibold">Global Square Sync</h3>
+          <Zap className="h-6 w-6 text-caribbean-green animate-pulse" />
+          <h3 className="font-bold text-lg text-white">🚀 Square Sync & Auto-Assign</h3>
         </div>
       </div>
 
       {/* Description */}
-      <p className="text-sm text-muted-foreground mb-4">
-        Automatically match all Square transactions to events based on dates.
-        No manual assignment needed!
-      </p>
+      <div className="bg-caribbean-black/50 p-4 rounded-lg mb-4">
+        <p className="text-caribbean-gold font-medium mb-2">⚡ NEW AUTOMATED WORKFLOW:</p>
+        <p className="text-sm text-gray-300">
+          1. <strong>Sync</strong> pulls latest Square transactions → 2. <strong>Auto-assign</strong> matches them to events by date
+        </p>
+        <p className="text-xs text-gray-400 mt-1">💡 Requires MANAGER/ADMIN role</p>
+      </div>
 
       {/* Date Range Inputs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -79,13 +93,20 @@ export function GlobalSquareSyncPanel() {
           </div>
         </div>
 
-        <div className="flex items-end">
+        <div className="flex items-end gap-2">
           <Button
             onClick={handleGlobalSync}
             disabled={isPending || !dateFrom || !dateTo}
-            className="w-full bg-caribbean-green hover:bg-caribbean-green/90"
+            className="flex-1 bg-caribbean-green hover:bg-caribbean-green/90"
           >
             {isPending ? 'Syncing...' : 'Sync All Square Transactions'}
+          </Button>
+          <Button
+            onClick={handleAutoAssign}
+            disabled={isPending}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isPending ? 'Assigning...' : 'Auto-assign by Date'}
           </Button>
         </div>
       </div>

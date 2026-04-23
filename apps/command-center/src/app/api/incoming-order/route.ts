@@ -118,7 +118,6 @@ export async function POST(request: NextRequest) {
         shippingCost: data.shippingCost,
         orderTotal,
         promoCode: data.promoCode || undefined,
-        savedPromoForNextOrder: data.savedPromoForNextOrder || undefined,
       });
     } catch (slackError) {
       // Don't fail the order if Slack notification fails

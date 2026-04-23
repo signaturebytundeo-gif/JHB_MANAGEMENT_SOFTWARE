@@ -12,6 +12,8 @@ import { getRecentSquarePayments } from '@/lib/integrations/square';
 import { isPlatformConfigured } from '@/lib/integrations/config';
 import { decomposeBundleInventory } from '@/lib/utils/bundle-decompose';
 import { matchSquareItem } from '@/lib/utils/square-match';
+import { autoCreateProductFromSquareItem } from '@/lib/utils/auto-create-product';
+import { createOrUpdateAutoExpenseFromEvent } from './expenses';
 
 export async function createEvent(
   prevState: EventFormState,
@@ -39,7 +41,7 @@ export async function createEvent(
 
     const data = validatedFields.data;
 
-    await db.marketEvent.create({
+    const event = await db.marketEvent.create({
       data: {
         name: data.name,
         eventDate: data.eventDate,
@@ -55,7 +57,23 @@ export async function createEvent(
       },
     });
 
+    // Calculate total cost and auto-create expense if needed
+    const totalCost = Number(data.boothFee || 0) +
+                     Number(data.travelCost || 0) +
+                     Number(data.supplyCost || 0) +
+                     Number(data.laborCost || 0) +
+                     Number(data.otherCost || 0);
+
+    await createOrUpdateAutoExpenseFromEvent(
+      event.id,
+      data.name,
+      data.eventDate,
+      totalCost,
+      session.userId
+    );
+
     revalidatePath('/dashboard/events');
+    revalidatePath('/dashboard/finance/expenses');
     return { success: true, message: 'Event created successfully' };
   } catch (error) {
     console.error('Error creating event:', error);
@@ -95,8 +113,27 @@ export async function updateEvent(
       data,
     });
 
+    // Calculate total cost and auto-create/update expense if needed
+    const totalCost = Number(data.boothFee || 0) +
+                     Number(data.travelCost || 0) +
+                     Number(data.supplyCost || 0) +
+                     Number(data.laborCost || 0) +
+                     Number(data.otherCost || 0);
+
+    // Get current session for user ID
+    const session = await verifyManagerOrAbove();
+
+    await createOrUpdateAutoExpenseFromEvent(
+      eventId,
+      data.name,
+      data.eventDate,
+      totalCost,
+      session.userId
+    );
+
     revalidatePath('/dashboard/events');
     revalidatePath(`/dashboard/events/${eventId}`);
+    revalidatePath('/dashboard/finance/expenses');
     return { success: true, message: 'Event updated successfully' };
   } catch (error) {
     console.error('Error updating event:', error);
@@ -114,9 +151,18 @@ export async function deleteEvent(eventId: string) {
       data: { eventId: null },
     });
 
+    // Delete any auto-generated expenses for this event
+    await db.expense.deleteMany({
+      where: {
+        eventId,
+        source: 'auto-event',
+      },
+    });
+
     await db.marketEvent.delete({ where: { id: eventId } });
 
     revalidatePath('/dashboard/events');
+    revalidatePath('/dashboard/finance/expenses');
     return { success: true, message: 'Event deleted' };
   } catch (error) {
     console.error('Error deleting event:', error);
@@ -372,6 +418,93 @@ export async function unassignSalesFromEvent(saleIds: string[]) {
   }
 }
 
+/**
+ * Auto-assign all unassigned sales to events based on matching dates
+ */
+export async function autoAssignAllSalesByDate() {
+  try {
+    await verifyManagerOrAbove();
+
+    // Get all unassigned Square sales
+    const unassignedSales = await db.sale.findMany({
+      where: {
+        paymentMethod: 'SQUARE',
+        eventId: null,
+      },
+      select: {
+        id: true,
+        saleDate: true,
+      },
+    });
+
+    if (unassignedSales.length === 0) {
+      return {
+        success: true,
+        message: 'No unassigned sales to process',
+        salesMatched: 0,
+        eventsMatched: 0
+      };
+    }
+
+    // Get all events
+    const events = await db.marketEvent.findMany({
+      select: {
+        id: true,
+        eventDate: true,
+        name: true,
+      },
+    });
+
+    let totalMatched = 0;
+    const matchedEvents = new Set<string>();
+
+    // Group sales by date
+    const salesByDate = unassignedSales.reduce((acc, sale) => {
+      const dateKey = sale.saleDate.toISOString().split('T')[0];
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(sale.id);
+      return acc;
+    }, {} as Record<string, string[]>);
+
+    // Match sales to events by date
+    for (const event of events) {
+      const eventDateKey = event.eventDate.toISOString().split('T')[0];
+      const matchingSaleIds = salesByDate[eventDateKey];
+
+      if (matchingSaleIds && matchingSaleIds.length > 0) {
+        // Assign these sales to this event
+        await db.sale.updateMany({
+          where: { id: { in: matchingSaleIds } },
+          data: { eventId: event.id },
+        });
+
+        totalMatched += matchingSaleIds.length;
+        matchedEvents.add(event.id);
+
+        console.log(`[auto-assign] Assigned ${matchingSaleIds.length} sales to event "${event.name}" on ${eventDateKey}`);
+      }
+    }
+
+    revalidatePath('/dashboard/events');
+
+    return {
+      success: true,
+      message: `Auto-assigned ${totalMatched} sales across ${matchedEvents.size} events`,
+      salesMatched: totalMatched,
+      eventsMatched: matchedEvents.size,
+    };
+
+  } catch (error: any) {
+    console.error('Error in auto-assign by date:', error);
+    return {
+      success: false,
+      message: `Auto-assign failed: ${error.message || 'Unknown error'}`,
+      salesMatched: 0,
+      eventsMatched: 0
+    };
+  }
+}
+
 // ============================================================================
 // Square ↔ Event Reconciliation
 // ============================================================================
@@ -517,11 +650,29 @@ export async function syncSquareForEvent(eventId: string): Promise<EventSquareSy
             salesNeedReview++;
           }
         } else {
-          // No match — log under "Custom Sale" so dollar totals always reconcile.
-          // This covers "Unknown Item", custom amounts, and truly new products.
-          productId = customProduct.id;
-          saleNote = `⚠ Custom: "${lineItem.name}" ($${totalAmount.toFixed(2)}) — no product match`;
-          salesNeedReview++;
+          // No match — try to auto-create a new product
+          const newProduct = await autoCreateProductFromSquareItem(
+            {
+              name: lineItem.name,
+              sku: lineItem.sku,
+              variationName: lineItem.variationName,
+              unitPrice,
+            },
+            session.userId
+          );
+
+          if (newProduct) {
+            // Successfully created new product
+            productId = newProduct.id;
+            saleNote = `✅ Auto-created: "${lineItem.name}" → ${newProduct.name} (${newProduct.sku})`;
+            salesNeedReview++; // Flag for review since it's a new product
+          } else {
+            // Couldn't create product — log under "Custom Sale" so dollar totals always reconcile.
+            // This covers "Unknown Item", custom amounts, and items that shouldn't be products.
+            productId = customProduct.id;
+            saleNote = `⚠ Custom: "${lineItem.name}" ($${totalAmount.toFixed(2)}) — couldn't create product`;
+            salesNeedReview++;
+          }
         }
 
         if (payment.note) {

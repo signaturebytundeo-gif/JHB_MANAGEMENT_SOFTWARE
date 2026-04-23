@@ -124,7 +124,10 @@ export async function getAlertStatus(): Promise<AlertStatus> {
 
     // ── Pending Expense Approvals ──
     const pendingExpenses = await db.expense.aggregate({
-      where: { approvalStatus: 'pending' },
+      where: {
+        approvalStatus: 'pending',
+        source: { not: 'auto-event' }, // Exclude auto-event expenses from approval alerts
+      },
       _count: { id: true },
       _sum: { amount: true },
     });

@@ -24,6 +24,7 @@ import {
   UserPlus,
   ArrowLeftRight,
   Receipt,
+  CalendarDays,
 } from 'lucide-react';
 
 async function KPICards({ role }: { role: string }) {
@@ -164,10 +165,11 @@ export default async function DashboardPage() {
     redirect('/dashboard/investor');
   }
 
-  // DASH-07: All 5 quick action buttons enabled with correct hrefs
+  // DASH-07: All quick action buttons enabled with correct hrefs
   const quickActions =
     user.role === 'ADMIN'
       ? [
+          { label: 'New Event', href: '/dashboard/events/new', icon: CalendarDays, enabled: true },
           { label: 'Purchase Order', href: '/dashboard/orders/new', icon: Plus, enabled: true },
           { label: 'Log Batch', href: '/dashboard/production/new', icon: PackagePlus, enabled: true },
           { label: 'Record Expense', href: '/dashboard/finance/expenses', icon: Receipt, enabled: true },
@@ -176,6 +178,7 @@ export default async function DashboardPage() {
         ]
       : user.role === 'MANAGER'
       ? [
+          { label: 'New Event', href: '/dashboard/events/new', icon: CalendarDays, enabled: true },
           { label: 'Purchase Order', href: '/dashboard/orders/new', icon: Plus, enabled: true },
           { label: 'Log Batch', href: '/dashboard/production/new', icon: PackagePlus, enabled: true },
           { label: 'Record Expense', href: '/dashboard/finance/expenses', icon: Receipt, enabled: true },
@@ -207,7 +210,7 @@ export default async function DashboardPage() {
       {quickActions.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
