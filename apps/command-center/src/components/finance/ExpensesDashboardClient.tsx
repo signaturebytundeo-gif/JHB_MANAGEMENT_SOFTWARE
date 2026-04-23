@@ -350,7 +350,7 @@ export function ExpensesDashboardClient({
                         )}
                       </TableCell>
                       <TableCell>
-                        {(expense.createdById === currentUserId || expense.approvalStatus !== 'rejected') && (
+                        {expense.approvalStatus !== 'rejected' && (
                           <Button
                             variant="ghost"
                             size="sm"

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifySession } from '@/lib/dal';
+import { put } from '@vercel/blob';
 import { z } from 'zod';
 import { ExpenseCategory, PaymentMethod } from '@prisma/client';
 
@@ -23,17 +24,51 @@ const editExpenseSchema = z.object({
 export async function POST(req: Request) {
   try {
     const session = await verifySession();
-    const body = await req.json();
 
-    const validated = editExpenseSchema.safeParse(body);
-    if (!validated.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validated.error.flatten().fieldErrors },
-        { status: 400 }
-      );
+    // Handle both JSON and FormData
+    let data: any;
+    let receiptFile: File | null = null;
+
+    const contentType = req.headers.get('content-type');
+
+    if (contentType?.includes('multipart/form-data')) {
+      // Handle FormData (with file upload)
+      const formData = await req.formData();
+      receiptFile = formData.get('receipt') as File | null;
+
+      const formDataObj: any = {};
+      for (const [key, value] of formData.entries()) {
+        if (key !== 'receipt') {
+          if (key === 'isRecurring') {
+            formDataObj[key] = value === 'true' || value === 'on';
+          } else if (key === 'amount') {
+            formDataObj[key] = parseFloat(value as string);
+          } else {
+            formDataObj[key] = value;
+          }
+        }
+      }
+
+      const validated = editExpenseSchema.safeParse(formDataObj);
+      if (!validated.success) {
+        return NextResponse.json(
+          { error: 'Invalid input', details: validated.error.flatten().fieldErrors },
+          { status: 400 }
+        );
+      }
+      data = validated.data;
+    } else {
+      // Handle JSON
+      const body = await req.json();
+      const validated = editExpenseSchema.safeParse(body);
+      if (!validated.success) {
+        return NextResponse.json(
+          { error: 'Invalid input', details: validated.error.flatten().fieldErrors },
+          { status: 400 }
+        );
+      }
+      data = validated.data;
     }
-
-    const data = validated.data;
 
     // Find the original expense
     const originalExpense = await prisma.expense.findUnique({
@@ -47,13 +82,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check permissions - only the creator or admins can edit
-    if (originalExpense.createdById !== session.userId && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'You can only edit your own expenses' },
-        { status: 403 }
-      );
-    }
+    // Allow all users to edit expenses (business requirement for collaborative expense management)
+    // Only restriction: can't edit rejected expenses
 
     // Can't edit rejected expenses
     if (originalExpense.approvalStatus === 'rejected') {
@@ -61,6 +91,23 @@ export async function POST(req: Request) {
         { error: 'Cannot edit rejected expenses' },
         { status: 400 }
       );
+    }
+
+    // Handle receipt upload
+    let newReceiptUrl = originalExpense.receiptUrl;
+    if (receiptFile && receiptFile.size > 0) {
+      if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        console.warn('[edit-expense] BLOB_READ_WRITE_TOKEN not set — skipping receipt upload');
+      } else {
+        const ext = receiptFile.name.includes('.') ? receiptFile.name.split('.').pop() : 'jpg';
+        const blobPath = `receipts/edited/${session.userId}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+
+        const blob = await put(blobPath, receiptFile, {
+          access: 'public',
+          contentType: receiptFile.type
+        });
+        newReceiptUrl = blob.url;
+      }
     }
 
     // Build audit trail entry
@@ -85,6 +132,7 @@ export async function POST(req: Request) {
       { field: 'isRecurring', oldValue: originalExpense.isRecurring, newValue: data.isRecurring || false },
       { field: 'recurrenceFrequency', oldValue: originalExpense.recurrenceFrequency, newValue: data.recurrenceFrequency || null },
       { field: 'nextDueDate', oldValue: originalExpense.nextDueDate?.toISOString().split('T')[0] || null, newValue: data.nextDueDate?.toISOString().split('T')[0] || null },
+      { field: 'receiptUrl', oldValue: originalExpense.receiptUrl, newValue: newReceiptUrl },
     ];
 
     for (const { field, oldValue, newValue } of fieldsToTrack) {
@@ -118,27 +166,29 @@ export async function POST(req: Request) {
       isRecurring: data.isRecurring || false,
       recurrenceFrequency: data.recurrenceFrequency || null,
       nextDueDate: data.nextDueDate || null,
+      receiptUrl: newReceiptUrl,
       editHistory: newEditHistory,
       updatedAt: new Date(),
     };
 
-    // Reset approval if expense was previously approved and non-trivial changes made
+    // Handle approval status for edits
     const significantChanges = editEntry.changes.some(change =>
       ['amount', 'category', 'description'].includes(change.field)
     );
 
-    if (originalExpense.approvalStatus === 'approved' && significantChanges) {
-      // Recurring expenses remain auto-approved even after edits
-      if (data.isRecurring) {
-        updateData.approvalStatus = 'auto_approved';
-        updateData.approvedAt = new Date();
-      } else {
-        // One-time expenses need re-approval after significant changes
-        updateData.approvalStatus = 'pending_single';
-        updateData.approvedById = null;
-        updateData.secondApprovedById = null;
-        updateData.approvedAt = null;
-      }
+    // If expense is now marked as recurring, auto-approve it
+    if (data.isRecurring) {
+      updateData.approvalStatus = 'auto_approved';
+      updateData.approvedAt = new Date();
+      updateData.approvedById = session.userId;
+    }
+    // If expense was previously approved and has significant changes (and not recurring)
+    else if (originalExpense.approvalStatus === 'approved' && significantChanges) {
+      // One-time expenses need re-approval after significant changes
+      updateData.approvalStatus = 'pending_single';
+      updateData.approvedById = null;
+      updateData.secondApprovedById = null;
+      updateData.approvedAt = null;
     }
 
     // Update the expense

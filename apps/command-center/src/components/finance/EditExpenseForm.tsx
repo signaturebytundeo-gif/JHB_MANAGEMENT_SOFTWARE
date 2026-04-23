@@ -144,26 +144,27 @@ export function EditExpenseForm({ expense, onSuccess, onCancel }: EditExpenseFor
     setIsSubmitting(true);
 
     try {
+      const formElement = e.target as HTMLFormElement;
+      const formData = new FormData(formElement);
+
+      // Add all form fields to FormData
+      formData.append('expenseId', expense.id);
+      formData.append('description', description);
+      formData.append('amount', amount);
+      formData.append('category', category);
+      formData.append('expenseDate', expenseDate);
+      formData.append('vendorName', vendorName);
+      formData.append('notes', notes);
+      formData.append('subcategory', subcategory);
+      formData.append('paymentMethod', paymentMethod);
+      formData.append('isRecurring', isRecurring.toString());
+      formData.append('recurrenceFrequency', recurrenceFrequency);
+      formData.append('nextDueDate', nextDueDate);
+      formData.append('editReason', editReason);
+
       const response = await fetch('/api/edit-expense', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          expenseId: expense.id,
-          description,
-          amount: parseFloat(amount),
-          category,
-          expenseDate,
-          vendorName: vendorName || undefined,
-          notes: notes || undefined,
-          subcategory: subcategory || undefined,
-          paymentMethod: paymentMethod || undefined,
-          isRecurring,
-          recurrenceFrequency: recurrenceFrequency || undefined,
-          nextDueDate: nextDueDate || undefined,
-          editReason,
-        }),
+        body: formData, // Send FormData instead of JSON
       });
 
       const result = await response.json();
@@ -347,15 +348,42 @@ export function EditExpenseForm({ expense, onSuccess, onCancel }: EditExpenseFor
           </div>
         )}
 
+        {/* Receipt Upload/Update */}
+        <div className="md:col-span-2 space-y-1.5">
+          <Label htmlFor="receipt">Receipt</Label>
+          {expense.receiptUrl && (
+            <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-800 mb-2">Current receipt on file:</p>
+              <a
+                href={expense.receiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-caribbean-green hover:underline"
+              >
+                📎 View existing receipt
+              </a>
+            </div>
+          )}
+          <Input
+            id="receipt"
+            name="receipt"
+            type="file"
+            accept="image/*,.pdf"
+          />
+          <p className="text-xs text-muted-foreground">
+            Upload a new receipt to replace the existing one. Accepted formats: JPG, PNG, PDF
+          </p>
+        </div>
+
         {/* Notes */}
         <div className="md:col-span-2 space-y-1.5">
-          <Label htmlFor="notes">Notes</Label>
+          <Label htmlFor="notes">Notes & Additional Details</Label>
           <Textarea
             id="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional notes (max 500 characters)"
-            rows={3}
+            placeholder="Optional notes, sizes, quantities, additional details (max 500 characters)"
+            rows={4}
           />
         </div>
 
