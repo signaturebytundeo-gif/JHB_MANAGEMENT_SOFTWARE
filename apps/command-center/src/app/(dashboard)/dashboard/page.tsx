@@ -25,6 +25,7 @@ import {
   ArrowLeftRight,
   Receipt,
   CalendarDays,
+  Calendar,
 } from 'lucide-react';
 
 async function KPICards({ role }: { role: string }) {
@@ -175,6 +176,7 @@ export default async function DashboardPage() {
           { label: 'Record Expense', href: '/dashboard/finance/expenses', icon: Receipt, enabled: true },
           { label: 'Transfer', href: '/dashboard/inventory/transfers', icon: ArrowLeftRight, enabled: true },
           { label: 'Invoice', href: '/dashboard/finance/invoices', icon: DollarSign, enabled: true },
+          { label: 'Events', href: '/dashboard/events', icon: Calendar, enabled: true },
         ]
       : user.role === 'MANAGER'
       ? [
@@ -183,6 +185,7 @@ export default async function DashboardPage() {
           { label: 'Log Batch', href: '/dashboard/production/new', icon: PackagePlus, enabled: true },
           { label: 'Record Expense', href: '/dashboard/finance/expenses', icon: Receipt, enabled: true },
           { label: 'Transfer', href: '/dashboard/inventory/transfers', icon: ArrowLeftRight, enabled: true },
+          { label: 'Events', href: '/dashboard/events', icon: Calendar, enabled: true },
         ]
       : user.role === 'SALES_REP'
       ? [
