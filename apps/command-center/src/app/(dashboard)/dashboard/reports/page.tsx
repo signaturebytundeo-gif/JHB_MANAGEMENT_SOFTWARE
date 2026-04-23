@@ -1,68 +1,66 @@
-import { Suspense } from 'react';
-import { format, startOfMonth } from 'date-fns';
-import { getDailySalesSummary } from '@/app/actions/reports';
-import { getAlertStatus } from '@/app/actions/alerts';
-import { AlertConfigPanel } from '@/components/reports/AlertConfigPanel';
-import { ReportsPageClient } from './ReportsPageClient';
+import { Metadata } from 'next';
+import { verifySession } from '@/lib/dal';
+import { redirect } from 'next/navigation';
+import { QuarterlyReportsClient } from '@/components/reports/QuarterlyReportsClient';
+import { prisma } from '@/lib/prisma';
 
-// ── Server Component ──────────────────────────────────────────────────────────
+export const metadata: Metadata = {
+  title: 'Reports | Jamaica House Brand',
+  description: 'Generate quarterly distribution and sales reports',
+};
+
+async function getLocationsAndData() {
+  // Get restaurant locations for filtering
+  const locations = await prisma.location.findMany({
+    where: {
+      type: {
+        in: ['RESTAURANT', 'PRODUCTION']
+      },
+      isActive: true,
+    },
+    orderBy: { name: 'asc' },
+  });
+
+  // Get available years from sales data
+  const salesData = await prisma.sale.findMany({
+    select: { saleDate: true },
+    orderBy: { saleDate: 'asc' },
+  });
+
+  const availableYears = [...new Set(
+    salesData.map(sale => sale.saleDate.getFullYear())
+  )].sort((a, b) => b - a); // Descending order
+
+  return {
+    locations,
+    availableYears: availableYears.length > 0 ? availableYears : [new Date().getFullYear()],
+  };
+}
 
 export default async function ReportsPage() {
-  const today = new Date();
+  const session = await verifySession();
 
-  // Fetch default report (Daily Sales Summary for today)
-  const initialData = await getDailySalesSummary(today);
+  // Only admins and managers can access reports
+  if (!['ADMIN', 'MANAGER'].includes(session.user.role)) {
+    redirect('/dashboard');
+  }
 
-  // Fetch alert status (separate Suspense boundary doesn't change with report selection)
-  const alertStatus = await getAlertStatus();
-
-  const defaultParams = {
-    date: format(today, 'yyyy-MM-dd'),
-    startDate: format(startOfMonth(today), 'yyyy-MM-dd'),
-    endDate: format(today, 'yyyy-MM-dd'),
-    month: today.getMonth() + 1,
-    year: today.getFullYear(),
-  };
+  const { locations, availableYears } = await getLocationsAndData();
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Page header */}
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Operational Reports</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Generate, view, and export operational reports across all business areas.
+        <h1 className="text-3xl font-bold text-foreground">Reports & Analytics</h1>
+        <p className="text-muted-foreground mt-2">
+          Generate quarterly distribution reports for restaurant locations and cost analysis
         </p>
       </div>
 
-      {/* Reports client section */}
-      <ReportsPageClient
-        initialData={initialData}
-        defaultParams={defaultParams}
+      <QuarterlyReportsClient
+        locations={locations}
+        availableYears={availableYears}
+        currentUserRole={session.user.role}
       />
-
-      {/* Divider */}
-      <div className="border-t border-border pt-6 print:hidden">
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-foreground">System Alerts</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Current status of operational thresholds across inventory, finance, production, and expenses.
-          </p>
-        </div>
-        <Suspense
-          fallback={
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-border bg-card p-4 h-32 animate-pulse"
-                />
-              ))}
-            </div>
-          }
-        >
-          <AlertConfigPanel alertStatus={alertStatus} />
-        </Suspense>
-      </div>
     </div>
   );
 }
