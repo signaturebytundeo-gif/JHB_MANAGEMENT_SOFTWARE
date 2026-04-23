@@ -19,7 +19,7 @@ async function main() {
   // ============================================================================
   console.log("👥 Seeding admin users...");
 
-  const defaultPassword = await bcrypt.hash("JHB2026!", 10);
+  const defaultPassword = await bcrypt.hash("JHB26!", 10);
 
   const anthony = await prisma.user.upsert({
     where: { email: "anthony@jamaicahousebrand.com" },
@@ -48,10 +48,10 @@ async function main() {
   });
 
   const tomi = await prisma.user.upsert({
-    where: { email: "tomi@jamaicahousebrand.com" },
+    where: { email: "tomigunz@jamaicahousebrand.com" },
     update: {},
     create: {
-      email: "tomi@jamaicahousebrand.com",
+      email: "tomigunz@jamaicahousebrand.com",
       name: "Tomi",
       password: defaultPassword,
       role: Role.ADMIN,
@@ -60,7 +60,22 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created/verified admin users: ${anthony.name}, ${tunde.name}, ${tomi.name}`);
+  // Guest account with manager role for demo purposes
+  const guestPassword = await bcrypt.hash("Guest123!", 10);
+  const guest = await prisma.user.upsert({
+    where: { email: "guest@jamaicahousebrand.com" },
+    update: {},
+    create: {
+      email: "guest@jamaicahousebrand.com",
+      name: "Guest User",
+      password: guestPassword,
+      role: Role.MANAGER,
+      emailVerified: new Date(),
+      isActive: true,
+    },
+  });
+
+  console.log(`✅ Created/verified users: ${anthony.name}, ${tunde.name}, ${tomi.name}, ${guest.name}`);
 
   // ============================================================================
   // PRODUCTS WITH PRICING TIERS (INFRA-01)
