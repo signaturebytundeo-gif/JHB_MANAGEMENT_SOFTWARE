@@ -22,6 +22,7 @@ import {
 type AuditMovement = {
   id: string;
   movementType: string;
+  transferType: string | null;
   batchCode: string;
   productName: string;
   productSku: string;
@@ -56,6 +57,30 @@ const REASON_LABELS: Record<string, string> = {
   EXPIRED: 'Expired',
   COUNT_CORRECTION: 'Count Correction',
 };
+
+const TRANSFER_TYPE_LABELS: Record<string, string> = {
+  RESTOCK: 'Restock',
+  FULFILLMENT: 'Fulfillment',
+  ADJUSTMENT: 'Adjustment',
+  RETURN: 'Return',
+};
+
+function transferTypeBadgeVariant(
+  transferType: string | null
+): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' {
+  switch (transferType) {
+    case 'RESTOCK':
+      return 'success';
+    case 'FULFILLMENT':
+      return 'default';
+    case 'ADJUSTMENT':
+      return 'warning';
+    case 'RETURN':
+      return 'outline';
+    default:
+      return 'secondary';
+  }
+}
 
 function movementTypeBadgeVariant(
   type: string
@@ -252,9 +277,16 @@ export function AuditTrailTable({ movements }: AuditTrailTableProps) {
                         {formatDate(m.createdAt)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={movementTypeBadgeVariant(m.movementType)}>
-                          {MOVEMENT_TYPE_LABELS[m.movementType] ?? m.movementType}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                          <Badge variant={movementTypeBadgeVariant(m.movementType)}>
+                            {MOVEMENT_TYPE_LABELS[m.movementType] ?? m.movementType}
+                          </Badge>
+                          {m.transferType && (
+                            <Badge variant={transferTypeBadgeVariant(m.transferType)} className="text-xs">
+                              {TRANSFER_TYPE_LABELS[m.transferType] ?? m.transferType}
+                            </Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm">
                         {m.productName}
@@ -300,10 +332,15 @@ export function AuditTrailTable({ movements }: AuditTrailTableProps) {
                       <p className="font-medium text-sm">{m.productName}</p>
                       <p className="text-xs text-muted-foreground font-mono">{m.batchCode}</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-1">
                       <Badge variant={movementTypeBadgeVariant(m.movementType)}>
                         {MOVEMENT_TYPE_LABELS[m.movementType] ?? m.movementType}
                       </Badge>
+                      {m.transferType && (
+                        <Badge variant={transferTypeBadgeVariant(m.transferType)} className="text-xs">
+                          {TRANSFER_TYPE_LABELS[m.transferType] ?? m.transferType}
+                        </Badge>
+                      )}
                       <Badge variant={status.variant}>{status.label}</Badge>
                     </div>
                   </div>

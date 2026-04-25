@@ -467,6 +467,7 @@ export async function getAuditTrail(filters?: {
   productId?: string;
   locationId?: string;
   movementType?: MovementType;
+  transferType?: TransferType;
   dateFrom?: string;
   dateTo?: string;
 }) {
@@ -475,6 +476,9 @@ export async function getAuditTrail(filters?: {
 
     if (filters?.movementType) {
       where.movementType = filters.movementType;
+    }
+    if (filters?.transferType) {
+      where.transferType = filters.transferType;
     }
     if (filters?.dateFrom || filters?.dateTo) {
       const dateFilter: Record<string, Date> = {};
@@ -512,12 +516,13 @@ export async function getAuditTrail(filters?: {
         approvedBy: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: filters && Object.keys(filters).length > 0 ? 1000 : 100, // More results when filtered
     });
 
     return movements.map((m) => ({
       id: m.id,
       movementType: m.movementType,
+      transferType: m.transferType,
       batchCode: m.batch.batchCode,
       productName: m.batch.product.name,
       productSku: m.batch.product.sku,

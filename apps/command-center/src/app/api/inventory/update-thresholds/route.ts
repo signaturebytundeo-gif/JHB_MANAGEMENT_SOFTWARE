@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySession } from '@/lib/dal';
-import { db } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { z } from 'zod';
 
 const updateThresholdsSchema = z.object({
