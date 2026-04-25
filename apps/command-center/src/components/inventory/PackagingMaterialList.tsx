@@ -15,7 +15,7 @@ import { deactivatePackagingMaterial } from '@/app/actions/packaging';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { classifyStockLevel } from '@/lib/utils/reorder-point';
+import { classifyStockLevelLegacy } from '@/lib/utils/reorder-point';
 import { PackagingMaterialForm } from './PackagingMaterialForm';
 
 type PackagingMaterial = {
@@ -45,7 +45,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 function getStockBadge(currentQuantity: number, reorderPoint: number) {
-  const level = classifyStockLevel(currentQuantity, reorderPoint);
+  const level = classifyStockLevelLegacy(currentQuantity, reorderPoint);
   if (level === 'CRITICAL') return { label: 'Critical', variant: 'destructive' as const };
   if (level === 'REORDER') return { label: 'Reorder', variant: 'warning' as const };
   return { label: 'OK', variant: 'success' as const };

@@ -45,10 +45,14 @@ export default async function EventsPage({
       {unassignedCount > 0 && (
         <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
           <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-          <p className="text-sm text-amber-300">
-            You have <strong>{unassignedCount}</strong> unassigned Square sale{unassignedCount !== 1 ? 's' : ''}.
-            Create an event and assign them to track profitability.
-          </p>
+          <div className="flex-1">
+            <p className="text-sm text-amber-300">
+              You have <strong>{unassignedCount}</strong> unassigned Square sale{unassignedCount !== 1 ? 's' : ''}.
+            </p>
+            <p className="text-xs text-amber-300/80 mt-1">
+              Use the "Auto-assign by Date" button below to automatically match them to your events.
+            </p>
+          </div>
         </div>
       )}
 

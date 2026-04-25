@@ -17,6 +17,7 @@ import type { EnhancedStockLevelRow } from '@/app/actions/inventory';
 import { fulfillOnlineOrder } from '@/app/actions/inventory';
 import { toast } from 'sonner';
 import { Calendar, Clock, TrendingDown, Package } from 'lucide-react';
+import { ThresholdManagerDialog } from './ThresholdManagerDialog';
 
 type StockLevelFilter = 'ALL' | 'CRITICAL' | 'REORDER' | 'HEALTHY' | 'STALE';
 type SortKey = 'name' | 'total' | 'daysSinceRestock';
@@ -317,15 +318,24 @@ export function EnhancedStockLevelGrid({ data }: EnhancedStockLevelGridProps) {
                 <TableRow key={row.product.id}>
                   <TableCell>
                     <div>
-                      <p className="font-medium text-sm">{row.product.name}</p>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="font-medium text-sm">{row.product.name}</p>
+                        <ThresholdManagerDialog
+                          product={row.product}
+                          onUpdate={handleActionComplete}
+                        />
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {row.product.sku} • {row.product.size}
                       </p>
                       {row.belowThreshold && (
                         <Badge variant="destructive" className="text-xs mt-1">
-                          Below threshold ({row.product.reorderPoint})
+                          Below threshold ({row.product.reorderThreshold ?? 20})
                         </Badge>
                       )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Thresholds: Critical ≤ {row.product.criticalThreshold ?? 10} • Reorder ≤ {row.product.reorderThreshold ?? 20}
+                      </p>
                     </div>
                   </TableCell>
                   {row.locations.map((l) => (
@@ -386,9 +396,18 @@ export function EnhancedStockLevelGrid({ data }: EnhancedStockLevelGridProps) {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <p className="font-semibold text-sm">{row.product.name}</p>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="font-semibold text-sm">{row.product.name}</p>
+                    <ThresholdManagerDialog
+                      product={row.product}
+                      onUpdate={handleActionComplete}
+                    />
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {row.product.sku} • {row.product.size}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Thresholds: Critical ≤ {row.product.criticalThreshold ?? 10} • Reorder ≤ {row.product.reorderThreshold ?? 20}
                   </p>
                   {row.belowThreshold && (
                     <Badge variant="destructive" className="text-xs mt-1">

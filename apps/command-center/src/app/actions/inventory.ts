@@ -17,7 +17,7 @@ import {
 } from '@/lib/validators/inventory';
 import { TransactionType, MovementType, TransferType } from '@prisma/client';
 import { allocateInventoryFIFO } from '@/lib/utils/fifo';
-import { classifyStockLevel } from '@/lib/utils/reorder-point';
+import { classifyStockLevel, classifyStockLevelLegacy } from '@/lib/utils/reorder-point';
 
 // ============================================================================
 // READ ACTIONS
@@ -441,7 +441,7 @@ export async function getStockLevels() {
         return {
           location: { id: location.id, name: location.name, type: location.type },
           quantity,
-          stockLevel: classifyStockLevel(quantity, product.reorderPoint),
+          stockLevel: classifyStockLevelLegacy(quantity, product.reorderPoint),
         };
       });
       const total = locationStocks.reduce((sum, l) => sum + l.quantity, 0);
@@ -961,7 +961,7 @@ export async function getInventoryAggregation(): Promise<InventoryAggregationRow
         totalProduced,
         allocated,
         available,
-        stockLevel: classifyStockLevel(available, product.reorderPoint),
+        stockLevel: classifyStockLevelLegacy(available, product.reorderPoint),
       };
     });
   } catch (error) {
@@ -1255,7 +1255,15 @@ export async function recordRestaurantConsumption(
 // ============================================================================
 
 export type EnhancedStockLevelRow = {
-  product: { id: string; name: string; sku: string; size: string; reorderPoint: number };
+  product: {
+    id: string;
+    name: string;
+    sku: string;
+    size: string;
+    reorderPoint: number;
+    reorderThreshold: number | null;
+    criticalThreshold: number | null;
+  };
   locations: Array<{
     location: { id: string; name: string; type: string };
     quantity: number;
@@ -1279,7 +1287,15 @@ export async function getEnhancedStockLevels(): Promise<EnhancedStockLevelRow[]>
       db.product.findMany({
         where: { isActive: true },
         orderBy: { name: 'asc' },
-        select: { id: true, name: true, sku: true, size: true, reorderPoint: true },
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          size: true,
+          reorderPoint: true,
+          reorderThreshold: true,
+          criticalThreshold: true
+        },
       }),
       db.location.findMany({
         where: { isActive: true },
@@ -1423,7 +1439,11 @@ export async function getEnhancedStockLevels(): Promise<EnhancedStockLevelRow[]>
         return {
           location: { id: location.id, name: location.name, type: location.type },
           quantity,
-          stockLevel: classifyStockLevel(quantity, product.reorderPoint),
+          stockLevel: classifyStockLevel(
+            quantity,
+            product.criticalThreshold ?? 10,
+            product.reorderThreshold ?? 20
+          ),
           daysSinceLastRestock,
           lastSoldThroughDate: lastSoldThroughDate?.toISOString() ?? null,
           lastRestockDate: lastRestockDate?.toISOString() ?? null,
@@ -1432,7 +1452,7 @@ export async function getEnhancedStockLevels(): Promise<EnhancedStockLevelRow[]>
 
       const total = locationStocks.reduce((sum, l) => sum + l.quantity, 0);
       const mainWarehouseStock = mainWarehouse ? (locMap.get(mainWarehouse.id) ?? 0) : 0;
-      const belowThreshold = mainWarehouseStock < product.reorderPoint;
+      const belowThreshold = mainWarehouseStock <= (product.reorderThreshold ?? 20);
 
       return {
         product,

@@ -271,17 +271,19 @@ model MagicLinkToken {
 // ============================================================================
 
 model Product {
-  id           String   @id @default(cuid())
-  name         String
-  sku          String   @unique
-  size         String
-  unitsPerCase Int? // Nullable for TBD packaging
-  description  String?
-  reorderPoint Int      @default(0) // Default reorder threshold in units
-  leadTimeDays Int      @default(14) // Default production/procurement lead time
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String
+  sku              String   @unique
+  size             String
+  unitsPerCase     Int? // Nullable for TBD packaging
+  description      String?
+  reorderPoint     Int      @default(0) // Legacy field - use reorderThreshold instead
+  reorderThreshold Int?     @default(20) // When to show REORDER alerts
+  criticalThreshold Int?    @default(10) // When to show CRITICAL alerts
+  leadTimeDays     Int      @default(14) // Default production/procurement lead time
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   // Relations
   pricingTiers          PricingTier[]

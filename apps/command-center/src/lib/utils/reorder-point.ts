@@ -30,17 +30,32 @@ export function calculateReorderPoint(
 }
 
 /**
- * Classifies current stock level relative to the reorder threshold.
+ * Classifies current stock level using per-SKU thresholds.
  *
- * - CRITICAL: currentStock < reorderPoint (action required immediately)
- * - REORDER:  currentStock < reorderPoint * 1.2 (approaching threshold, order soon)
- * - HEALTHY:  currentStock >= reorderPoint * 1.2 (sufficient stock)
+ * - CRITICAL: currentStock <= criticalThreshold (immediate action required)
+ * - REORDER:  currentStock <= reorderThreshold (order soon)
+ * - HEALTHY:  currentStock > reorderThreshold (sufficient stock)
  *
  * @param currentStock - Current units available
- * @param reorderPoint - Threshold at which to reorder
+ * @param criticalThreshold - Threshold for critical alerts
+ * @param reorderThreshold - Threshold for reorder alerts
  * @returns StockLevel classification
  */
 export function classifyStockLevel(
+  currentStock: number,
+  criticalThreshold: number = 10,
+  reorderThreshold: number = 20
+): StockLevel {
+  if (currentStock <= criticalThreshold) return 'CRITICAL';
+  if (currentStock <= reorderThreshold) return 'REORDER';
+  return 'HEALTHY';
+}
+
+/**
+ * Legacy function for backward compatibility.
+ * @deprecated Use the new classifyStockLevel with explicit thresholds
+ */
+export function classifyStockLevelLegacy(
   currentStock: number,
   reorderPoint: number
 ): StockLevel {
