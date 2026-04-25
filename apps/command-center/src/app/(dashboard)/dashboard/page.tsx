@@ -166,7 +166,7 @@ export default async function DashboardPage() {
     redirect('/dashboard/investor');
   }
 
-  // DASH-07: All quick action buttons enabled with correct hrefs
+  // DASH-07: All quick action buttons enabled with correct hrefs - Events tab fix
   const quickActions =
     user.role === 'ADMIN'
       ? [
