@@ -1,15 +1,15 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { verifySession } from '@/lib/dal';
-import { getStockLevels, getInventoryAggregation } from '@/app/actions/inventory';
+import { getEnhancedStockLevels, getInventoryAggregation } from '@/app/actions/inventory';
 import { getInventorySummary, getTransactionLog, getLocations } from '@/app/actions/inventory';
 import { getProducts } from '@/app/actions/sales';
-import { StockLevelGrid } from '@/components/inventory/StockLevelGrid';
+import { EnhancedStockLevelGrid } from '@/components/inventory/EnhancedStockLevelGrid';
 import { InventoryAggregationTable } from '@/components/inventory/InventoryAggregationTable';
 import { InventoryPageClient } from './client';
 
 async function StockLevelContent() {
-  const stockData = await getStockLevels();
+  const stockData = await getEnhancedStockLevels();
   const totalSKUs = stockData.length;
   const totalUnits = stockData.reduce((sum, row) => sum + row.total, 0);
   const criticalCount = stockData.filter((row) =>
@@ -18,11 +18,12 @@ async function StockLevelContent() {
   const reorderCount = stockData.filter((row) =>
     row.locations.some((l) => l.stockLevel === 'REORDER')
   ).length;
+  const belowThresholdCount = stockData.filter(row => row.belowThreshold).length;
 
   return (
     <div className="space-y-6">
       {/* Summary metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4">
         <div className="rounded-lg border bg-card p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">Total SKUs</p>
           <p className="text-2xl font-bold mt-1">{totalSKUs}</p>
@@ -43,12 +44,18 @@ async function StockLevelContent() {
             {reorderCount}
           </p>
         </div>
+        <div className="rounded-lg border bg-card p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Below Threshold</p>
+          <p className={`text-2xl font-bold mt-1 ${belowThresholdCount > 0 ? 'text-orange-600 dark:text-orange-400' : ''}`}>
+            {belowThresholdCount}
+          </p>
+        </div>
       </div>
 
-      {/* Stock Level Grid */}
+      {/* Enhanced Stock Level Grid with consumption tracking */}
       <div className="rounded-lg border bg-card p-6">
-        <h2 className="text-lg font-semibold mb-4">Stock Levels by Location</h2>
-        <StockLevelGrid data={stockData} />
+        <h2 className="text-lg font-semibold mb-4">Stock Levels with Consumption Tracking</h2>
+        <EnhancedStockLevelGrid data={stockData} />
       </div>
     </div>
   );

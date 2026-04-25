@@ -109,3 +109,18 @@ export const packagingMaterialSchema = z.object({
 export type PackagingFormState =
   | { errors?: Record<string, string[]>; message?: string; success?: boolean }
   | undefined;
+
+/**
+ * fulfillmentSchema — validates online order fulfillment from main warehouse.
+ * Used by InventoryMovement FULFILLMENT type records.
+ */
+export const fulfillmentSchema = z.object({
+  productId: z.string().min(1, 'Product is required'),
+  quantity: z.coerce.number().int().positive('Quantity must be positive'),
+  orderReference: z.string().min(1, 'Order reference is required (e.g. "Etsy #1234")').max(100),
+  websiteOrderId: z.string().optional(),
+});
+
+export type FulfillmentFormState =
+  | { errors?: Record<string, string[]>; message?: string; success?: boolean }
+  | undefined;

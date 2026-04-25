@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState, useCallback, useTransition } from 'react';
-import { transferInventory } from '@/app/actions/inventory';
+import { transferInventory, recordRestaurantConsumption } from '@/app/actions/inventory';
 import { addLocationQuick, getActiveLocations } from '@/app/actions/locations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,12 @@ import {
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -31,6 +37,16 @@ interface LastTransfer {
   productName: string;
   fromLocationName: string;
   toLocationName: string;
+  toLocationType?: string;
+  toLocationId: string;
+  productId: string;
+}
+
+interface ConsumptionDialogProps {
+  open: boolean;
+  onClose: () => void;
+  transfer: LastTransfer;
+  onConsumptionRecorded: () => void;
 }
 
 const LOCATION_TYPE_OPTIONS = [
@@ -241,6 +257,157 @@ function LocationSelect({
 }
 
 /* ------------------------------------------------------------------ */
+/* Restaurant Consumption Dialog                                       */
+/* ------------------------------------------------------------------ */
+
+function RestaurantConsumptionDialog({ open, onClose, transfer, onConsumptionRecorded }: ConsumptionDialogProps) {
+  const [processing, startProcessing] = useTransition();
+  const [showPartialInput, setShowPartialInput] = useState(false);
+  const [quantityRemaining, setQuantityRemaining] = useState('');
+
+  function handleResponse(type: 'sold_through' | 'no_consumption' | 'partial') {
+    if (type === 'partial') {
+      setShowPartialInput(true);
+      return;
+    }
+
+    startProcessing(async () => {
+      try {
+        if (type === 'sold_through') {
+          const result = await recordRestaurantConsumption(
+            transfer.productId,
+            transfer.toLocationId,
+            'SOLD_THROUGH'
+          );
+          if (result.success) {
+            toast.success('Consumption recorded: All previous stock sold through');
+            onConsumptionRecorded();
+          } else {
+            toast.error(result.message || 'Failed to record consumption');
+          }
+        }
+        // For 'no_consumption', we just close the dialog
+        onClose();
+      } catch (error) {
+        toast.error('Failed to record consumption');
+      }
+    });
+  }
+
+  function handlePartialSubmit() {
+    const remaining = parseInt(quantityRemaining);
+    if (isNaN(remaining) || remaining < 0) {
+      toast.error('Please enter a valid quantity');
+      return;
+    }
+
+    startProcessing(async () => {
+      try {
+        const result = await recordRestaurantConsumption(
+          transfer.productId,
+          transfer.toLocationId,
+          'PARTIAL_SOLD',
+          remaining
+        );
+        if (result.success) {
+          toast.success(`Consumption recorded: ${remaining} units remaining`);
+          onConsumptionRecorded();
+        } else {
+          toast.error(result.message || 'Failed to record consumption');
+        }
+        onClose();
+      } catch (error) {
+        toast.error('Failed to record consumption');
+      }
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Restaurant Stock Consumption</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            You just restocked <strong>{transfer.productName}</strong> at{' '}
+            <strong>{transfer.toLocationName}</strong>.
+          </p>
+
+          <p className="text-sm font-medium">
+            Did the previous stock at this location sell through before this restock?
+          </p>
+
+          {!showPartialInput ? (
+            <div className="space-y-3">
+              <Button
+                onClick={() => handleResponse('sold_through')}
+                disabled={processing}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                Yes - All Previous Stock Sold
+              </Button>
+
+              <Button
+                onClick={() => handleResponse('partial')}
+                disabled={processing}
+                variant="outline"
+                className="w-full"
+              >
+                Partially - Some Stock Remaining
+              </Button>
+
+              <Button
+                onClick={() => handleResponse('no_consumption')}
+                disabled={processing}
+                variant="outline"
+                className="w-full"
+              >
+                No - Previous Stock Still There
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="quantity-remaining">Quantity still remaining from previous stock:</Label>
+                <Input
+                  id="quantity-remaining"
+                  type="number"
+                  min="0"
+                  value={quantityRemaining}
+                  onChange={(e) => setQuantityRemaining(e.target.value)}
+                  placeholder="Enter units remaining"
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handlePartialSubmit}
+                  disabled={processing || !quantityRemaining}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {processing ? 'Recording...' : 'Record Consumption'}
+                </Button>
+
+                <Button
+                  onClick={() => setShowPartialInput(false)}
+                  disabled={processing}
+                  variant="outline"
+                >
+                  Back
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Main TransferForm                                                   */
 /* ------------------------------------------------------------------ */
 
@@ -252,6 +419,7 @@ export function TransferForm({ products, locations: initialLocations }: Transfer
   const [formKey, setFormKey] = useState(0);
   const formValuesRef = useRef({ productId: '', fromLocationId: '', toLocationId: '', quantity: '' });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showConsumptionDialog, setShowConsumptionDialog] = useState(false);
 
   // Client-side locations list so new additions show immediately
   const [locations, setLocations] = useState(initialLocations);
@@ -275,18 +443,30 @@ export function TransferForm({ products, locations: initialLocations }: Transfer
       const fromLoc = locations.find((l) => l.id === vals.fromLocationId);
       const toLoc = locations.find((l) => l.id === vals.toLocationId);
       if (product && fromLoc && toLoc && vals.quantity) {
-        setLastTransfer({
+        const transferData = {
           quantity: vals.quantity,
           productName: `${product.name} (${product.sku})`,
           fromLocationName: fromLoc.name,
           toLocationName: toLoc.name,
-        });
+          toLocationType: toLoc.type,
+          toLocationId: toLoc.id,
+          productId: product.id,
+        };
+        setLastTransfer(transferData);
+
+        // Reset form
+        formRef.current?.reset();
+        setFromLocationId('');
+        formValuesRef.current = { productId: '', fromLocationId: '', toLocationId: '', quantity: '' };
+        setFormKey((k) => k + 1);
+
+        // Check if destination is a restaurant - if so, show consumption dialog instead of success message
+        if (toLoc.type === 'RESTAURANT') {
+          setShowConsumptionDialog(true);
+        } else {
+          setShowSuccess(true);
+        }
       }
-      formRef.current?.reset();
-      setFromLocationId('');
-      formValuesRef.current = { productId: '', fromLocationId: '', toLocationId: '', quantity: '' };
-      setFormKey((k) => k + 1);
-      setShowSuccess(true);
     }
   }, [state, products, locations]);
 
@@ -295,21 +475,22 @@ export function TransferForm({ products, locations: initialLocations }: Transfer
   }, [showSuccess]);
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-5" onChange={clearSuccess}>
-      {/* Error message */}
-      {state?.message && !state.success && (
-        <div className="rounded-md bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-600 dark:text-red-400">
-          {state.message}
-        </div>
-      )}
+    <>
+      <form ref={formRef} action={formAction} className="space-y-5" onChange={clearSuccess}>
+        {/* Error message */}
+        {state?.message && !state.success && (
+          <div className="rounded-md bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+            {state.message}
+          </div>
+        )}
 
-      {/* Success summary */}
-      {showSuccess && lastTransfer && (
-        <div className="rounded-md bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm text-green-700 dark:text-green-400">
-          Transferred {lastTransfer.quantity} units of {lastTransfer.productName} from{' '}
-          {lastTransfer.fromLocationName} to {lastTransfer.toLocationName}.
-        </div>
-      )}
+        {/* Success summary */}
+        {showSuccess && lastTransfer && (
+          <div className="rounded-md bg-green-500/10 border border-green-500/30 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+            Transferred {lastTransfer.quantity} units of {lastTransfer.productName} from{' '}
+            {lastTransfer.fromLocationName} to {lastTransfer.toLocationName}.
+          </div>
+        )}
 
       {/* Product */}
       <div className="space-y-2">
@@ -410,13 +591,27 @@ export function TransferForm({ products, locations: initialLocations }: Transfer
         />
       </div>
 
-      <Button
-        type="submit"
-        disabled={pending}
-        className="w-full h-11 bg-caribbean-green hover:bg-caribbean-green/90 text-white"
-      >
-        {pending ? 'Transferring...' : 'Transfer Inventory'}
-      </Button>
-    </form>
+        <Button
+          type="submit"
+          disabled={pending}
+          className="w-full h-11 bg-caribbean-green hover:bg-caribbean-green/90 text-white"
+        >
+          {pending ? 'Transferring...' : 'Transfer Inventory'}
+        </Button>
+      </form>
+
+      {/* Restaurant Consumption Dialog */}
+      {showConsumptionDialog && lastTransfer && (
+        <RestaurantConsumptionDialog
+          open={showConsumptionDialog}
+          onClose={() => setShowConsumptionDialog(false)}
+          transfer={lastTransfer}
+          onConsumptionRecorded={() => {
+            setShowConsumptionDialog(false);
+            setShowSuccess(true); // Show success message after consumption is recorded
+          }}
+        />
+      )}
+    </>
   );
 }

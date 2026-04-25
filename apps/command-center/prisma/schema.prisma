@@ -108,6 +108,13 @@ enum MovementType {
   DEDUCTION
 }
 
+enum TransferType {
+  RESTOCK
+  FULFILLMENT
+  ADJUSTMENT
+  RETURN
+}
+
 enum InventoryAdjustmentReason {
   DAMAGE
   SHRINKAGE
@@ -655,6 +662,7 @@ model BatchMaterial {
 model InventoryMovement {
   id               String                     @id @default(cuid())
   movementType     MovementType
+  transferType     TransferType?              // Optional: RESTOCK, FULFILLMENT, ADJUSTMENT, RETURN
   batchId          String
   fromLocationId   String?
   toLocationId     String?
@@ -666,6 +674,7 @@ model InventoryMovement {
   approvedAt       DateTime?
   createdById      String
   orderId          String?
+  orderReference   String?                    // For FULFILLMENT type: "Etsy #1234", "Website Order", etc.
   createdAt        DateTime                   @default(now())
 
   // Relations

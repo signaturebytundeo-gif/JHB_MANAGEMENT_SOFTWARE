@@ -12,8 +12,10 @@ import {
   type TransferFormState,
   adjustmentSchema,
   type AdjustmentFormState,
+  fulfillmentSchema,
+  type FulfillmentFormState,
 } from '@/lib/validators/inventory';
-import { TransactionType, MovementType } from '@prisma/client';
+import { TransactionType, MovementType, TransferType } from '@prisma/client';
 import { allocateInventoryFIFO } from '@/lib/utils/fifo';
 import { classifyStockLevel } from '@/lib/utils/reorder-point';
 
@@ -994,5 +996,530 @@ export async function updateProductThreshold(
   } catch (error) {
     console.error('Error updating product threshold:', error);
     return { message: 'Failed to update threshold' };
+  }
+}
+
+// ============================================================================
+// FULFILLMENT ACTIONS — Online Order Inventory Decrements
+// ============================================================================
+
+/**
+ * Fulfills an online order by decrementing inventory from Main Warehouse.
+ * Creates a FULFILLMENT type InventoryMovement that decrements from the warehouse.
+ * This is used for Etsy orders, website orders, and direct sales.
+ */
+export async function fulfillOnlineOrder(
+  productId: string,
+  quantity: number,
+  orderReference: string, // e.g. "Etsy #1234", "Website Order", "Direct Sale"
+  websiteOrderId?: string // Optional link to WebsiteOrder record
+): Promise<{ success?: boolean; message?: string }> {
+  try {
+    const session = await verifyManagerOrAbove();
+
+    if (quantity <= 0) {
+      return { message: 'Quantity must be greater than 0' };
+    }
+
+    // Find the main warehouse - look for WAREHOUSE type location or name containing "warehouse" or "storage"
+    const mainWarehouse = await db.location.findFirst({
+      where: {
+        isActive: true,
+        OR: [
+          { type: 'WAREHOUSE' },
+          { type: 'FULFILLMENT' },
+          { name: { contains: 'warehouse', mode: 'insensitive' } },
+          { name: { contains: 'storage', mode: 'insensitive' } },
+          { name: { contains: 'main', mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    if (!mainWarehouse) {
+      return { message: 'No main warehouse found for fulfillment' };
+    }
+
+    const now = new Date();
+
+    await db.$transaction(async (tx) => {
+      // Use FIFO allocation to find available batches
+      const allocations = await allocateInventoryFIFO(
+        productId,
+        mainWarehouse.id,
+        quantity,
+        tx as typeof db
+      );
+
+      // Create fulfillment movements for each batch allocation
+      for (const allocation of allocations) {
+        await tx.inventoryMovement.create({
+          data: {
+            movementType: MovementType.DEDUCTION,
+            transferType: TransferType.FULFILLMENT,
+            batchId: allocation.batchId,
+            fromLocationId: mainWarehouse.id,
+            toLocationId: null, // Fulfillment goes "out of inventory"
+            quantity: allocation.quantity,
+            orderReference,
+            notes: `Online order fulfillment: ${orderReference}`,
+            requiresApproval: false, // Auto-approve fulfillments
+            approvedById: session.userId,
+            approvedAt: now,
+            createdById: session.userId,
+            orderId: websiteOrderId ? null : null, // Could link to OperatorOrder if needed
+          },
+        });
+      }
+    });
+
+    revalidatePath('/dashboard/inventory');
+
+    return {
+      success: true,
+      message: `Fulfilled ${quantity} units from ${mainWarehouse.name}`
+    };
+  } catch (error) {
+    console.error('Error fulfilling online order:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fulfill order';
+    return { message };
+  }
+}
+
+/**
+ * Form-based fulfillment action for UI forms. Validates form data and calls fulfillOnlineOrder.
+ */
+export async function createFulfillment(
+  prevState: FulfillmentFormState,
+  formData: FormData
+): Promise<FulfillmentFormState> {
+  try {
+    const validatedFields = fulfillmentSchema.safeParse({
+      productId: formData.get('productId'),
+      quantity: formData.get('quantity'),
+      orderReference: formData.get('orderReference'),
+      websiteOrderId: formData.get('websiteOrderId') || undefined,
+    });
+
+    if (!validatedFields.success) {
+      return { errors: validatedFields.error.flatten().fieldErrors };
+    }
+
+    const data = validatedFields.data;
+    const result = await fulfillOnlineOrder(
+      data.productId,
+      data.quantity,
+      data.orderReference,
+      data.websiteOrderId
+    );
+
+    if (result.success) {
+      return { success: true, message: result.message };
+    } else {
+      return { message: result.message };
+    }
+  } catch (error) {
+    console.error('Error creating fulfillment:', error);
+    return { message: 'Failed to create fulfillment' };
+  }
+}
+
+/**
+ * Records consumption at a restaurant location when stock was sold through.
+ * Creates adjustment movements to zero out the current stock and record the sale.
+ */
+export async function recordRestaurantConsumption(
+  productId: string,
+  locationId: string,
+  consumptionType: 'SOLD_THROUGH' | 'PARTIAL_SOLD',
+  quantityRemaining?: number // Required for PARTIAL_SOLD
+): Promise<{ success?: boolean; message?: string }> {
+  try {
+    const session = await verifyManagerOrAbove();
+
+    // Validate location is a restaurant
+    const location = await db.location.findUnique({
+      where: { id: locationId },
+      select: { name: true, type: true },
+    });
+
+    if (!location) {
+      return { message: 'Location not found' };
+    }
+
+    if (location.type !== 'RESTAURANT') {
+      return { message: 'Consumption tracking is only for restaurant locations' };
+    }
+
+    if (consumptionType === 'PARTIAL_SOLD' && (quantityRemaining == null || quantityRemaining < 0)) {
+      return { message: 'Quantity remaining is required for partial consumption' };
+    }
+
+    const now = new Date();
+
+    await db.$transaction(async (tx) => {
+      // Calculate current stock at this location for this product
+      // Use the same method as getStockLevels() - BatchAllocation + approved InventoryMovements
+      const [initialAllocation, inboundAgg, outboundAgg] = await Promise.all([
+        tx.batchAllocation.aggregate({
+          where: {
+            locationId: locationId,
+            batch: { productId: productId, status: 'RELEASED', isActive: true }
+          },
+          _sum: { quantity: true },
+        }),
+        tx.inventoryMovement.aggregate({
+          where: {
+            toLocationId: locationId,
+            batch: { productId: productId },
+            approvedAt: { not: null }
+          },
+          _sum: { quantity: true },
+        }),
+        tx.inventoryMovement.aggregate({
+          where: {
+            fromLocationId: locationId,
+            batch: { productId: productId },
+            approvedAt: { not: null }
+          },
+          _sum: { quantity: true },
+        }),
+      ]);
+
+      const currentStock =
+        (initialAllocation._sum.quantity ?? 0) +
+        (inboundAgg._sum.quantity ?? 0) -
+        (outboundAgg._sum.quantity ?? 0);
+
+      if (currentStock <= 0) {
+        throw new Error(`No stock found at ${location.name} to record consumption`);
+      }
+
+      // Calculate quantity consumed
+      let quantityConsumed: number;
+      if (consumptionType === 'SOLD_THROUGH') {
+        quantityConsumed = currentStock; // All stock was consumed
+      } else {
+        // PARTIAL_SOLD: consumed = current - remaining
+        quantityConsumed = Math.max(0, currentStock - (quantityRemaining ?? 0));
+      }
+
+      if (quantityConsumed <= 0) {
+        throw new Error('No consumption to record');
+      }
+
+      // Find available batches using FIFO allocation for the consumed quantity
+      const allocations = await allocateInventoryFIFO(
+        productId,
+        locationId,
+        quantityConsumed,
+        tx as typeof db
+      );
+
+      // Create consumption movements (outbound from restaurant)
+      for (const allocation of allocations) {
+        await tx.inventoryMovement.create({
+          data: {
+            movementType: MovementType.DEDUCTION,
+            transferType: TransferType.ADJUSTMENT,
+            batchId: allocation.batchId,
+            fromLocationId: locationId,
+            toLocationId: null, // Consumption goes "out of inventory"
+            quantity: allocation.quantity,
+            reason: 'EXPIRED', // Using EXPIRED as closest match for "sold through"
+            notes: `Restaurant consumption: ${consumptionType.toLowerCase().replace('_', ' ')} - ${quantityConsumed} units sold`,
+            requiresApproval: false, // Auto-approve consumption records
+            approvedById: session.userId,
+            approvedAt: now,
+            createdById: session.userId,
+          },
+        });
+      }
+    });
+
+    revalidatePath('/dashboard/inventory');
+
+    return {
+      success: true,
+      message: `Recorded consumption of ${consumptionType === 'SOLD_THROUGH' ? 'all stock' : `${quantityRemaining} units remaining`} at ${location.name}`
+    };
+  } catch (error) {
+    console.error('Error recording restaurant consumption:', error);
+    const message = error instanceof Error ? error.message : 'Failed to record consumption';
+    return { message };
+  }
+}
+
+// ============================================================================
+// ENHANCED STOCK LEVELS WITH CONSUMPTION TRACKING
+// ============================================================================
+
+export type EnhancedStockLevelRow = {
+  product: { id: string; name: string; sku: string; size: string; reorderPoint: number };
+  locations: Array<{
+    location: { id: string; name: string; type: string };
+    quantity: number;
+    stockLevel: 'HEALTHY' | 'REORDER' | 'CRITICAL';
+    daysSinceLastRestock: number | null;
+    lastSoldThroughDate: string | null; // ISO string
+    lastRestockDate: string | null; // ISO string
+  }>;
+  total: number;
+  mainWarehouseStock: number;
+  belowThreshold: boolean;
+};
+
+/**
+ * Get enhanced stock levels with consumption tracking data.
+ * Includes days since last restock, last sold through date, and enhanced alerting.
+ */
+export async function getEnhancedStockLevels(): Promise<EnhancedStockLevelRow[]> {
+  try {
+    const [products, locations, allAllocations, allMovements] = await Promise.all([
+      db.product.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, sku: true, size: true, reorderPoint: true },
+      }),
+      db.location.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: { id: true, name: true, type: true },
+      }),
+      // BatchAllocation initial quantities for RELEASED batches
+      db.batchAllocation.findMany({
+        where: { batch: { status: 'RELEASED', isActive: true } },
+        select: {
+          locationId: true,
+          quantity: true,
+          batch: { select: { productId: true } },
+        },
+      }),
+      // All InventoryMovements with timestamps for consumption analysis
+      db.inventoryMovement.findMany({
+        where: { approvedAt: { not: null } },
+        select: {
+          batchId: true,
+          fromLocationId: true,
+          toLocationId: true,
+          quantity: true,
+          movementType: true,
+          transferType: true,
+          notes: true,
+          createdAt: true,
+          batch: { select: { productId: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    // Build stock map: productId -> locationId -> quantity
+    const stockMap = new Map<string, Map<string, number>>();
+
+    // Initialize all product/location pairs to 0
+    for (const product of products) {
+      const locMap = new Map<string, number>();
+      for (const location of locations) {
+        locMap.set(location.id, 0);
+      }
+      stockMap.set(product.id, locMap);
+    }
+
+    // Add BatchAllocation initial quantities
+    for (const allocation of allAllocations) {
+      const productId = allocation.batch.productId;
+      const locMap = stockMap.get(productId);
+      if (locMap) {
+        const current = locMap.get(allocation.locationId) ?? 0;
+        locMap.set(allocation.locationId, current + allocation.quantity);
+      }
+    }
+
+    // Apply InventoryMovements and track timing data
+    const restockDates = new Map<string, Date>(); // locationId:productId -> last restock date
+    const soldThroughDates = new Map<string, Date>(); // locationId:productId -> last sold through date
+
+    for (const movement of allMovements) {
+      const productId = movement.batch.productId;
+      const locMap = stockMap.get(productId);
+      if (!locMap) continue;
+
+      const key = `${movement.toLocationId || movement.fromLocationId}:${productId}`;
+
+      // Track restock dates (inbound transfers to restaurants)
+      if (movement.toLocationId && movement.movementType === 'TRANSFER') {
+        const location = locations.find(l => l.id === movement.toLocationId);
+        if (location?.type === 'RESTAURANT') {
+          const currentDate = restockDates.get(key);
+          if (!currentDate || movement.createdAt > currentDate) {
+            restockDates.set(key, movement.createdAt);
+          }
+        }
+      }
+
+      // Track sold through dates (consumption/deduction from restaurants)
+      if (movement.fromLocationId &&
+          (movement.movementType === 'DEDUCTION' || movement.transferType === 'ADJUSTMENT') &&
+          movement.notes?.includes('consumption')) {
+        const location = locations.find(l => l.id === movement.fromLocationId);
+        if (location?.type === 'RESTAURANT') {
+          const currentDate = soldThroughDates.get(key);
+          if (!currentDate || movement.createdAt > currentDate) {
+            soldThroughDates.set(key, movement.createdAt);
+          }
+        }
+      }
+
+      // Apply movement to stock levels
+      if (movement.toLocationId) {
+        const current = locMap.get(movement.toLocationId) ?? 0;
+        locMap.set(movement.toLocationId, current + movement.quantity);
+      }
+
+      if (movement.fromLocationId) {
+        const current = locMap.get(movement.fromLocationId) ?? 0;
+        locMap.set(movement.fromLocationId, current - movement.quantity);
+      }
+    }
+
+    // Find main warehouse
+    const mainWarehouse = locations.find(l =>
+      l.type === 'WAREHOUSE' || l.type === 'FULFILLMENT' ||
+      l.name.toLowerCase().includes('warehouse') || l.name.toLowerCase().includes('storage')
+    );
+
+    const now = new Date();
+
+    // Sort locations by total stock across all products (highest first)
+    const locationTotals = new Map<string, number>();
+    for (const location of locations) {
+      let locTotal = 0;
+      for (const product of products) {
+        const locMap = stockMap.get(product.id);
+        if (locMap) locTotal += Math.max(0, locMap.get(location.id) ?? 0);
+      }
+      locationTotals.set(location.id, locTotal);
+    }
+    const sortedLocations = [...locations].sort(
+      (a, b) => (locationTotals.get(b.id) ?? 0) - (locationTotals.get(a.id) ?? 0)
+    );
+
+    // Build enhanced output shape
+    const result = products.map((product) => {
+      const locMap = stockMap.get(product.id) ?? new Map<string, number>();
+      const locationStocks = sortedLocations.map((location) => {
+        const quantity = Math.max(0, locMap.get(location.id) ?? 0);
+        const key = `${location.id}:${product.id}`;
+
+        // Calculate days since last restock
+        const lastRestockDate = restockDates.get(key);
+        const daysSinceLastRestock = lastRestockDate
+          ? Math.floor((now.getTime() - lastRestockDate.getTime()) / (1000 * 60 * 60 * 24))
+          : null;
+
+        // Get last sold through date
+        const lastSoldThroughDate = soldThroughDates.get(key);
+
+        return {
+          location: { id: location.id, name: location.name, type: location.type },
+          quantity,
+          stockLevel: classifyStockLevel(quantity, product.reorderPoint),
+          daysSinceLastRestock,
+          lastSoldThroughDate: lastSoldThroughDate?.toISOString() ?? null,
+          lastRestockDate: lastRestockDate?.toISOString() ?? null,
+        };
+      });
+
+      const total = locationStocks.reduce((sum, l) => sum + l.quantity, 0);
+      const mainWarehouseStock = mainWarehouse ? (locMap.get(mainWarehouse.id) ?? 0) : 0;
+      const belowThreshold = mainWarehouseStock < product.reorderPoint;
+
+      return {
+        product,
+        locations: locationStocks,
+        total,
+        mainWarehouseStock,
+        belowThreshold,
+      };
+    });
+
+    result.sort((a, b) => b.total - a.total);
+    return result;
+  } catch (error) {
+    console.error('Error fetching enhanced stock levels:', error);
+    return [];
+  }
+}
+
+/**
+ * Get summary data for the enhanced stock levels dashboard.
+ */
+export async function getStockLevelSummary() {
+  try {
+    const stockData = await getEnhancedStockLevels();
+
+    // Locations that haven't had a restock in 14+ days (potential hidden depletion)
+    const staleLocations = stockData.flatMap(product =>
+      product.locations.filter(loc =>
+        loc.location.type === 'RESTAURANT' &&
+        loc.daysSinceLastRestock !== null &&
+        loc.daysSinceLastRestock >= 14 &&
+        loc.quantity > 0 // Only care about locations with stock
+      ).map(loc => ({
+        locationName: loc.location.name,
+        productName: product.product.name,
+        daysSinceRestock: loc.daysSinceLastRestock!,
+        quantity: loc.quantity
+      }))
+    );
+
+    // SKUs where Main Warehouse stock is below reorder threshold
+    const lowWarehouseStock = stockData.filter(product => product.belowThreshold);
+
+    return {
+      staleLocations,
+      lowWarehouseStockCount: lowWarehouseStock.length,
+      lowWarehouseStock: lowWarehouseStock.map(p => ({
+        productName: p.product.name,
+        currentStock: p.mainWarehouseStock,
+        threshold: p.product.reorderPoint
+      })),
+      totalProducts: stockData.length,
+      totalUnits: stockData.reduce((sum, p) => sum + p.total, 0)
+    };
+  } catch (error) {
+    console.error('Error fetching stock level summary:', error);
+    return {
+      staleLocations: [],
+      lowWarehouseStockCount: 0,
+      lowWarehouseStock: [],
+      totalProducts: 0,
+      totalUnits: 0
+    };
+  }
+}
+
+/**
+ * Helper to get the main warehouse location for fulfillment operations.
+ * Returns the first active location that matches warehouse criteria.
+ */
+export async function getMainWarehouse() {
+  try {
+    return await db.location.findFirst({
+      where: {
+        isActive: true,
+        OR: [
+          { type: 'WAREHOUSE' },
+          { type: 'FULFILLMENT' },
+          { name: { contains: 'warehouse', mode: 'insensitive' } },
+          { name: { contains: 'storage', mode: 'insensitive' } },
+          { name: { contains: 'main', mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { name: 'asc' },
+    });
+  } catch (error) {
+    console.error('Error getting main warehouse:', error);
+    return null;
   }
 }
