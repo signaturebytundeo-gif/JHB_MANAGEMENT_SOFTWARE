@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { verifySession } from '@/lib/dal';
+import Anthropic from '@anthropic-ai/sdk';
 
 // Updated categories per requirements (matching database enum values)
 const ALLOWED_CATEGORIES = [
@@ -113,17 +114,14 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const base64 = buffer.toString('base64');
 
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+    const client = new Anthropic({
+      apiKey: apiKey,
+    });
+
+    try {
+      const claudeRes = await client.messages.create({
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1024,
-        temperature: 0.1,
         system: SYSTEM_PROMPT,
         messages: [
           {
@@ -133,7 +131,7 @@ export async function POST(req: Request) {
                 type: 'image',
                 source: {
                   type: 'base64',
-                  media_type: mediaType,
+                  media_type: mediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
                   data: base64,
                 },
               },
@@ -144,26 +142,16 @@ export async function POST(req: Request) {
             ],
           },
         ],
-      }),
-    });
+      });
 
-    if (!claudeRes.ok) {
-      const errText = await claudeRes.text();
-      console.error('[scan-receipt] Claude API error:', claudeRes.status, errText);
+      const textBlock = claudeRes.content[0].type === 'text' ? claudeRes.content[0].text : '';
+    } catch (err: any) {
+      console.error('[scan-receipt] Claude API error:', err);
       return NextResponse.json(
-        { error: `Claude API failed (${claudeRes.status})`, receiptUrl },
+        { error: `Claude API failed (${err.status || 'unknown'})`, receiptUrl },
         { status: 502 }
       );
     }
-
-    const claudeData = (await claudeRes.json()) as {
-      content?: Array<{
-        type: 'text';
-        text: string;
-      }>;
-    };
-
-    const textBlock = claudeData.content?.[0]?.text ?? '';
 
     // Defensive — even with responseMimeType=application/json, strip fences if any.
     const cleaned = textBlock
