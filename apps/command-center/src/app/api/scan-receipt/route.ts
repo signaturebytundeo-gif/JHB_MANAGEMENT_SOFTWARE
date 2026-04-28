@@ -118,9 +118,10 @@ export async function POST(req: Request) {
       apiKey: apiKey,
     });
 
+    let textBlock = '';
     try {
       const claudeRes = await client.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
         messages: [
@@ -144,7 +145,7 @@ export async function POST(req: Request) {
         ],
       });
 
-      const textBlock = claudeRes.content[0].type === 'text' ? claudeRes.content[0].text : '';
+      textBlock = claudeRes.content[0].type === 'text' ? claudeRes.content[0].text : '';
     } catch (err: any) {
       console.error('[scan-receipt] Claude API error:', err);
       return NextResponse.json(

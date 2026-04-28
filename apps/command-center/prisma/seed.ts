@@ -19,7 +19,7 @@ async function main() {
   // ============================================================================
   console.log("👥 Seeding admin users...");
 
-  const defaultPassword = await bcrypt.hash("JHB26!", 10);
+  const defaultPassword = await bcrypt.hash("JHB2026!", 10);
 
   const anthony = await prisma.user.upsert({
     where: { email: "anthony@jamaicahousebrand.com" },
