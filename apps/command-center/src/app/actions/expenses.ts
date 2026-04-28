@@ -438,7 +438,7 @@ export async function saveExpenseTemplate(
   vendor: string,
   category: string,
   description: string,
-  paymentMethod?: string | null,
+  paymentMethod?: any,
   subcategory?: string | null,
   isRecurring?: boolean | null,
   recurrenceFrequency?: string | null
@@ -462,7 +462,7 @@ export async function saveExpenseTemplate(
         vendor,
         category: category as any,
         description,
-        paymentMethod: paymentMethod || null,
+        paymentMethod: paymentMethod as any,
         subcategory: subcategory || null,
         isRecurring: isRecurring || false,
         recurrenceFrequency: recurrenceFrequency || null,

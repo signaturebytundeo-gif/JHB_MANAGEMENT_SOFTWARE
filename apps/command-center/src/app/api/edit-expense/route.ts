@@ -114,7 +114,7 @@ export async function POST(req: Request) {
     const editEntry = {
       editedAt: new Date().toISOString(),
       editedBy: session.userId,
-      editedByName: session.user.name,
+      editedByName: session.userId,
       editReason: data.editReason,
       changes: [] as Array<{field: string; oldValue: any; newValue: any}>,
     };

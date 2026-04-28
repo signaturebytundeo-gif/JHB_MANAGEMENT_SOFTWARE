@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   try {
     // Verify admin access
     const session = await verifySession();
-    if (session.user.role !== 'ADMIN') {
+    if (session.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
