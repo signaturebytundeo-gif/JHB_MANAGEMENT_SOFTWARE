@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 import { put } from '@vercel/blob';
 import { z } from 'zod';
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     }
 
     // Find the original expense
-    const originalExpense = await prisma.expense.findUnique({
+    const originalExpense = await db.expense.findUnique({
       where: { id: data.expenseId },
     });
 
@@ -192,7 +192,7 @@ export async function POST(req: Request) {
     }
 
     // Update the expense
-    const updatedExpense = await prisma.expense.update({
+    const updatedExpense = await db.expense.update({
       where: { id: data.expenseId },
       data: updateData,
     });

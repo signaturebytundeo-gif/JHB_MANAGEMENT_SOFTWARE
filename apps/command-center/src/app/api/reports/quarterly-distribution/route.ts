@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 import { z } from 'zod';
 
@@ -69,7 +69,7 @@ export async function GET(req: Request) {
           }
         };
 
-    const locations = await prisma.location.findMany({
+    const locations = await db.location.findMany({
       where: {
         ...locationFilter,
         isActive: true,
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
 
     for (const location of locations) {
       // Get sales data for this location and quarter
-      const sales = await prisma.sale.findMany({
+      const sales = await db.sale.findMany({
         where: {
           saleDate: {
             gte: quarterStart,

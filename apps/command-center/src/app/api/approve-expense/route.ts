@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { verifyApprovalToken, getApproverEmails } from '@/lib/approval-tokens';
 
 export async function GET(req: Request) {
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     }
 
     // Find the expense
-    const expense = await prisma.expense.findUnique({
+    const expense = await db.expense.findUnique({
       where: { id: expenseId },
       include: {
         createdBy: {
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
 
     // Perform the approval action
     if (action === 'reject') {
-      await prisma.expense.update({
+      await db.expense.update({
         where: { id: expenseId },
         data: {
           approvalStatus: 'rejected',
@@ -113,7 +113,7 @@ export async function GET(req: Request) {
         }
       }
 
-      await prisma.expense.update({
+      await db.expense.update({
         where: { id: expenseId },
         data: updateData,
       });

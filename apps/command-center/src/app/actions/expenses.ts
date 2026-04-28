@@ -448,7 +448,7 @@ export async function saveExpenseTemplate(
     const existing = await db.expenseTemplate.findFirst({
       where: {
         vendor,
-        category,
+        category: category as any,
         description,
       },
     });
@@ -460,7 +460,7 @@ export async function saveExpenseTemplate(
     const template = await db.expenseTemplate.create({
       data: {
         vendor,
-        category,
+        category: category as any,
         description,
         paymentMethod: paymentMethod || null,
         subcategory: subcategory || null,

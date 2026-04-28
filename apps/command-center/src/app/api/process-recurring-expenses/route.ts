@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 
 // Helper function to calculate next due date
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     today.setHours(0, 0, 0, 0); // Start of day
 
     // Find all recurring expenses that are due
-    const dueExpenses = await prisma.expense.findMany({
+    const dueExpenses = await db.expense.findMany({
       where: {
         isRecurring: true,
         nextDueDate: {
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
       try {
         // Create new expense record based on the recurring template
-        const newExpense = await prisma.expense.create({
+        const newExpense = await db.expense.create({
           data: {
             description: expense.description,
             amount: expense.amount,
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
           expense.recurrenceFrequency
         );
 
-        await prisma.expense.update({
+        await db.expense.update({
           where: { id: expense.id },
           data: {
             nextDueDate,

@@ -23,7 +23,10 @@ async function main() {
 
   const anthony = await prisma.user.upsert({
     where: { email: "anthony@jamaicahousebrand.com" },
-    update: {},
+    update: {
+      password: defaultPassword,
+      isActive: true,
+    },
     create: {
       email: "anthony@jamaicahousebrand.com",
       name: "Anthony Amos Jr.",
@@ -36,7 +39,10 @@ async function main() {
 
   const tunde = await prisma.user.upsert({
     where: { email: "olatunde@jamaicahousebrand.com" },
-    update: {},
+    update: {
+      password: defaultPassword,
+      isActive: true,
+    },
     create: {
       email: "olatunde@jamaicahousebrand.com",
       name: "Olatunde Ogunjulugbe",
@@ -49,7 +55,10 @@ async function main() {
 
   const tomi = await prisma.user.upsert({
     where: { email: "tomigunz@jamaicahousebrand.com" },
-    update: {},
+    update: {
+      password: defaultPassword,
+      isActive: true,
+    },
     create: {
       email: "tomigunz@jamaicahousebrand.com",
       name: "Tomi",
@@ -64,7 +73,10 @@ async function main() {
   const guestPassword = await bcrypt.hash("Guest123!", 10);
   const guest = await prisma.user.upsert({
     where: { email: "guest@jamaicahousebrand.com" },
-    update: {},
+    update: {
+      password: guestPassword,
+      isActive: true,
+    },
     create: {
       email: "guest@jamaicahousebrand.com",
       name: "Guest User",

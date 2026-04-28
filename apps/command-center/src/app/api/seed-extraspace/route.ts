@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 
 /**
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     // Check if ExtraSpace expense already exists
-    const existingExpense = await prisma.expense.findFirst({
+    const existingExpense = await db.expense.findFirst({
       where: {
         vendorName: 'ExtraSpace Storage',
         isRecurring: true,
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     // Create the recurring ExtraSpace Storage expense
-    const extraspaceExpense = await prisma.expense.create({
+    const extraspaceExpense = await db.expense.create({
       data: {
         description: 'Monthly storage unit rental for business inventory and supplies',
         amount: 150.00, // Typical storage unit cost, can be edited later
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     });
 
     // Also create a corresponding expense template
-    await prisma.expenseTemplate.create({
+    await db.expenseTemplate.create({
       data: {
         vendor: 'ExtraSpace Storage',
         category: 'STORAGE_RENT',
