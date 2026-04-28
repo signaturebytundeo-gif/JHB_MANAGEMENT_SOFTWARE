@@ -16,12 +16,7 @@ import {
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+// Dialog components not available - using inline modal approach
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -323,11 +318,11 @@ function RestaurantConsumptionDialog({ open, onClose, transfer, onConsumptionRec
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Restaurant Stock Consumption</DialogTitle>
-        </DialogHeader>
+    <div className={`fixed inset-0 z-50 ${open ? 'flex' : 'hidden'} items-center justify-center bg-black/50 backdrop-blur-sm`}>
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 mx-4 w-full max-w-md">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold">Restaurant Stock Consumption</h3>
+        </div>
 
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -402,8 +397,8 @@ function RestaurantConsumptionDialog({ open, onClose, transfer, onConsumptionRec
             </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
 

@@ -17,7 +17,6 @@ import type { EnhancedStockLevelRow } from '@/app/actions/inventory';
 import { fulfillOnlineOrder } from '@/app/actions/inventory';
 import { toast } from 'sonner';
 import { Calendar, Clock, TrendingDown, Package } from 'lucide-react';
-import { ThresholdManagerDialog } from './ThresholdManagerDialog';
 
 type StockLevelFilter = 'ALL' | 'CRITICAL' | 'REORDER' | 'HEALTHY' | 'STALE';
 type SortKey = 'name' | 'total' | 'daysSinceRestock';
@@ -320,10 +319,7 @@ export function EnhancedStockLevelGrid({ data }: EnhancedStockLevelGridProps) {
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <p className="font-medium text-sm">{row.product.name}</p>
-                        <ThresholdManagerDialog
-                          product={row.product}
-                          onUpdate={handleActionComplete}
-                        />
+                        {/* Threshold management coming soon */}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {row.product.sku} • {row.product.size}
@@ -398,10 +394,7 @@ export function EnhancedStockLevelGrid({ data }: EnhancedStockLevelGridProps) {
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <p className="font-semibold text-sm">{row.product.name}</p>
-                    <ThresholdManagerDialog
-                      product={row.product}
-                      onUpdate={handleActionComplete}
-                    />
+                    {/* Threshold management coming soon */}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {row.product.sku} • {row.product.size}
