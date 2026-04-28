@@ -191,6 +191,7 @@ export default async function DashboardPage() {
       ? [
           { label: 'Log Sale', href: '/dashboard/orders', icon: ShoppingCart, enabled: true },
           { label: 'New Customer', href: '/dashboard/crm/customers/new', icon: UserPlus, enabled: true },
+          { label: 'New Event', href: '/dashboard/events/new', icon: CalendarPlus, enabled: true },
         ]
       : [];
 
@@ -213,7 +214,7 @@ export default async function DashboardPage() {
       {quickActions.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
