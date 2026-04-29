@@ -176,7 +176,7 @@ export default async function DashboardPage() {
           { label: 'Record Expense', href: '/dashboard/finance/expenses', icon: Receipt, enabled: true },
           { label: 'Transfer', href: '/dashboard/inventory/transfers', icon: ArrowLeftRight, enabled: true },
           { label: 'Invoice', href: '/dashboard/finance/invoices', icon: DollarSign, enabled: true },
-          { label: 'New Event', href: '/dashboard/events/new', icon: CalendarPlus, enabled: true },
+          { label: 'Events', href: '/dashboard/events', icon: Calendar, enabled: true },
         ]
       : user.role === 'MANAGER'
       ? [
@@ -185,13 +185,13 @@ export default async function DashboardPage() {
           { label: 'Record Expense', href: '/dashboard/finance/expenses', icon: Receipt, enabled: true },
           { label: 'Transfer', href: '/dashboard/inventory/transfers', icon: ArrowLeftRight, enabled: true },
           { label: 'Invoice', href: '/dashboard/finance/invoices', icon: DollarSign, enabled: true },
-          { label: 'New Event', href: '/dashboard/events/new', icon: CalendarPlus, enabled: true },
+          { label: 'Events', href: '/dashboard/events', icon: Calendar, enabled: true },
         ]
       : user.role === 'SALES_REP'
       ? [
           { label: 'Log Sale', href: '/dashboard/orders', icon: ShoppingCart, enabled: true },
           { label: 'New Customer', href: '/dashboard/crm/customers/new', icon: UserPlus, enabled: true },
-          { label: 'New Event', href: '/dashboard/events/new', icon: CalendarPlus, enabled: true },
+          { label: 'Events', href: '/dashboard/events', icon: Calendar, enabled: true },
         ]
       : [];
 
