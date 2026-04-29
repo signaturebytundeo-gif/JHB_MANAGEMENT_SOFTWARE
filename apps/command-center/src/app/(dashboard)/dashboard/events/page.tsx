@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getEvents, getUnassignedSalesCount } from '@/app/actions/events';
-import { Plus, AlertTriangle } from 'lucide-react';
+import { Plus, AlertTriangle, Receipt, FileText } from 'lucide-react';
 import { GlobalSquareSyncPanel } from '@/components/events/GlobalSquareSyncPanel';
 
 export default async function EventsPage({
@@ -40,6 +40,31 @@ export default async function EventsPage({
           <Plus className="w-4 h-4" />
           New Event
         </Link>
+      </div>
+
+      {/* Quick Actions */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4 text-white">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+          <Link href="/dashboard/events/new">
+            <button className="justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-sm hover:text-accent-foreground w-full h-auto flex flex-col items-center gap-2 p-4 border-caribbean-gold hover:bg-caribbean-green/10 hover:border-caribbean-green">
+              <Plus className="w-6 h-6 text-caribbean-green" />
+              <span className="text-white">New Event</span>
+            </button>
+          </Link>
+          <Link href="/dashboard/finance/expenses">
+            <button className="justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-sm hover:text-accent-foreground w-full h-auto flex flex-col items-center gap-2 p-4 border-caribbean-gold hover:bg-caribbean-green/10 hover:border-caribbean-green">
+              <Receipt className="w-6 h-6 text-caribbean-green" />
+              <span className="text-white">Log Expense</span>
+            </button>
+          </Link>
+          <Link href="/dashboard/finance/invoices">
+            <button className="justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border bg-background shadow-sm hover:text-accent-foreground w-full h-auto flex flex-col items-center gap-2 p-4 border-caribbean-gold hover:bg-caribbean-green/10 hover:border-caribbean-green">
+              <FileText className="w-6 h-6 text-caribbean-green" />
+              <span className="text-white">Invoice</span>
+            </button>
+          </Link>
+        </div>
       </div>
 
       {unassignedCount > 0 && (
