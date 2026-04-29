@@ -213,7 +213,7 @@ export default async function DashboardPage() {
       {/* Quick Actions — all enabled */}
       {quickActions.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold mb-4">Quick Actions [TEST DEPLOY 2026-04-29]</h2>
+          <h2 className="text-lg font-semibold mb-4">Quick Actions [FORCE DEPLOY 2026-04-29 12:45PM]</h2>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2 sm:gap-4">
             {quickActions.map((action) => {
               const Icon = action.icon;
