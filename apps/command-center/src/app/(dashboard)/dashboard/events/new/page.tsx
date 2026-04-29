@@ -10,6 +10,8 @@ export default async function NewEventPage() {
     getEventNames(),
   ]);
 
+  console.log('NewEventPage - eventNames fetched:', eventNames);
+
   return (
     <div className="space-y-6">
       <div>

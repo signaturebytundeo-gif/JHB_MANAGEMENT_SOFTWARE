@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronDown, Clock } from 'lucide-react';
 
 interface EventNameAutocompleteProps {
@@ -20,23 +20,45 @@ export function EventNameAutocomplete({
   className = '',
   required = false,
 }: EventNameAutocompleteProps) {
+  console.log('EventNameAutocomplete received eventNames:', eventNames);
+
+  // Add common templates if no event names exist
+  const allNames = useMemo(() => {
+    const commonTemplates = [
+      'Tuesday Farmers Market',
+      'Wednesday Farmers Market',
+      'Thursday Farmers Market',
+      'Friday Farmers Market',
+      'Saturday Farmers Market',
+      'Sunday Farmers Market',
+      'Coral Springs Green Market',
+      'Deerfield Beach Farmers Market',
+      'Pompano Beach Green Market',
+      'Fort Lauderdale Market'
+    ];
+
+    const names = eventNames.length > 0 ? eventNames : commonTemplates;
+    console.log('Using names for dropdown:', names);
+    return names;
+  }, [eventNames]);
+
   const [value, setValue] = useState(defaultValue);
   const [isOpen, setIsOpen] = useState(false);
-  const [filteredNames, setFilteredNames] = useState(eventNames);
+  const [filteredNames, setFilteredNames] = useState(allNames);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Filter event names based on current input
   useEffect(() => {
     if (value.trim() === '') {
-      setFilteredNames(eventNames);
+      setFilteredNames(allNames);
     } else {
-      const filtered = eventNames.filter(eventName =>
+      const filtered = allNames.filter(eventName =>
         eventName.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredNames(filtered);
     }
-  }, [value, eventNames]);
+  }, [value, allNames]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
