@@ -85,7 +85,11 @@ export function ReceiptScanner({ onExtracted }: ReceiptScannerProps) {
         vendorName: ex.vendor ?? undefined,
         notes: ex.notes ?? undefined,
         receiptUrl: data.receiptUrl ?? undefined,
-        lineItems: ex.line_items,
+        lineItems: ex.line_items.map(item => ({
+          name: item.description,
+          qty: 1, // Default to 1 since scan doesn't provide quantity
+          unit_price: item.amount
+        })),
         scanConfidence: 'medium', // Claude doesn't return confidence, default to medium
         documentType: 'receipt', // Default to receipt since Claude doesn't return document type
       });

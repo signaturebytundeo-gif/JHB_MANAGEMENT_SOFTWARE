@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifySession } from '@/lib/dal';
 import { z } from 'zod';
+import { LocationType } from '@prisma/client';
 
 const quarterlyReportSchema = z.object({
   year: z.number().min(2020).max(2030),
@@ -65,7 +66,7 @@ export async function GET(req: Request) {
       ? { id: locationId }
       : {
           type: {
-            in: ['RESTAURANT', 'PRODUCTION'] // Include both restaurant and production locations
+            in: [LocationType.RESTAURANT, LocationType.PRODUCTION] // Include both restaurant and production locations
           }
         };
 

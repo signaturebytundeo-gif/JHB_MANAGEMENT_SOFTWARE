@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 type ApprovalResult = {
@@ -17,7 +17,7 @@ type ApprovalResult = {
   error?: string;
 };
 
-export default function ExpenseApprovalPage() {
+function ExpenseApprovalContent() {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<ApprovalResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,5 +121,20 @@ export default function ExpenseApprovalPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ExpenseApprovalPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full mx-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-caribbean-green mx-auto"></div>
+          <p className="text-center mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ExpenseApprovalContent />
+    </Suspense>
   );
 }
