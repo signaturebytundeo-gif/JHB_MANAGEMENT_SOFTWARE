@@ -902,3 +902,20 @@ export async function globalSquareSync(
     };
   }
 }
+
+export async function getEventNames() {
+  try {
+    await verifySession();
+
+    const events = await db.marketEvent.findMany({
+      select: { name: true },
+      distinct: ['name'],
+      orderBy: { name: 'asc' },
+    });
+
+    return events.map(event => event.name);
+  } catch (error) {
+    console.error('Error fetching event names:', error);
+    return [];
+  }
+}

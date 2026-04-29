@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { createEvent, updateEvent } from '@/app/actions/events';
 import type { EventFormState } from '@/lib/validators/events';
 import { LocationAutocomplete } from './LocationAutocomplete';
+import { EventNameAutocomplete } from './EventNameAutocomplete';
 import { useVoiceFill } from '@/lib/voice/use-voice-fill';
 import { applyToNativeInputs } from '@/lib/voice/apply-to-inputs';
 
@@ -15,6 +16,7 @@ interface Channel {
 
 interface EventFormProps {
   channels: Channel[];
+  eventNames: string[];
   defaultValues?: {
     id: string;
     name: string;
@@ -30,7 +32,7 @@ interface EventFormProps {
   };
 }
 
-export function EventForm({ channels, defaultValues }: EventFormProps) {
+export function EventForm({ channels, eventNames, defaultValues }: EventFormProps) {
   const isEdit = !!defaultValues;
   const action = isEdit ? updateEvent : createEvent;
   const [state, formAction, isPending] = useActionState<EventFormState, FormData>(
@@ -70,13 +72,13 @@ export function EventForm({ channels, defaultValues }: EventFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className={labelClass}>Event Name *</label>
-          <input
-            type="text"
+          <EventNameAutocomplete
             name="name"
-            required
+            eventNames={eventNames}
             defaultValue={defaultValues?.name}
             placeholder="e.g., Coral Springs Green Market"
             className={inputClass}
+            required
           />
           {state?.errors?.name && (
             <p className="text-red-400 text-xs mt-1">{state.errors.name[0]}</p>

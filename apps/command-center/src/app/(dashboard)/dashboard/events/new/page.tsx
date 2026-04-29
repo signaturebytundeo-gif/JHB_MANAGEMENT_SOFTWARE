@@ -1,10 +1,14 @@
 import Link from 'next/link';
 import { EventForm } from '@/components/events/EventForm';
 import { getChannels } from '@/app/actions/sales';
+import { getEventNames } from '@/app/actions/events';
 import { ChevronLeft } from 'lucide-react';
 
 export default async function NewEventPage() {
-  const channels = await getChannels();
+  const [channels, eventNames] = await Promise.all([
+    getChannels(),
+    getEventNames(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -22,7 +26,7 @@ export default async function NewEventPage() {
         </p>
       </div>
 
-      <EventForm channels={channels} />
+      <EventForm channels={channels} eventNames={eventNames} />
     </div>
   );
 }

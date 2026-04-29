@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getEventById, getUnassignedSquareSales } from '@/app/actions/events';
+import { getEventById, getUnassignedSquareSales, getEventNames } from '@/app/actions/events';
 import { getChannels, getProducts } from '@/app/actions/sales';
 import { EventForm } from '@/components/events/EventForm';
 import { AssignSalesPanel } from '@/components/events/AssignSalesPanel';
@@ -14,10 +14,11 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [event, channels, products] = await Promise.all([
+  const [event, channels, products, eventNames] = await Promise.all([
     getEventById(id),
     getChannels(),
     getProducts(),
+    getEventNames(),
   ]);
 
   if (!event) return notFound();
@@ -215,6 +216,7 @@ export default async function EventDetailPage({
         <div className="mt-4">
           <EventForm
             channels={channels}
+            eventNames={eventNames}
             defaultValues={{
               id: event.id,
               name: event.name,
